@@ -2,6 +2,16 @@
 
 기준 명세는 [tables.md](tables.md)입니다. Vercel에 연결한 Neon PostgreSQL의 `public.products`를 사용하고, Next.js API를 통해 상품을 조회합니다. 기존 `/api/demo/home`과 방의 가상 구매 데이터는 별도로 유지합니다.
 
+## 공통 DB 접속
+
+- Vercel 프로젝트: `ww-002-8351s-projects / makmeaning`
+- DB: `makmeaning-products` — Neon Free, `iad1` 리전
+- 테이블: `public.products`
+- [Vercel DB 관리 화면](https://vercel.com/d/dashboard/integrations/neon/icfg_Hk1mPw8H4oDCw1If77gYLqaC/resources/store_KICG3jqn8kUycZ6a)
+- API 기준 주소: `https://makmeaning.vercel.app/api/products`
+
+Production, Preview, Development가 같은 DB를 사용합니다. 로컬에서 등록·수정한 상품도 팀 공통 데이터에 반영됩니다. 별도 Neon Auth는 사용하지 않습니다. DB 수정과 환경변수 다운로드에는 해당 Vercel/Neon 계정의 접근 권한이 필요합니다.
+
 ## 컬럼 규칙
 
 - `prd_id`: 문자열 기본키. 상품 코드의 앞자리 0을 보존합니다.
