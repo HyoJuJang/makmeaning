@@ -19,3 +19,6 @@ public/assets/
 *.key
 .vercel
 .env*
+
+# Keep only the credential-free setup template.
+!.env.example
