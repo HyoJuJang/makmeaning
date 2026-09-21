@@ -117,11 +117,17 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
 
   useEffect(() => {
     if (!data) return;
-    const restore = () => setConfirmed(readDemoState(data.home));
-    const storage = (event: StorageEvent) => { if (event.key === 'gscene-main-v1' || event.key === null) restore(); };
+    const restore = () => {
+      setConfirmed(readDemoState(data.home));
+      try {
+        const next = restoreCatalogState(data, localStorage.getItem(storageKey));
+        setState(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
+      } catch { /* Keep this visit's choices when storage is unavailable. */ }
+    };
+    const storage = (event: StorageEvent) => { if (event.key === 'gscene-main-v1' || event.key === storageKey || event.key === null) restore(); };
     window.addEventListener('pageshow', restore); window.addEventListener('storage', storage);
     return () => { window.removeEventListener('pageshow', restore); window.removeEventListener('storage', storage); };
-  }, [data]);
+  }, [data, storageKey]);
   function ownedStatus(id: string) {
     if (!data?.home.purchases.some(item => item.id === id)) return '';
     return category === 'food' ? `데모 잔량 ${confirmed?.foodQuantity[id] ?? data.home.purchases.find(item => item.id === id)?.state.quantity ?? 0}회` : confirmed?.featuredBeautyId === id ? '화장대에 꺼내두었어요' : '화장대에 함께 있어요';

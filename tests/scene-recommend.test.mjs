@@ -146,3 +146,13 @@ test('owned canonical product IDs use their explicit illustration pairing withou
   assert.notEqual(results[1].reason, '쓰면 안 되는 이유');
   assert.deepEqual(anchor, before);
 });
+
+// Restore from current storage, never merge pre-reset collection choices back in.
+import { restoreSceneCollection } from '../src/lib/scene/collection-state.ts';
+test('scene reset and cross-tab restore replace stale saves with validated current choices', () => {
+  const catalog = { products: [{ id: 'tee' }, { id: 'shoe' }], cartIds: ['tee'] };
+  assert.deepEqual(restoreSceneCollection(catalog, JSON.stringify({ cartIds: ['shoe'], savedIds: ['tee'] })), { cartIds: ['shoe'], savedIds: ['tee'] });
+  assert.deepEqual(restoreSceneCollection(catalog, null), { cartIds: ['tee'], savedIds: [] });
+  assert.deepEqual(restoreSceneCollection(catalog, JSON.stringify({ cartIds: [], savedIds: ['shoe', 'shoe', 'unknown', 7] })), { cartIds: [], savedIds: ['shoe'] });
+  assert.deepEqual(restoreSceneCollection(catalog, '{broken'), { cartIds: ['tee'], savedIds: [] });
+});

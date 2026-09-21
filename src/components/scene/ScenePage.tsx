@@ -6,6 +6,7 @@ import { DEMO_STATE_KEY, applyOwnedOutfit, readDemoState, saveDemoState, type De
 import type { DemoScene, SceneCategory, SceneProduct } from '../../types/scene';
 import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
+import { restoreSceneCollection } from '../../lib/scene/collection-state';
 import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
 import CategoryNav from '../navigation/CategoryNav';
 import './scene.css';
@@ -134,15 +135,11 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         const [homeData, sceneData]: [DemoHome, DemoScene] = await Promise.all([responses[0].json(), responses[1].json()]);
         if (!Array.isArray(homeData.purchases) || !homeData.user?.name || sceneData.category !== category || !Array.isArray(sceneData.products) || !Array.isArray(sceneData.cartIds)) throw new Error('Invalid scene');
         if (!mounted) return;
-        const ids = new Set(sceneData.products.map(product => product.id));
-        let cart = sceneData.cartIds, saved: string[] = [];
-        try {
-          const stored = JSON.parse(localStorage.getItem(storeKey) || 'null');
-          if (stored && Array.isArray(stored.cartIds)) cart = [...new Set<string>(stored.cartIds.filter((id: unknown) => typeof id === 'string' && ids.has(id)))];
-          if (stored && Array.isArray(stored.savedIds)) saved = [...new Set<string>(stored.savedIds.filter((id: unknown) => typeof id === 'string' && ids.has(id)))];
-        } catch { /* A blocked or corrupt local store must not prevent browsing. */ }
+        let collection = restoreSceneCollection(sceneData, null);
+        try { collection = restoreSceneCollection(sceneData, localStorage.getItem(storeKey)); }
+        catch { /* Blocked storage keeps this visit usable. */ }
         setConfirmedState(readDemoState(homeData));
-        setHome(homeData); setCatalog(sceneData); setCartIds(cart); setSavedIds(saved);
+        setHome(homeData); setCatalog(sceneData); setCartIds(collection.cartIds); setSavedIds(collection.savedIds);
         setSelectedId(null);
         loadedStoreKey.current = storeKey;
         setStorageReady(true);
@@ -161,14 +158,21 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
   useEffect(() => { if (!notice) return; const timeout = setTimeout(() => setNotice(''), 3500); return () => clearTimeout(timeout); }, [notice]);
 
   useEffect(() => {
-    if (!home) return;
-    const restore = () => setConfirmedState(readDemoState(home));
-    const onStorage = (event: StorageEvent) => { if (event.key === DEMO_STATE_KEY || event.key === null) restore(); };
+    if (!home || !catalog) return;
+    const restore = () => {
+      setConfirmedState(readDemoState(home));
+      try {
+        const next = restoreSceneCollection(catalog, localStorage.getItem(storeKey));
+        setCartIds(previous => JSON.stringify(previous) === JSON.stringify(next.cartIds) ? previous : next.cartIds);
+        setSavedIds(previous => JSON.stringify(previous) === JSON.stringify(next.savedIds) ? previous : next.savedIds);
+      } catch { /* Keep current in-memory choices when storage is unavailable. */ }
+    };
+    const onStorage = (event: StorageEvent) => { if ([DEMO_STATE_KEY, storeKey, null].includes(event.key)) restore(); };
     const onPageShow = () => { restore(); setOutfitPreviewId(null); setLampPreview(null); setPlacedId(null); setLookIds({}); setSeated(false); };
     window.addEventListener('storage', onStorage);
     window.addEventListener('pageshow', onPageShow);
     return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('pageshow', onPageShow); };
-  }, [home]);
+  }, [home, catalog, storeKey]);
 
   const purchases = home?.purchases.filter(product => product.category === category) || [];
   const previewPurchase = purchases.find(product => product.id === outfitPreviewId);
