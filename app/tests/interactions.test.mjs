@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {InteractionController,OBJECTS} from '../interactions.js';
 import {APPROACHES,START,isWalkable} from '../movement.js';
+import {CATEGORY_ROUTES,readyObjectCategory} from '../category-routes.js';
 const checks=[];
 function arrive(c,id){const request=c.dispatch({type:'REQUEST',intent:{type:'object',id},position:START});assert.equal(request[0].type,'navigate');const epoch=c.epoch;const position=APPROACHES[OBJECTS[id].target];c.dispatch({type:'ARRIVED',id,epoch,pathEmpty:true,position});assert.equal(c.phase,'entering');return position;}
 function engaged(c,id){arrive(c,id);c.tick(id==='wardrobe'?830:id==='fridge'?650:id==='window'?400:320);assert.equal(c.phase,'engaged');}
@@ -43,5 +44,31 @@ for(const [id,product,current,threshold,duration,kind]of[['wardrobe','shirt','kn
 }
 {
  const c=new InteractionController({reduced:true});arrive(c,'wardrobe');c.tick(210);assert.equal(c.phase,'engaged');c.dispatch({type:'ACTION',productId:'shirt',current:'knit'});assert(!c.tick(34).some(e=>e.type==='commit'));assert.equal(c.tick(1).filter(e=>e.type==='commit').length,1);c.tick(175);assert.equal(c.owner,'none');checks.push('reduced motion uses same graph and proportional commit before normal exit');
+}
+for(const [id,category,total] of [['wardrobe','fashion',830],['fridge','food',650],['vanity','beauty',320],['sofa','living',320],['pantry','food',320]]){
+ const c=new InteractionController(),position=APPROACHES[OBJECTS[id].target];
+ c.dispatch({type:'REQUEST',intent:{type:'object',id},position:START});
+ for(let tap=0;tap<4;tap++)assert.deepEqual(c.dispatch({type:'REQUEST',intent:{type:'object',id},position:START}),[]);
+ assert.equal(readyObjectCategory(c,id),null);
+ c.dispatch({type:'ARRIVED',id,epoch:c.epoch,pathEmpty:true,position});
+ for(let ms=0;ms<total-1;ms++){c.tick(1);assert.equal(readyObjectCategory(c,id),null);assert.deepEqual(c.dispatch({type:'REQUEST',intent:{type:'object',id},position}),[]);}
+ c.tick(1);assert.equal(c.phase,'engaged');assert.equal(readyObjectCategory(c,id),category);
+ if(id==='pantry'){assert.equal(c.trayExpanded,true);assert.equal(c.dispatch({type:'IMMEDIATE',kind:'food',productId:'vitamin',quantity:3,actionId:101}).filter(e=>e.type==='commit').length,1);}
+ const effects=c.dispatch({type:'REQUEST',intent:{type:'object',id},position});
+ assert(!effects.some(e=>e.type==='intent'),'Navigation waits for existing object exit animation');
+ assert.equal(c.phase,'exiting');assert.equal(c.categoryNavigation,category);
+ assert.deepEqual(c.dispatch({type:'REQUEST',intent:{type:'object',id},position}),[]);
+ assert.deepEqual(c.dispatch({type:'CANCEL'}),[],'Escape/extra taps cannot cancel a latched route into a broken lock');
+ const done=c.tick(1000),routes=done.filter(e=>e.type==='intent'&&e.intent.type==='category');
+ assert.equal(routes.length,1);assert.equal(CATEGORY_ROUTES[routes[0].intent.id].href,'/'+category);
+ assert.equal(c.owner,'none');assert.deepEqual(c.view().renderOffset,{x:0,y:0});
+ assert.equal(c.tick(1000).length,0,'Navigation effect occurs once');
+ c.dispatch({type:'HIDE'});assert.equal(c.categoryNavigation,null);arrive(c,id);
+ checks.push(`${id}: first tap stays in room, rapid taps ignored throughout entry, ready re-tap exits safely and routes once to ${category}, return cleanup permits re-entry`);
+}
+for(const [id,product,current] of [['wardrobe','shirt','knit'],['vanity','cream','serum']]){
+ const c=new InteractionController();engaged(c,id);c.dispatch({type:'ACTION',productId:product,current});
+ assert.equal(readyObjectCategory(c,id),null);assert.deepEqual(c.dispatch({type:'REQUEST',intent:{type:'object',id},position:APPROACHES[OBJECTS[id].target]}),[]);
+ assert.equal(c.categoryNavigation,null,'Product animation must never launch a category');
 }
 console.log(JSON.stringify({result:'PASS',checks},null,2));

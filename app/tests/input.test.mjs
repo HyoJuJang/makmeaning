@@ -5,6 +5,7 @@ import * as movement from '../movement.js';
 import * as avatars from '../avatar.js';
 import * as scenes from '../scene-entry.js';
 import * as interactions from '../interactions.js';
+import * as categoryRoutes from '../category-routes.js';
 import * as objects from '../object-art.js';
 import {demoHome} from '../../src/data/demo-home.ts';
 
@@ -20,7 +21,8 @@ function element(name){
     querySelector(selector){return element(name+' '+selector);},
     querySelectorAll(){return [];},
     focus(){document.activeElement=this;},
-    contains(other){return other===this;}
+    contains(other){return other===this;},
+    getBoundingClientRect(){return {top:0,left:0,width:400,height:600,bottom:600};}
   };
   elements.set(name,e);return e;
 }
@@ -30,6 +32,8 @@ const document={hidden:false,body:element('body'),activeElement:null,
 };
 document.activeElement=element('.house-wrap');
 let fetchCount=0;
+let savedState=null;
+const sessionState=new Map(),routeRequests=[];
 const apiHome=structuredClone(demoHome);
 apiHome.user.name='API 민서';
 const fetchHome=async(url,options)=>{
@@ -37,15 +41,17 @@ const fetchHome=async(url,options)=>{
   return {ok:true,json:async()=>structuredClone(apiHome)};
 };
 const context=vm.createContext({
-  ...movement,...avatars,...scenes,...interactions,...objects,document,
-  window:{addEventListener(type,fn){windowEvents.set(type,fn);}},
-  localStorage:{getItem(){return null;},setItem(){}},
+  ...movement,...avatars,...scenes,...interactions,...objects,...categoryRoutes,document,
+  window:{addEventListener(type,fn){windowEvents.set(type,fn);},location:{assign(href){routeRequests.push(href);}},innerHeight:844,scrollBy(){}},
+  sessionStorage:{getItem(key){return sessionState.get(key)||null;},setItem(key,value){sessionState.set(key,value);},removeItem(key){sessionState.delete(key);}},
+  localStorage:{getItem(){return savedState;},setItem(key,value){assert.equal(key,'gscene-main-v1');savedState=value;}},
   matchMedia(){return{matches:false};},
   requestAnimationFrame(fn){frameCallback=fn;},
   fetch:fetchHome,AbortController,clearTimeout(){},setTimeout(){},console
 });
 const source=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8').replace(/^import .*?;\n/gm,'');
-const bootstrap=vm.runInContext(`(async()=>{${source}\n globalThis.appTest={loadHome,renderProductsFor(category){active=category;renderProducts();active=null;}};})()`,context);
+const bootstrapSource=`(async()=>{${source}\n globalThis.appTest={loadHome,requestIntent,controller,getState(){return JSON.parse(JSON.stringify(state));},renderProductsFor(category){active=category;renderProducts();active=null;}};})()`;
+const bootstrap=vm.runInContext(bootstrapSource,context);
 assert.equal(element('#app').dataset.homeState,'loading');
 await bootstrap;
 assert.equal(fetchCount,1);
@@ -92,3 +98,25 @@ await retry;
 assert.equal(retryAttempt,2);assert.equal(element('#app').dataset.homeState,'ready');
 assert.equal(element('#home-load-state').hidden,true);
 console.log('PASS: API boot, API user rendering, failed response, and explicit retry recovery.');
+
+context.fetch=fetchHome;
+// Exercise real app handlers, the controller's exit effect, persistence, and a fresh room boot.
+for(const [id,category] of [['wardrobe','fashion'],['fridge','food'],['vanity','beauty'],['sofa','living'],['pantry','food']]){
+ await vm.runInContext(bootstrapSource,context);
+ const app=context.appTest,request={type:'object',id};const priorRoutes=routeRequests.length;
+ app.requestIntent(request);app.requestIntent(request);frames(2);app.requestIntent(request);
+ assert.equal(routeRequests.length,priorRoutes,'Rapid first taps never navigate');
+ for(let i=0;i<1000&&app.controller.phase!=='engaged';i++)frames(1);
+ assert.equal(app.controller.phase,'engaged');assert.equal(routeRequests.length,priorRoutes);
+ const dock=position();app.requestIntent(request);app.requestIntent(request);frames(30);
+ assert.deepEqual(routeRequests.slice(priorRoutes),['/'+category],'Only the ready re-tap navigates, exactly once');
+ assert(sessionState.has('gscene-room-return-v1'));
+ await vm.runInContext(bootstrapSource,context);frames(1);
+ assert.deepEqual(position(),dock,'Category return restores the safe standing dock');
+ assert.equal(context.appTest.controller.primary,'idle');
+ assert.equal(sessionState.has('gscene-room-return-v1'),false,'Resume is consumed once');
+ context.appTest.requestIntent(request);
+ for(let i=0;i<1000&&context.appTest.controller.phase!=='engaged';i++)frames(1);
+ assert.equal(context.appTest.controller.phase,'engaged','Returning room still responds to the same object');
+}
+console.log('PASS: actual room handler routes all five objects exactly once after ready re-tap, restores the safe dock, and re-enters after returning.');

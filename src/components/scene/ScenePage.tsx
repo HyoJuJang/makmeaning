@@ -6,6 +6,7 @@ import type { DemoScene, SceneCategory, SceneProduct } from '../../types/scene';
 import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
 import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
+import CategoryNav from '../navigation/CategoryNav';
 import './scene.css';
 
 const CONFIG = {
@@ -246,7 +247,10 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
     <header className="sc-header">
       <a href="/" className="sc-back" aria-label="내 공간으로 돌아가기"><Icon name="back" /><span>내 공간</span></a>
       <a href="/" className="sc-brand">G:Scene<span>.</span></a>
-      <button className="sc-icon-button sc-bag" aria-label={`장바구니 ${cartIds.length}개`} onClick={() => setPanel('cart')}><Icon name="bag" /><span>{cartIds.length}</span></button>
+      <div className="sc-header-actions">
+        <button className="sc-icon-button" aria-label={`찜한 상품 ${savedIds.length}개`} onClick={() => setPanel('saved')}><Icon name="heart" /></button>
+        <button className="sc-icon-button sc-bag" aria-label={`장바구니 ${cartIds.length}개`} onClick={() => setPanel('cart')}><Icon name="bag" /><span>{cartIds.length}</span></button>
+      </div>
     </header>
     {(!home || !catalog) ? <section className="sc-load" role="status"><span className="sc-kicker">YOUR NEXT SCENE</span><h1>{error ? '공간을 불러오지 못했어요' : '나의 공간을 준비하고 있어요'}</h1><p>{error ? '연결을 확인한 뒤 다시 시도해 주세요.' : '구매한 물건과 새로운 취향을 연결하는 중'}</p>{error && <button className="sc-primary" onClick={() => setAttempt(value => value + 1)}>다시 불러오기</button>}</section> : <>
       <div className="sc-heading"><div><span className="sc-room-number">{category === 'fashion' ? '01' : '02'}</span><h1>{config.title}</h1></div><span className="sc-person">{home.user.name}의 작은 취향 공간</span></div>
@@ -290,7 +294,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         </section>
       </div>
     </>}
-    <nav className="sc-bottom-nav" aria-label="공간 메뉴"><a href="/"><Icon name="home" size={18} /><span>내 공간</span></a><a href="/fashion" aria-current={category === 'fashion' ? 'page' : undefined}><span className="sc-nav-letter">F</span><span>패션</span></a><a href="/living" aria-current={category === 'living' ? 'page' : undefined}><span className="sc-nav-letter">L</span><span>리빙</span></a><button onClick={() => setPanel('saved')}><Icon name="heart" size={18} /><span>찜한 상품</span></button></nav>
+    <CategoryNav activeCategory={category} />
     {notice && <div className="sc-toast" role="status">{notice}</div>}
     {panel && <Dialog viewKey={`${panel}:${panel === 'product' ? detailId : ''}`} title={panel === 'filters' ? '나만의 Scene 설정' : panel === 'product' ? '내 장면에 더하기' : panel === 'owned' ? `나의 구매 상품 ${purchases.length}` : panel === 'saved' ? `찜한 상품 ${saved.length}` : `장바구니 ${cart.length}`} onClose={() => setPanel(null)}>
       {panel === 'filters' ? (

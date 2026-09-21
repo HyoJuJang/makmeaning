@@ -307,3 +307,12 @@ Main이 `http://127.0.0.1:4173/` 실제 앱을 390×844, 320×568 viewport에서
 ### Main 최종 재검증
 
 최종 옷장 뒤적임은 왼쪽 물체 방향으로 sprite를 반전해 실제 손이 물체를 향하도록 확인했다. 독립 브라우저 탭에서도 M02의 소파 접근→중앙 착석 및 offset을 확인했고 console warning/error는 0건이다. root npm test 전체 통과: 156개 경로, 무작위 목적지100, 충돌3,000 step, 입력·controller·구매slot·API 검증. localhost4173의 local server는 기존 API GET을 재사용하고 public/products 이미지도 제공하며 root Next/API 원본은 바꾸지 않는다.
+
+
+## 2026-09-21 — Room category navigation / icon integration QA
+
+- 실제 브라우저: 390×844 mobile, 1280×900 desktop. 옷장·냉장고·화장대·소파의 첫 탭은 생활 동작, 준비 후 재탭은 해당 tab으로 이동. N1–N7 PASS; Pantry 추가 경로와 뒤로 가기/동일 object 재진입도 PASS.
+- 수정한 integration 문제: (1) 버튼화한 room label의 회색 기본 배경 제거 (2) lamp의 잘못된 category 안내/CTA 제거 (3) Food/Beauty 구매 상품을 room과 같은 API에 연결. 동일 흐름 재검증 PASS.
+- I1–I6: 실제 production screenshot에서 custom SVG 4종의 24px/1.65px 선·56px 터치 높이·11px label·subtle active 표시 확인. 가로 overflow/깨진 image/브라우저 console 오류 없음. 기존 찜 기능 유지 확인.
+- 검증: 전체 npm test, typecheck, production build PASS. 기존 미커밋 변경과 분리한 commit 후보에서도 input/controller 검사 PASS.
+- 범위 제한: Food/Beauty는 기존 구매 상품 landing만 제공하며 추천 기능은 이번 작업에 추가하지 않음.

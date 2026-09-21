@@ -108,11 +108,6 @@
 .sc-empty h3{font-size:14px;margin:10px 0;font-weight:600}
 .sc-empty p{font-size:11px;line-height:1.7}
 .sc-outline{border:1px solid #cad4c1!important;border-radius:7px;background:transparent;padding:10px 16px;font-size:11px!important;margin-top:19px;min-height:44px}
-.sc-bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:6;background:#fbfaf6f5;backdrop-filter:blur(16px);border:1px solid #e6e7dc;border-bottom:0;border-radius:16px 16px 0 0;width:min(440px,100%);padding:7px 18px max(9px,env(safe-area-inset-bottom));display:grid;grid-template-columns:repeat(4,1fr);box-shadow:0 -6px 25px #41513205}
-.sc-bottom-nav>a,.sc-bottom-nav>button{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;background:transparent;font-size:9px;color:#9a9e91;min-height:42px}
-.sc-bottom-nav [aria-current=page]{color:#30503d;font-weight:650}
-.sc-nav-letter{font:500 20px/20px Georgia,serif}
-.sc-bottom-nav [aria-current=page] .sc-nav-letter:after{content:'';display:block;width:3px;height:3px;margin:2px auto -5px;border-radius:50%;background:#3b5b44}
 .sc-toast{position:fixed;left:50%;bottom:88px;transform:translateX(-50%);z-index:20;background:#284535f2;color:#fff;border-radius:10px;box-shadow:0 3px 15px #28453525;padding:13px 18px;width:max-content;max-width:calc(100vw - 40px);font-size:11px;text-align:center;line-height:1.6;pointer-events:none}
 .sc-dialog{border:0;border-radius:20px;background:var(--sc-paper);padding:0;width:min(480px,calc(100vw - 24px));max-height:88svh;color:var(--sc-ink);box-shadow:0 15px 80px #14291940;overscroll-behavior:contain}
 .sc-dialog::backdrop{background:#26382d6b;backdrop-filter:blur(3px)}
@@ -293,10 +288,6 @@
 .sc-match-tags>span{font-size:10px}
 .sc-cart-button{border-radius:3px;min-height:40px;font-size:11px!important}
 .sc-reason{font-size:11px;line-height:1.7;min-height:56px}
-.sc-bottom-nav{border-radius:3px 3px 0 0;box-shadow:0 -3px 0 #dedfd4,0 -6px 15px #354b3308;border-color:#cccfbf}
-.sc-nav-letter{font:700 18px/20px ui-monospace,monospace}
-.sc-bottom-nav [aria-current=page] .sc-nav-letter:after{border-radius:0;width:5px;height:3px}
-.sc-bottom-nav>a,.sc-bottom-nav>button{font-size:10px;color:#6a7662}
 .sc-conditions{margin:0}
 .sc-section-title{margin:0 0 18px}
 .sc-section-title>p{font-size:13px;color:#66715d;line-height:1.7}
@@ -406,3 +397,10 @@
 @media(prefers-reduced-motion:reduce){.sc-room-avatar[data-motion=idle] svg,.sc-look-added>div{animation:none}.sc-room-light,.sc-room-lamp{transition:none}}
 
 .sc-room-controls button[aria-pressed=true]:hover{background:#f3ecd4}
+
+/* Keep saved items accessible while the bottom bar is dedicated to categories. */
+.sc-header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px}
+.sc-header .sc-back{width:auto;justify-self:start;white-space:nowrap}
+.sc-header-actions{display:flex;justify-content:flex-end;align-items:center;justify-self:end}
+.sc-header-actions .sc-bag{margin-left:0}
+.sc-header-actions .sc-bag>span{top:1px;right:1px}
