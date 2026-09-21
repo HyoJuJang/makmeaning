@@ -9,11 +9,11 @@
 - Purchase intent includes new discoveries → owned/cart anchors are optional. “새롭게 둘러보기” works without an owned item.
 
 ## Flow
-Main room Fashion/Living label → /fashion or /living → compact room + owned/cart rail → choose anchor → select conditions → apply → product reason/detail → demo cart.
+Main room Fashion/Living label → /fashion or /living → compact room + owned/cart rail → choose anchor → open the single-line condition summary → select conditions in a dialog → apply → product reason/detail → demo cart.
 Furniture hotspots retain existing avatar interactions. Wardrobe/sofa trays also link to category screens. Native links reload the main room safely when returning; its existing local state remains intact.
 
 ## Visual direction
-Reuse the main room's cream, warm wood, muted forest green and neutral typography. Pixel art is limited to room imagery. Product images and controls stay clean and readable. Small room preview, horizontal owned items, compact wrapping chips. One column on mobile; editorial two-column workspace on wide screens. No lime, promotion labels or infinite feeds.
+Reuse the main room's cream, warm wood, muted forest green and neutral typography. Pixel room framing, numbered selection corners and beveled item slots extend the main room's visual language. The existing main avatar renderer and saved appearance are reused. Product images stay clear and readable. Room and recommendations stack vertically at every width; two product columns on mobile and three on desktop. The applied conditions occupy one row. Full situation/taste/budget/kind choices live in a native dialog; drafts apply only through the CTA. Cancelling or resetting a draft does not change the active recommendations. No lime, promotion labels or infinite feeds.
 
 ## Data and limits
 /api/demo/home remains source of purchased items. /api/demo/scenes provides explicit fictional samples and one starter cart item per category. The room image is a decorative scene; only numbered/selected products and the purchase rail imply ownership. Product photos are generated sample illustrations, not verified GS SHOP listings.

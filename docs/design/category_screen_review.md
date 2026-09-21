@@ -28,4 +28,28 @@ Fictional customer, purchase history, catalog names/prices and generated sample 
 
 Local `next dev` encountered the host's file watcher limit (EMFILE), so browser verification and the delivered preview use `npm run build` + `npm start`. This is an environment restriction; the production build and server work.
 
-No deployment or remote branch push is part of this local implementation delivery. Existing Vercel configuration is preserved.
+The initial implementation was committed as 04956ac and pushed to feat/fashion-living-scenes at the user's request. Existing Vercel configuration is preserved; browser verification uses the local production server.
+
+
+## Room-first pixel revision · 2026-09-21
+
+User review: keep the main room's pixel/game feeling while showing the room and recommendations together; minimize always-visible scene controls.
+
+- Pixel room frame, numbered selection corners, item slots, and subtle reduced-motion-aware character idle animation. Reuses the main avatar renderer and the saved avatar/outfit; does not change main-room state.
+- Owned/cart selection updates the highlighted item and recommendation reasons. New discovery still works without an anchor.
+- Room above recommendations at all widths. Applied conditions use one compact button; the full controls are in a native dialog. Draft reset/cancel does not change applied filters. Apply closes the sheet and returns focus to the condition button without jumping past the room.
+
+Review → fix → rerun:
+1. The character overlapped the room hint. Moved the hint to the top corner and checked both room screenshots again.
+2. At 320 × 740, the first recommendation prices were hidden under the bottom menu. Reduced small-screen header/inventory spacing. Rerun: price bottom 667px, nav top 681px; both first-row images, names and prices visible, no horizontal overflow.
+3. Removing the focused item from the cart discarded keyboard focus. Return focus to the dialog title after removal. Rerun with Enter: added a sample cushion, opened the cart, removed that cushion; focus is sc-dialog-title, original starter cart item retained.
+
+Verification:
+- Production build + TypeScript PASS; complete existing test suite and release smoke PASS.
+- 390 × 844 Fashion: room plus first-row images/names/prices visible together; no horizontal overflow.
+- 320 × 740 Living: room plus first-row images/names/prices visible together; no horizontal overflow. Filter sheet fits horizontally and scrolls vertically.
+- 1280 × 900 Living: centered pixel room above a three-column product grid; no horizontal overflow.
+- Fashion: weekend + minimalist/casual tastes + custom 45,000 KRW gives five products, all within budget. Reopening preserves the custom amount and tastes. Draft reset → Escape leaves the applied conditions unchanged.
+- Invalid 100 KRW shows an error and disables Apply, even with the extra options folded.
+- Room marker selection synchronizes the owned slot, caption, selection corners and recommendation reason. New discovery clears the owned selection.
+- Product detail → cart → add/remove and keyboard focus checked in the actual browser. Main saved character is carried into both category rooms.
