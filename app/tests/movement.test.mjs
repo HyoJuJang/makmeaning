@@ -28,6 +28,10 @@ for(const p of [{x:-20,y:300},{x:401,y:300},{x:220,y:-1},{x:220,y:601},{x:80,y:2
   assert(!isWalkable(p.x,p.y),'Wall/furniture center should not be walkable');
   assert.equal(findPath(START,p),null,'Unwalkable destination must not generate a route');
 }
+// The strip between the stool and TV stays walkable from either side.
+for (const x of [310,320,350,357]) checkRoute({x,y:329},APPROACHES.beauty);
+assert(!isWalkable(340,310),'The stool itself must still block ordinary walking');
+assert(!isWalkable(340,345),'The TV console must still block ordinary walking');
 let seed=73129;
 const random=()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};
 let sampled=0,unreachable=0;

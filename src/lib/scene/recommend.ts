@@ -12,6 +12,8 @@ export type SceneFilters = {
 export type SceneAnchor = {
   id: string;
   name: string;
+  /** Explicit artwork pairing for owned items; never a catalog product identifier. */
+  illustrationKey?: string;
   kind?: string;
   tastes?: string[];
 };
@@ -39,8 +41,9 @@ export function recommend(
       const kindEnding = (product.kind.charCodeAt(product.kind.length - 1) - 0xac00) % 28 ? '이에요.' : '예요.';
       const situationMatches = Boolean(filters.situation) && product.situations.includes(filters.situation);
       const matchedTastes = requestedTastes.filter(taste => product.tastes.includes(taste));
-      const ownedReason = anchor && product.pairsWith.includes(anchor.id)
-        ? product.reasons[anchor.id]?.trim()
+      const pairKey = anchor?.illustrationKey ?? anchor?.id;
+      const ownedReason = pairKey && product.pairsWith.includes(pairKey)
+        ? product.reasons[pairKey]?.trim()
         : undefined;
       const sharedAnchorTastes = anchor?.kind && anchor.kind !== product.kind
         ? [...new Set(anchor.tastes ?? [])].filter(taste => product.tastes.includes(taste))

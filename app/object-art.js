@@ -4,7 +4,7 @@ const clamp = n => Math.max(0, Math.min(1, Number(n) || 0));
 const mix = (a, b, p) => a + (b - a) * p;
 const points = ps => ps.map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
 const escapeAttribute = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const purchasedArt = (purchase, art) => purchase ? `<g data-product="${escapeAttribute(purchase.id)}" data-room-slot="${escapeAttribute(purchase.roomSlot)}">${art}</g>` : '';
+const purchasedArt = (purchase, art) => purchase ? `<g data-product="${escapeAttribute(purchase.catalogProductId||purchase.id)}" data-room-slot="${escapeAttribute(purchase.roomSlot)}">${art}</g>` : '';
 
 function garment(x, blue, sway = 0) {
   const cloth = blue ? '#8daac0' : '#eee3c9';
@@ -49,7 +49,7 @@ function fridge(open, quantity, selected, purchases) {
   const outerTop = door[1], outerBottom = door[2];
   const handX = mix(239,305,open), handY = mix(119,139,open);
   const food = (id, slot, x, y) => {
-    const purchase = purchases.find(p=>p.id===id&&p.category==='food'&&p.roomSlot===slot);
+    const purchase = purchases.find(p=>p.illustrationKey===id&&p.category==='food'&&p.roomSlot===slot);
     return quantity[id] > 0 ? purchasedArt(purchase, foodIcon(id,x,y,selected===id)) : '';
   };
   return `<g data-object-art="fridge" data-open="${open.toFixed(3)}">

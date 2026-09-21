@@ -5,6 +5,7 @@ import * as movement from '../movement.js';
 import * as avatars from '../avatar.js';
 import * as scenes from '../scene-entry.js';
 import * as interactions from '../interactions.js';
+import * as demoState from '../demo-state.js';
 import * as categoryRoutes from '../category-routes.js';
 import * as objects from '../object-art.js';
 import {demoHome} from '../../src/data/demo-home.ts';
@@ -41,10 +42,10 @@ const fetchHome=async(url,options)=>{
   return {ok:true,json:async()=>structuredClone(apiHome)};
 };
 const context=vm.createContext({
-  ...movement,...avatars,...scenes,...interactions,...objects,...categoryRoutes,document,
+  ...movement,...avatars,...scenes,...interactions,...objects,...categoryRoutes,...demoState,document,
   window:{addEventListener(type,fn){windowEvents.set(type,fn);},location:{assign(href){routeRequests.push(href);}},innerHeight:844,scrollBy(){}},
   sessionStorage:{getItem(key){return sessionState.get(key)||null;},setItem(key,value){sessionState.set(key,value);},removeItem(key){sessionState.delete(key);}},
-  localStorage:{getItem(){return savedState;},setItem(key,value){assert.equal(key,'gscene-main-v1');savedState=value;}},
+  localStorage:{removeItem(key){if(key==='gscene-main-v1')savedState=null;},getItem(){return savedState;},setItem(key,value){assert.equal(key,'gscene-main-v1');savedState=value;}},
   matchMedia(){return{matches:false};},
   requestAnimationFrame(fn){frameCallback=fn;},
   fetch:fetchHome,AbortController,clearTimeout(){},setTimeout(){},console
@@ -57,6 +58,7 @@ await bootstrap;
 assert.equal(fetchCount,1);
 assert.equal(element('#app').dataset.homeState,'ready');
 assert(element('h1').innerHTML.includes('API 민서'),'The visible user must come from the API');
+assert.equal(context.appTest.getState().outfitId,'knit','Initial outfit must honor the API wearing purchase');
 const position=()=>({x:Number(element('.walker').dataset.x),y:Number(element('.walker').dataset.y)});
 function emit(type,key){
   for(const fn of documentEvents.get(type)||[])fn({key,target:document.activeElement,preventDefault(){},repeat:false});
@@ -99,7 +101,33 @@ assert.equal(retryAttempt,2);assert.equal(element('#app').dataset.homeState,'rea
 assert.equal(element('#home-load-state').hidden,true);
 console.log('PASS: API boot, API user rendering, failed response, and explicit retry recovery.');
 
+// Re-run real bootstrap with persisted choices, then invoke the real reset handler.
 context.fetch=fetchHome;
+savedState=JSON.stringify({outfitId:'shirt',foodQuantity:{milk:1},lampOn:false,featuredBeautyId:'cream'});
+await vm.runInContext(bootstrapSource,context);
+assert.equal(context.appTest.getState().outfitId,'shirt','A saved purchased outfit wins on refresh');
+assert.equal(context.appTest.getState().foodQuantity.milk,1);
+element('#reset').click();
+const resetState=context.appTest.getState();
+assert.equal(resetState.outfitId,'knit','Reset must restore the API wearing purchase');
+assert.equal(resetState.foodQuantity.milk,3);
+assert.equal(resetState.lampOn,true);
+assert.equal(resetState.featuredBeautyId,'serum');
+assert.equal(JSON.parse(savedState).outfitId,apiHome.purchases.find(p=>p.illustrationKey==='knit').id,'Reset must persist its restored outfit');
+await vm.runInContext(bootstrapSource,context);
+assert.equal(context.appTest.getState().outfitId,'knit','Reload must preserve reset state');
+
+savedState=JSON.stringify({outfitId:'not-a-purchase'});
+await vm.runInContext(bootstrapSource,context);
+assert.equal(context.appTest.getState().outfitId,'knit','Invalid saved outfit must fall back to API state');
+for(const purchase of apiHome.purchases)if(purchase.category==='fashion')purchase.state.wearing=false;
+savedState=null;
+await vm.runInContext(bootstrapSource,context);
+assert.equal(context.appTest.getState().outfitId,'base','No API wearing item must preserve basic avatar outfits');
+element('#reset').click();
+assert.equal(context.appTest.getState().outfitId,'base','Reset without API wearing item must use base');
+console.log('PASS: API outfit initialization, saved outfit restoration, reset/reload consistency, and base fallback.');
+
 // Exercise real app handlers, the controller's exit effect, persistence, and a fresh room boot.
 for(const [id,category] of [['wardrobe','fashion'],['fridge','food'],['vanity','beauty'],['sofa','living'],['pantry','food']]){
  await vm.runInContext(bootstrapSource,context);
@@ -120,3 +148,29 @@ for(const [id,category] of [['wardrobe','fashion'],['fridge','food'],['vanity','
  assert.equal(context.appTest.controller.phase,'engaged','Returning room still responds to the same object');
 }
 console.log('PASS: actual room handler routes all five objects exactly once after ready re-tap, restores the safe dock, and re-enters after returning.');
+
+// BFCache restores old JS memory: the persisted pageshow handler must re-read canonical state.
+savedState=null;await vm.runInContext(bootstrapSource,context);frames(1);
+const canonicalShirt=apiHome.purchases.find(p=>p.illustrationKey==='shirt').id;
+const canonicalMilk=apiHome.purchases.find(p=>p.illustrationKey==='milk').id;
+const canonicalCream=apiHome.purchases.find(p=>p.illustrationKey==='cream').id;
+const confirmedElsewhere={...demoState.initialDemoState(apiHome),outfitId:canonicalShirt,avatarId:'f02',lampOn:false,featuredBeautyId:canonicalCream};
+confirmedElsewhere.foodQuantity[canonicalMilk]=1;savedState=JSON.stringify(confirmedElsewhere);
+sessionState.set('gscene-room-return-v1',JSON.stringify({position:{x:162,y:164},savedAt:Date.now()}));
+const cachePosition=position();windowEvents.get('pageshow')({persisted:true});
+assert.equal(context.appTest.getState().outfitId,'shirt');
+assert.equal(context.appTest.getState().avatarId,'f02');
+assert.equal(context.appTest.getState().lampOn,false);
+assert.equal(context.appTest.getState().featuredBeautyId,'cream');
+assert.equal(context.appTest.getState().foodQuantity.milk,1);
+assert.equal(element('.walker').dataset.avatar,'f02','Restored appearance is rendered immediately');
+assert.deepEqual(position(),cachePosition,'BFCache restores state without teleporting');
+assert.equal(sessionState.has('gscene-room-return-v1'),false,'Cached room consumes the pending return bookmark');
+context.appTest.requestIntent({type:'object',id:'lamp'});
+for(let i=0;i<1000&&context.appTest.controller.phase!=='engaged';i++)frames(1);
+assert.equal(context.appTest.controller.phase,'engaged');
+const afterLamp=JSON.parse(savedState);
+assert.equal(afterLamp.lampOn,true,'Actual lamp interaction commits after cached return');
+assert.equal(afterLamp.outfitId,canonicalShirt,'A later room commit cannot overwrite the externally confirmed outfit');
+assert.equal(afterLamp.avatarId,'f02');assert.equal(afterLamp.featuredBeautyId,canonicalCream);assert.equal(afterLamp.foodQuantity[canonicalMilk],1);
+console.log('PASS: persisted pageshow restores canonical appearance/purchases; subsequent actual lamp commit preserves them.');

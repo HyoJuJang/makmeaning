@@ -6,3 +6,8 @@ tests
 node_modules
 .next
 .env*
+work
+outputs
+src/generated
+public/prototype
+public/assets

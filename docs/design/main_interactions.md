@@ -10,7 +10,7 @@
 
 현재 dollhouse 배치, 자유 이동, 충돌, object 접근, 네 캐릭터 외형, 두 착장, 구매 상품 및 category별 행동, Scene entry를 유지한다. 이번 명세는 `main_screen_spec.md`의 **object 도착 직후 modal 개방**만 아래의 공간 동작과 작은 context tray로 대체한다. Scene 선택·캐릭터 선택의 기존 modal은 유지한다.
 
-대상은 Wardrobe / Fridge / Sofa / Vanity / Window 다섯 가지다. 구현 단위는 문 개폐, 짧은 캐릭터 pose sequence, 착석, 기존 상품 상태 반영이다. 추천 페이지, 구매, backend, NPC, 욕구 수치, 시간 시뮬레이션, 날씨·바람 효과, 게임 엔진은 범위에 포함하지 않는다.
+최신 대상은 Wardrobe / Fridge / Sofa / Vanity / Window / Lamp / Bed 일곱 가지다. Lamp·Bed의 추가 계약은 §12를 따른다. 구현 단위는 문 개폐, 짧은 캐릭터 pose sequence, 착석, 기존 상품 상태 반영이다. 추천 페이지, 구매, backend, NPC, 욕구 수치, 시간 시뮬레이션, 날씨·바람 효과, 게임 엔진은 범위에 포함하지 않는다.
 
 ## 2. 현재 구현과 연결되는 공통 계약
 
@@ -24,9 +24,11 @@
 | Fridge | 기존 Food (262,197) | up | 손잡이 잡기 → 문 열기 |
 | Sofa | Living 중앙 좌석 도착점 (124,389) | left, 착석 후 right | 좌석으로 체중 이동 → 앉기 |
 | Vanity | Beauty 아래쪽 도착점 (340,329) | up | 의자로 체중 이동 → 앉기 |
-| Window | 신규 (204,130) | up | 손잡이 잡기 → 열기/살펴보기 |
+| Window | (204,130) | up | 손잡이 잡기 → 현재 상태의 반대로 개폐 |
+| Lamp | (326,444) | right | 손 뻗기 → 켜기/끄기 |
+| Bed | (124,235) | left | 침대 위로 몸 이동 → 눕기 |
 
-Main의 현재 geometry **코드 조회 검사**에서 신규·조정 세 점은 walkable이며 기존 여섯 접근점 모두에서 경로가 존재했다. 이는 화면 검증을 대신하지 않는다. 문 손잡이, 좌석, 캐릭터 팔의 최종 정합은 구현 시 실제 asset에서 확인한다. 좌표를 조정하면 radius를 포함한 도달 가능성을 다시 검사한다. 기존 lamp (306,444), pantry (318,198) 접근점은 유지한다.
+Main의 현재 geometry **코드 조회 검사**에서 신규·조정 세 점은 walkable이며 기존 여섯 접근점 모두에서 경로가 존재했다. 이는 화면 검증을 대신하지 않는다. 문 손잡이, 좌석, 캐릭터 팔의 최종 정합은 구현 시 실제 asset에서 확인한다. 좌표를 조정하면 radius를 포함한 도달 가능성을 다시 검사한다. lamp는 손이 스탠드 쪽으로 닿도록 (326,444)로 조정했다. pantry (318,198)는 유지한다. 침대/조명 포함 최종 도달 가능성은 §12와 review를 따른다.
 
 object 본체와 category label은 같은 trigger다. 목적지 2 논리 px 이내에 도착하고 보행이 끝난 뒤에만 물체를 바라보고 동작을 시작한다. 도달하지 못하면 문을 열거나 앉거나 상품 UI를 띄우지 않는다. 빈 바닥 탭·WASD·방향키 이동은 그대로 지원한다.
 
@@ -39,17 +41,17 @@ object 본체와 category label은 같은 trigger다. 목적지 2 논리 px 이�
 | 기존 구매·외형 | outfitId, avatarId, foodQuantity, lampOn, featuredBeautyId | 기존 저장/복원 유지 |
 | 보행 | position, direction, path, pressed keys | 기존 방식 유지 |
 | 현재 object 동작 | objectId, phase, sequenceToken, standingAnchor, renderOffset, pendingIntent | runtime만 유지 |
-| 물체 상태 | wardrobeDoor, fridgeDoor, sofaOccupied, vanityOccupied | runtime; 이탈 시 정리 |
+| 물체 상태 | wardrobeDoor, fridgeDoor, sofaOccupied, vanityOccupied, bedOccupied | runtime; 이탈 시 정리 |
 | 창문 | windowStableState = closed/open, 전환 progress | 세션 동안 유지; 새로고침/데모 초기화 시 closed |
 | 상품 선택 UI | 선택 상품, tray 펼침 상태, 확정 전 상품 action | runtime; 취소 시 폐기 |
 
-공통 phase는 `approaching → entering → engaged → acting → exiting → idle`로 제한한다. acting은 상품 선택에 따른 짧은 동작에만 사용한다. 캐릭터는 phase에 맞춰 idle/walk/reach/browse/change-clothes/sit-down/seated-idle/use-cosmetic/stand-up pose를 표시한다. 동시에 두 object 동작을 실행하지 않는다.
+공통 phase는 `approaching → entering → engaged → acting → exiting → idle`로 제한한다. acting은 상품 선택과 창문·조명 재조작의 짧은 동작에 사용한다. 캐릭터는 phase에 맞춰 idle/walk/reach/browse/change-clothes/sit-down/seated-idle/use-cosmetic/stand-up pose를 표시한다. 동시에 두 object 동작을 실행하지 않는다.
 
 새 동작마다 token을 부여한다. 모든 animation 완료·상품 commit·지연 UI 갱신은 현재 token인지 확인한다. 취소한 동작의 callback이 늦게 패널을 열거나 옷을 바꿀 수 없어야 한다. 단일 phase clock 또는 취소 가능한 animation controller를 사용하고, `animationend` 이벤트 하나만 기다려 상태가 멈추게 하지 않는다. reduced-motion에서도 정상 종료되어야 한다.
 
 ### 공간 동작과 상품 UI의 관계
 
-다섯 object는 **실제 방 안에서 먼저 동작을 보여주며, blur/backdrop 없는 비모달 context tray**를 사용한다. 기존 상품 목록·이름·수량·행동을 tray 안에서 재사용한다. 동작을 보여주는 복제 캐릭터나 별도의 미리보기 창으로 대체하지 않는다.
+일곱 object는 **실제 방 안에서 먼저 동작을 보여주며, blur/backdrop 없는 비모달 context tray**를 사용한다. 기존 상품 목록·이름·수량·행동을 tray 안에서 재사용한다. 동작을 보여주는 복제 캐릭터나 별도의 미리보기 창으로 대체하지 않는다.
 
 - 기본 tray: 하단의 작은 한 줄 상태 + `옷 고르기`/`식품 보기`/`거실 물건 보기`/`화장품 고르기` + 종료 control. 320px에서는 짧은 label과 아이콘 종료 control로 한 줄을 유지하고 접근 가능한 전체 이름을 제공한다. 접힌 높이 최대 72px, 모든 button 최소 44×44px.
 - 펼친 tray: 최대 `min(220px, 35svh)`, 상품 목록만 내부 스크롤. 제목/접기/종료는 고정하고 기존 상품 action에 접근 가능해야 한다. 한 번에 한 상품을 온전히 읽을 수 있게 한다.
@@ -57,7 +59,7 @@ object 본체와 category label은 같은 trigger다. 목적지 2 논리 px 이�
 - tray는 방을 inert로 만들거나 focus를 가두지 않는다. tray 입력은 바닥 탭으로 전파하지 않는다. 열린 tray 밖의 바닥/다른 가구를 탭하면 아래 cleanup 후 새 동작으로 이어진다.
 - 도착 직후, 상품 action으로 tray를 접은 직후에는 **캐릭터와 문/좌석/손 동작 영역이 tray 위에 보이는지** 확인한다. 가려졌을 때만 페이지를 최소한 스크롤한다. world 좌표, 캐릭터 위치, room 크기는 바꾸지 않는다. 동작 영역 확보 후 animation을 시작한다. 320×568에서 확보가 어렵다면 먼저 tray를 접는다. 스크롤은 한 번만 정렬하고 사용자의 스크롤과 계속 경쟁하지 않는다.
 
-lamp 직접 클릭은 기존 접근 후 Living modal, pantry 직접 클릭은 기존 접근 후 Food modal을 유지한다. 이 경로에서 소파에 강제로 앉히거나 냉장고 문을 원격으로 열지 않는다. category 상품 데이터와 action의 결과는 tray/modal 어느 진입에서나 동일하다.
+lamp 직접 클릭은 접근 후 손 동작과 켜기/끄기를 실행하고 작은 비모달 tray를 표시한다. pantry 직접 클릭은 기존 접근 후 Food modal을 유지한다. 이 경로에서 소파에 강제로 앉히거나 냉장고 문을 원격으로 열지 않는다. category 상품 데이터와 action의 결과는 tray/modal 어느 진입에서나 동일하다.
 
 ### 입력 전환과 cleanup
 
@@ -66,21 +68,21 @@ lamp 직접 클릭은 기존 접근 후 Living modal, pantry 직접 클릭은 �
 | 접근 중 새 유효 목적지 | 이전 path와 예약 동작 취소 → 새 경로. 이전 object의 enter는 실행하지 않음 |
 | engaged/acting 중 바닥·다른 object·이동키 | 가장 최근 유효 의도 하나만 보관 → 미확정 action 취소 → 문 닫기/일어서기 등 exit → 안전 anchor에서 새 경로/키 이동 |
 | exit 중 새 입력 | exit를 중복 시작하지 않고 마지막 의도만 갱신 |
-| 동일 object 연타 | 접근/enter/acting/exit를 중복 생성하지 않음. engaged에서는 현재 tray만 유지 |
+| 동일 object 연타 | 접근/enter/acting은 중복 생성하지 않음. engaged의 창문·조명은 반대 상태 조작, 나머지는 현재 tray 유지. exit 중에는 최신 intent만 교체 |
 | 가구 내부·집 밖 등 유효하지 않은 이동 | 상태 변경 없이 짧은 기존 안내. 좌석이나 문 동작을 불필요하게 종료하지 않음 |
 | Escape | modal이면 그 modal 닫기. object/tray이면 pending 폐기 + exit. 자유 보행이면 정지 |
 | Scene/캐릭터 선택으로 전환 | 먼저 object exit, keys/path 정리 → 요청한 modal 하나만 열기. 기존 focus trap·inert 유지 |
-| lamp/pantry 직접 접근으로 전환 | object exit → 해당 기존 접근점까지 경로 보행 → 도착 판정 → 기존 Living/Food modal. exit 직후 원격으로 modal을 열지 않음 |
+| lamp/pantry 직접 접근으로 전환 | object exit → 안전 접근점까지 경로 보행 → 도착 판정. lamp는 손 동작 후 조명 토글, pantry는 Food modal |
 | blur / document hidden | path·keys·예약 의도·미확정 action·callback 취소. 옷장/냉장고 closed, 착석은 안전 standingAnchor의 idle로 정리. 창은 마지막 확정 open/closed 유지. 복귀 후 자동 이동/동작 재개 없음 |
 | 데모 초기화 | 기존 구매 초기화 + 모든 동작/token/tray/offset/occupancy 초기화, 문과 창 closed, 기존 시작 좌표로 복귀 |
 
-화면에 보이는 정상 exit는 200–250ms 이내다. 즉시 pose 정리는 blur/hidden/reset에만 사용한다. 앉기 중 취소도 현재 보이는 pose에서 stand로 이어져야 하며 한 프레임에 원점으로 튀지 않는다. queued 키 이동은 exit 후에도 키가 눌려 있을 때만 시작한다. exit 중 keyup이면 취소한다. 기존 일반 보행의 짧은 key pulse 처리는 유지한다.
+화면에 보이는 정상 exit는 기존 object 200–250ms, 침대 get-up 320ms다. 즉시 pose 정리는 blur/hidden/reset에만 사용한다. 앉기 중 취소도 현재 보이는 pose에서 stand로 이어져야 하며 한 프레임에 원점으로 튀지 않는다. queued 키 이동은 exit 후에도 키가 눌려 있을 때만 시작한다. exit 중 keyup이면 취소한다. 기존 일반 보행의 짧은 key pulse 처리는 유지한다.
 
 **구매 상태 commit:** 아래 interaction별 확정 지점에서 한 번만 변경·저장한다. commit 이전에 취소하면 이전 값을 유지하고, 이후 취소하면 반영된 값을 유지한다. 동일 action의 재진입·stale callback은 재저장/재소모하지 않는다. 문 닫기나 일어서기가 구매 상태를 되돌려서는 안 된다. 오류로 animation을 계속할 수 없으면 같은 규칙으로 안전하게 exit한다.
 
 ### 앉기와 충돌의 분리
 
-Sofa/Vanity는 실제 `position`을 가구 내부에 넣지 않는다. 마지막 안전 보행점 `standingAnchor`를 유지한 채 좌석용 pose와 제한된 `renderOffset`으로 좌석에 진입한다. 앉은 동안 일반 보행 적분을 중지하며 무릎·발·그림자가 좌석에 맞게 달라져야 한다. standing sprite를 통째로 아래로 내리는 방식은 합격이 아니다.
+Sofa/Vanity/Bed는 실제 `position`을 가구 내부에 넣지 않는다. 마지막 안전 보행점 `standingAnchor`를 유지한 채 좌석용 pose와 제한된 `renderOffset`으로 좌석에 진입한다. 앉은 동안 일반 보행 적분을 중지하며 무릎·발·그림자가 좌석에 맞게 달라져야 한다. standing sprite를 통째로 아래로 내리는 방식은 합격이 아니다.
 
 일어나기는 그 pose/offset에서 연속적으로 standingAnchor의 선 자세로 돌아온 뒤 보행을 시작한다. 좌석 주변 모든 collision을 해제하거나 소파·화장대를 관통하는 일반 경로를 만들지 않는다. 4개 외형 × 기본 옷 및 2개 구매 상의 모두 동일한 몸체 기준과 착장 상태를 사용한다.
 
@@ -90,8 +92,8 @@ Sofa/Vanity는 실제 `position`을 가구 내부에 넣지 않는다. 마지막
 
 ### 단일 상태와 owner
 
-`character.primary = idle | walking | interacting | sitting_sofa | sitting_vanity | changing_clothes | rummaging_wardrobe | using_cosmetic`.
-추가 상태는 Vanity의 손/제품 동작에 필요한 `using_cosmetic` 하나다. sit-down/stand-up/reach는 `interacting`의 pose variant로 표현한다. `pose`는 controller의 phase/step에서 파생하며 별도의 행동 시작 권한이 없다.
+`character.primary = idle | walking | interacting | sitting_sofa | sitting_vanity | changing_clothes | rummaging_wardrobe | using_cosmetic | lying_bed`.
+추가 상태는 Vanity의 손/제품 동작 `using_cosmetic`과 침대의 안정 자세 `lying_bed`다. sit-down/stand-up/reach는 `interacting`의 pose variant로 표현한다. `pose`는 controller의 phase/step에서 파생하며 별도의 행동 시작 권한이 없다.
 
 | primary | 허용 owner / phase | 동작 |
 | --- | --- | --- |
@@ -103,8 +105,9 @@ Sofa/Vanity는 실제 `position`을 가구 내부에 넣지 않는다. 마지막
 | sitting_sofa | sofa owner / engaged | 좌석 pose 유지, 램프 action 가능 |
 | sitting_vanity | vanity owner / engaged | 좌석 pose 유지, 상품 선택 대기 |
 | using_cosmetic | vanity owner / acting | 착석을 유지한 손/제품 motion, 중간 commit |
+| lying_bed | bed owner / engaged | 안전 발 anchor 고정, bedProgress=1, 침대 위 누운 pose |
 
-`executionOwner = none | movement | object:{id} | modal:{id}`를 하나만 가진다. modal은 Scene/avatar/lamp/pantry이며 controller event를 통해 소유권을 넘긴다. object 요청의 접근 중에는 movement가 owner이며 `targetObject`만 예약한다. 도착 검증 후 object owner로 원자적으로 전환한다. 모든 입력은 controller의 `dispatch(event)`로 들어가며 renderer/CSS callback/UI handler는 직접 primary·object stable·상품을 변경하지 않는다. 한 frame clock이 현재 phase/step의 progress를 계산한다.
+`executionOwner = none | movement | object:{id} | modal:{id}`를 하나만 가진다. modal은 Scene/avatar/pantry이며 controller event를 통해 소유권을 넘긴다. object 요청의 접근 중에는 movement가 owner이며 `targetObject`만 예약한다. 도착 검증 후 object owner로 원자적으로 전환한다. 모든 입력은 controller의 `dispatch(event)`로 들어가며 renderer/CSS callback/UI handler는 직접 primary·object stable·상품을 변경하지 않는다. 한 frame clock이 현재 phase/step의 progress를 계산한다.
 
 controller 필드: `epoch`, `phase`, `step`, `phaseRevision`, `elapsed`, `targetObject`, `standingAnchor`, `renderOffset`, `pendingIntent`, `action:{id,productId,committed}|null`. `epoch`는 새로운 행동과 취소 때 증가하고 `phaseRevision`은 같은 phase 내 step 변경에도 증가한다. `step`은 align/open/browse/hold/sit/gesture/close/stand 등 기존 sequence의 구간이며 새로운 기능이 아니다.
 
@@ -113,7 +116,7 @@ controller 필드: `epoch`, `phase`, `step`, `phaseRevision`, `elapsed`, `target
 | Object | stable | transition | 규칙 |
 | --- | --- | --- | --- |
 | wardrobe / fridge | closed 또는 open | null 또는 `{from,to,progress,epoch}` | stable은 마지막 완료 상태; 중간 문 각도는 transition에만 존재 |
-| sofa / vanity | unoccupied 또는 occupied | null 또는 `{from,to,progress,epoch}` | sit 완료에 occupied, stand 완료에 unoccupied. enter/exit 중 그림은 progress로 결정 |
+| sofa / vanity / bed | unoccupied 또는 occupied | null 또는 `{from,to,progress,epoch}` | sit 완료에 occupied, stand 완료에 unoccupied. enter/exit 중 그림은 progress로 결정 |
 | window | closed 또는 open | null 또는 `{from,to,progress,epoch}` | 완료 때만 stable 변경, 이탈 후 stable 유지 |
 
 `stable=closed`인데 opening transition이 있는 것은 정상이다. `transition=null`이면 렌더는 stable과 일치한다. wardrobe/fridge exit는 현재 보이는 progress에서 closed까지, window 취소는 현재 progress에서 마지막 stable까지 복귀한다. seating exit는 현재 pose에서 standingAnchor로 복귀한다. occupied/unoccupied를 animation 시작 때 미리 바꾸지 않는다. 구매 식품 수량/상의/뷰티/램프는 이 object 상태와 독립된 기존 영속 state다. 외부 표시용 wardrobe 상태 `browsing`은 stable=open이며 primary=rummaging_wardrobe인 경우에만 파생한다. sofa/vanity의 UI 이름 empty는 unoccupied와 같은 뜻이며 별도로 저장하지 않는다.
@@ -132,10 +135,11 @@ controller 필드: `epoch`, `phase`, `step`, `phaseRevision`, `elapsed`, `target
 | SELECT_BEAUTY | vanity engaged+occupied, 다른 유효 제품, action 없음 | using_cosmetic / acting | 고유 actionId, 미확정값 보관, tray 접기; 500ms sequence |
 | COMMIT_MARK | 현재 epoch+phaseRevision+acting+actionId, !committed, threshold 도달 | primary 유지 | outfit은 600ms의 50%, beauty는 500ms의 60%에 한 번 변경·저장·committed=true |
 | USE_FOOD / TOGGLE_LAMP | 해당 tray engaged 또는 해당 기존 modal, 유효 상품, 수량>0(식품) | 기존 primary 유지 | 입력 activation의 고유 actionId로 즉시 한 번 commit; animation callback 재실행 금지 |
+| LAMP_TOGGLE | lamp engaged, 다른 action 없음 | interacting / acting | switch 220ms 완료 시 기존 lampOn을 한 번만 변경·저장 |
 | WINDOW_TOGGLE | window engaged, transition 없음 | interacting / acting | 반대 stable로 300ms open 또는 250ms close; 완료 guard 통과 시 stable 확정 |
 | CANCEL / 새 유효 의도 | object owner; entering/engaged/acting | interacting / exiting | **epoch 증가해 이전 완료/commit 무효화**, 현재 시각 snapshot에서 exit 시작; 최신 유효 intent 한 개 예약 |
 | 새 의도 / KEYUP | exiting | exiting 유지 | exit 재시작 금지, 마지막 intent 갱신; 해제된 키 intent 폐기 |
-| EXIT_DONE | exit의 epoch+phaseRevision 일치, offset=0, exit 목표 object 상태 충족 | idle / none → 예약 의도 dispatch | tray/임시 action/pose 정리; 새 보행 또는 Scene/avatar modal. lamp/pantry는 접근 후 modal |
+| EXIT_DONE | exit의 epoch+phaseRevision 일치, offset=0, exit 목표 object 상태 충족 | idle / none → 예약 의도 dispatch | tray/임시 action/pose 정리; 새 보행 또는 Scene/avatar modal. lamp는 접근 후 switch, pantry는 접근 후 modal |
 | HIDE / BLUR | 모든 runtime | 즉시 안전 idle | 아래 중단 규칙; 자동 재개 없음 |
 | RESET | 모든 상태 | 초기 idle / none | 아래 초기화 규칙 |
 
@@ -144,14 +148,14 @@ controller 필드: `epoch`, `phase`, `step`, `phaseRevision`, `elapsed`, `target
 ### 취소·commit·정상 완료의 차이
 
 취소를 `nextStep()`이나 `complete()` 호출로 구현하지 않는다. 취소는 별도의 `beginExit(reason,intent)`로 entering/acting을 **exiting에 직접 연결**한다. 따라서 Wardrobe opening 취소가 browse나 change-clothes를 시작하거나, Vanity gesture 취소가 정상 완료 commit을 발생시키지 않는다.
-commit 전 취소는 기존 구매값 유지, commit 후 취소는 새 구매값 유지. immutable 구매값을 취소 snapshot으로 덮어쓰지 않는다. wardrobe 정상 acting 완료만 새 옷 200ms hold→closed exit를 실행한다. vanity 정상 완료는 sitting_vanity/engaged로 돌아간다. 음식/램프는 입력 수락 시 이미 commit되므로 이후 취소는 되돌리지 않는다. actionId는 한 번의 수락 입력에 하나이며 의도적인 다음 음식 사용은 새 actionId다.
+commit 전 취소는 기존 구매값 유지, commit 후 취소는 새 구매값 유지. immutable 구매값을 취소 snapshot으로 덮어쓰지 않는다. wardrobe 정상 acting 완료만 새 옷 200ms hold→closed exit를 실행한다. vanity 정상 완료는 sitting_vanity/engaged로 돌아간다. 음식과 소파의 램프 상품 action은 입력 수락 시 commit된다. 스탠드 직접 조작은 220ms switch 완료 시 한 번 commit된다. 해당 commit 이후 취소는 되돌리지 않는다. actionId는 한 번의 수락 입력에 하나이며 의도적인 다음 음식 사용은 새 actionId다.
 
 ### 불가능한 조합과 invariant
 
 1. primary는 한 값이다. walking+sitting, changing_clothes+rummaging, 두 seat occupied는 불가능하다.
 2. walking이면 renderOffset=0, heldProduct=null, object owner 없음. position은 모든 state에서 walkable이며 seated도 standingAnchor를 유지한다.
 3. changing_clothes/rummaging이면 wardrobe owner와 stable=open, transition=null. using_cosmetic이면 vanity occupied이며 position은 dock에 고정된다.
-4. modal owner와 object owner/tray는 공존하지 않는다. Scene/avatar는 exit 후 열고 lamp/pantry는 exit→도착 후 연다.
+4. modal owner와 object owner/tray는 공존하지 않는다. Scene/avatar는 exit 후 열고 pantry modal은 exit→도착 후 연다. lamp는 object owner를 사용한다.
 5. opened window는 owner가 없어도 가능하다. 다른 열린 문/occupied seat는 해당 object owner 또는 exit 처리와 연결돼야 한다.
 6. exit에는 구매 commit이 없다. renderOffset·heldProduct·임시 선택은 exit 완료 후 남지 않는다. 취소된 epoch의 모든 effect는 no-op이다.
 7. inventory/UI는 구매 state를 읽고 animation은 commit을 요청한다. 렌더 횟수, animationend 횟수, React 재실행 여부로 소모/저장을 수행하지 않는다.
@@ -324,7 +328,7 @@ seated idle, occupancy, 좌석 그림자·앞면 mask의 임시 처리와 tray�
 
 ### Trigger
 
-기존 상단 창의 본체/손잡이에 접근 가능한 새 object button. 닫힌 상태 이름은 `창문 열기`, 열린 상태는 `열린 창문 살펴보기`. category나 상품 panel을 추가하지 않는다.
+기존 상단 창의 본체/손잡이에 접근 가능한 새 object button. 닫힌 상태 이름은 `창문 열기`, 열린 상태는 `창문 닫기`. category나 상품 panel을 추가하지 않는다.
 
 ### Character state
 
@@ -337,7 +341,7 @@ seated idle, occupancy, 좌석 그림자·앞면 mask의 임시 처리와 tray�
 ### Animation sequence
 
 1. (204,130) 도착 → up 정렬 100ms.
-2. 닫힌 창에 첫 접근이면 reach와 창짝 이동 300ms → 완료 지점에 open commit. 열린 창에 재접근하면 자동으로 닫지 않고 그대로 살펴본다.
+2. 닫힌 창을 누르면 reach와 창짝 이동 300ms → 완료 지점에 open commit. 열린 창을 누르면 접근 후 reach와 창짝 복귀 250ms → closed commit. 이미 창 앞에서 engaged인 경우에도 본체를 다시 누르면 같은 개폐를 실행한다.
 3. `창문을 열었어요`/`창문이 닫혀 있어요` 상태와 현재 반대 action(`창문 닫기` 또는 `창문 열기`), `돌아서기` tray를 제공한다.
 4. 명시적 닫기 시 reach와 창짝 복귀 250ms → 완료 지점에 closed commit. 동작 중 동일 control 연타는 무시한다.
 
@@ -352,7 +356,7 @@ seated idle, occupancy, 좌석 그림자·앞면 mask의 임시 처리와 tray�
 ### QA acceptance criteria
 
 - N1. 실제 창짝/손잡이/열린 틈이 변해 closed와 open을 작은 모바일 화면에서도 구별할 수 있다.
-- N2. 이동 후에도 열린 창이 남고, 다시 접근해 `창문 닫기`를 눌러 닫을 수 있다.
+- N2. 이동 후에도 열린 창이 남고, 창문 본체를 다시 누르면 걸어가서 닫는다. 창 앞에서 본체 재탭 또는 tray의 `창문 닫기`로도 닫을 수 있다.
 - N3. 열기/닫기 중 취소와 hidden 복귀 후에는 마지막 확정 상태이며 중간 각도나 늦은 토글이 없다.
 - N4. 창 trigger가 다른 category를 열지 않고, 캐릭터는 walkable 바닥 안에 계속 머문다.
 
@@ -365,7 +369,7 @@ seated idle, occupancy, 좌석 그림자·앞면 mask의 임시 처리와 tray�
 | A. object 레이어 | 기존 옷장 위치의 문 프레임·문 2짝·구매 의류, 냉장고 body·interior·door·구매 식품, 창 sash·손잡이 | 기존 방 배치/재질/식물과 정합. 닫힌 상태의 잔상 제거 |
 | B. 캐릭터 pose | 손 뻗기, 뒤적임, 옷 갈아입기, 앉기/앉은 idle/일어서기, 화장품 꺼내기 | 승인 PNG의 투명 sprite를 공용 SVG renderer에 연결. 4외형/기본 옷 및 2개 구매 상의 공유, 별도 캐릭터 시스템 금지 |
 | C. interaction controller | 접근 완료 연결, phase/token, 취소, commit, exit, intent 교체 | 기존 경로/충돌 재사용. animation과 구매 상태 갱신 중복 금지 |
-| D. context tray | compact 비모달 목록과 기존 action 재사용, 접기/종료 구별 | `active`는 Scene/캐릭터/lamp/pantry modal 소유권에 사용. tray category는 별도 명시하여 기존 product renderer/handler의 active 의존을 분리 |
+| D. context tray | compact 비모달 목록과 기존 action 재사용, 접기/종료 구별 | `active`는 Scene/캐릭터/pantry modal 소유권에 사용. tray category는 별도 명시하여 기존 product renderer/handler의 active 의존을 분리 |
 | E. 다섯 sequence | 위 W/F/S/V/N의 순서·좌표·기간·종료 연결 | 시간 값은 초기 목표이며 약 ±20% 시각 조정 가능. 순서·commit 전후 규칙은 유지 |
 | F. 향후 실행 QA | 실제 mobile interaction, 취소/전환, 회귀, 주요 문제 최대 3개 review→fix | 구현 후 실행하고 관찰 결과를 별도 기록 |
 
@@ -422,7 +426,63 @@ Next.js `/api/demo/home` 통합에서는 기존 보행·pose·controller를 유�
 - 외형은 사용자 승인 `avatar-options/`의 M01 Navy / M02 Sage / F01 Oat / F02 Slate 네 종류다. F02는 어깨 아래로 풀어내린 긴머리를 유지한다. 원본 시트는 보존하고 투명 runtime atlas를 `app/assets/avatars/`에 따로 둔다.
 - `app/avatar-frames.js`는 pose별 crop·발 anchor·상의 영역, `app/avatar.js`는 방향별 sprite·보행·생활 pose·기존 구매 상의 색을 렌더링한다. state controller의 전이·commit 규칙은 유지한다.
 - 신규 기본 착장은 캐릭터별 원본 `base`다. legacy 외형 short/wave/bob은 m01/m02/f01으로 연결하며 저장된 knit/shirt와 구매 상태는 보존한다. 2×2 선택 프리뷰는 원본 기본 옷을 보여준다.
-- 소파는 안전 anchor (124,389), offset (-34,+8), 최종 발 (90,397)로 중앙 쿠션에 무릎을 굽혀 편하게 앉는다. 화장대는 안전 anchor (340,329), offset (0,-18), 최종 발 (340,311)로 의자 바로 아래에서 진입하고 거울을 바라본다. 일어서기 후 동일 안전 anchor에서 일반 이동을 재개한다.
+- 소파는 안전 anchor (124,389), offset (-34,+8), 최종 발 (90,397)로 중앙 쿠션에 무릎을 굽혀 편하게 앉는다. 화장대는 안전 anchor (340,329), offset (0,-6), render anchor (340,323)로 의자 바로 아래에서 진입하고 거울을 바라본다. 일어서기 후 동일 안전 anchor에서 일반 이동을 재개한다.
 - 창문은 중앙 실제 유리 x181–231/y19–66 내부에서 하부 창짝이 위로 22px 이동한다. 왼쪽 아래 식물 영역을 clip에서 제외한다. 닫을 때 아래로 복귀하며 가로 돌출이 없다.
 - 방 위의 상시 라벨은 Fashion / Food / Living / Beauty만 유지한다. 창문과 가구 보조 이름·화살표 배지는 제거한다. 창문 자체의 투명 클릭 영역과 접근성 이름, 기존 walk-to-object는 유지한다.
 - 390×844·320×568 실제 화면과 기존 전체 자동 검증을 통과했다. 최초 atlas 중복 표시 문제 1건은 직접 자식 SVG sizing으로 수정해 다시 확인했다. 최신 QA는 main_screen_review.md의 4종 아바타 교체 절을 따른다.
+
+
+## 12. 물리 점검 · 조명 · 창문 · 침대 — 2026-09-21
+
+사용자 후속 요청에 따라 같은 공간 안의 생활 동작을 보완했다. 구현 전 `work/physics-slice-spec.md`로 계약을 확정했고 Builder 구현 → 실제 모바일 QA → 이불 영역 수정 → 재실행을 마쳤다. 이 절과 갱신된 §2/§2A/§7이 과거 lamp modal·열린 창문 살펴보기 규칙보다 우선한다.
+
+### Lamp
+
+- **Trigger:** 스탠드 본체를 탭하거나 키보드로 활성화. 이미 조명 앞에 있다면 본체 재탭/현재 tray의 켜기·끄기.
+- **Character state:** walking → interacting(align/reach) → interacting(engaged). lamp는 object owner이며 modal을 띄우지 않는다.
+- **Object state:** 기존 영속 구매 state의 `lampOn` 하나만 원본으로 사용한다. controller에 별도 on/off 사본을 두지 않는다.
+- **Animation:** 안전 접근점 (326,444), right 정렬 100ms → switch/reach 220ms → 완료 때 한 번 toggle. 빛 번짐, 구매 램프 밝기와 갓 색이 함께 바뀐다. 재탭도 같은 220ms 동작이다.
+- **종료:** 변경 후 작은 비모달 상태 tray에서 대기. 돌아서기/이동/다른 물체/Escape는 exit 후 넘긴다.
+- **Cleanup:** commit 전 취소는 기존 lampOn 유지, 완료 후 취소는 새 값 유지. busy 연타·stale 완료는 중복 toggle을 만들지 않는다. 소파에서의 기존 램프 상품 action과 저장은 그대로 유지한다.
+- **QA:** 도착 전 빛 변화 없음; 직접 탭/재탭/상태 버튼으로 양방향 작동; 빠른 두 번 탭은 하나의 switch; 이동 전 exit; viewport 320에서도 조명과 캐릭터, control이 보임.
+
+### Bed
+
+- **Trigger:** 원래 침대 영역의 투명 button `침대에 눕기`. 별도 상시 글자나 category를 추가하지 않는다.
+- **Character state:** walking → interacting(lie-down) → lying_bed → interacting(get-up) → idle/walking. primary는 언제나 하나다.
+- **Object state:** bed의 stable은 unoccupied/occupied, transition은 기존 seat와 같은 `{from,to,progress,epoch}`. lie 완료에 occupied, get-up 완료에 unoccupied.
+- **Animation:** 안전 dock (124,235) → 정렬 100ms → lie-down 320ms. 논리 발 위치는 dock에 고정하고 `bedProgress` 0→1과 renderOffset (0,0)→(-52,+3)으로 침대 위로 몸을 옮긴다. 앞을 보는 얼굴은 베개 위, 몸은 침대 상단 이불 아래에 놓인다. 이불은 상단만 그리며 하단은 원본 이불에 자연스럽게 연결해 앞쪽 협탁과 스탠드를 가리지 않는다.
+- **종료:** 누운 자세에서 대기. 일어나기/바닥 탭/방향키/다른 물체 요청은 현재 progress에서 get-up 320ms → offset=0 → 마지막 유효 의도 실행. 침대 collider를 해제하지 않는다.
+- **Cleanup:** 눕는 도중 취소해도 현재 pose에서 연속적으로 일어난다. exit 중 목적지 교체는 마지막 하나만 유지한다. exit 중 keyup이면 일어난 뒤 정지한다. blur/hidden/reset은 안전 dock의 idle, offset=0, unoccupied로 정리하며 자동 재개하지 않는다.
+- **QA:** 도착 전 누움 없음; 베개·상체·이불 위치 정합; 침대 안에서 일반 걷기 없음; 완전히 일어난 뒤만 이동; 무효 벽/가구 탭은 휴식 상태 유지; 최신 목적지·짧은 키·held key·중간 취소·hidden에서 stuck pose 없음; 390/320에서 협탁과 스탠드가 가려지지 않음.
+
+### 최종 물리 검증 기준
+
+발 collider 반경 7, 일반 보행 속도와 furniture footprint를 유지한다. bed/sofa/vanity는 실제 발 위치와 생활 pose offset을 분리한다. 일반 walking은 offset=0이고 발 위치는 항상 walkable이어야 한다. 조명 접근점은 TV장과 현관 수납을 침범하지 않는 바닥에 둔다. 모든 접근점 경로, 사선 이동, 취소/keyup/blur, 창문 재접근 닫기와 조명 단일 commit을 자동 검증하고 실제 mobile에서 공간과 pose를 확인한다. 실제 수행한 범위와 발견한 문제 1개의 해결 결과는 `main_screen_review.md` 최신 절에 기록한다.
+
+
+## 13. Visual Polish Round 1 — 2026-09-21
+
+상태 모델과 안전 anchor를 유지한 렌더링 보완이다. Vanity의 뒤쪽 착석 pose는 두 무릎/발을 몸통 아래 가까운 간격으로 모으고 골반의 좌판 접촉을 명확히 한다. 구매 쿠션은 소파 좌석에 맞게 크기를 줄이고 약한 기울기/접촉 그림자로 지지 관계를 보여준다. Lamp는 원본 방의 고정 실루엣을 유지하며 중복 generic 아이콘을 제거하고 갓 중심의 작은 빛만 토글한다. Lamp reach는 오른쪽 아래 스위치 높이로 팔을 뻗는 전용 pose다.
+
+controller commit/exit/epoch, 일반 이동 및 collision, 객체 접근점, 기본 animation duration은 변경하지 않았다. localhost visual-qa=1 진단 URL만 controller clock을 0.15배로 진행해 중간 프레임을 캡처한다. 일반 URL과 공개 host에서는 원속도다. 최종 기능/화면 검증은 visual_polish_review.md를 따른다.
+
+
+## 14. 사용자 피드백 — 착석·팔·의자 접근 보정 (2026-09-21)
+
+이 절은 §11·§13의 화장대 pose 설명을 보완한다. 화장대의 논리적 안전 dock (340,329)은 유지하고 render offset을 (0,-6)으로 맞춘다. 머리/몸통은 서 있을 때보다 낮아지고, 골반이 흰 스툴의 앞쪽 좌판에 닿으며 허벅지→무릎→종아리가 꺾여야 한다. 단순히 다리 간격만 좁힌 standing 실루엣은 불합격이다.
+
+의자 아래쪽도 Beauty 투명 클릭 영역에 포함한다(방 좌표 x312–368, y192–324). TV와 의자 사이 바닥 y329는 계속 일반 이동 영역이다. 그 통로에서 의자 아래쪽을 탭하면 안전 dock으로 접근한 뒤 앉는다. 의자 본체와 TV collider를 열어 통과시키지 않는다. 이동 테스트는 통로 x310/320/350/357의 접근 경로와 의자(340,310)/TV(340,345)의 충돌을 검증한다.
+
+조명은 원본 side sprite의 움직일 팔을 몸통에서 먼저 제거한 뒤 그 동일한 팔을 어깨 pivot으로 회전한다. 팔을 중복해서 그리거나 길게 늘리지 않는다. 상체를 조금 숙이고 발은 안전 dock에 유지한다. 화장품 사용도 같은 원칙으로 원본 오른팔을 분리하며, 어깨 연결과 손/상품의 같은 좌표계를 유지한다.
+
+상태 전이·commit·취소·이동 대기 규칙과 모든 일반 collider는 유지한다. QA는 실제 화면에서 서기/앉기, 화장품 중간/종료, 조명 시작/정점/종료를 비교하며, DOM의 sitting 또는 reach 값만으로 시각적 합격을 선언하지 않는다.
+
+
+## 15. 제공된 vanity-seated-back 적용 (2026-09-21)
+
+사용자가 제공한 `docs/design/avatar-options/vanity-seated-back/` 네 PNG와 README가 화장대 착석의 최종 시각 기준이다. 이 절은 §13·§14의 임시 하체/상체 합성 방식을 대체한다. 정후면 raster 자체를 `app/assets/avatars/*-vanity-seated-back.png`로 원본 그대로 복사하고 `app/vanity-frames.js`의 clip metadata로 ivory 배경과 참고용 스툴을 제외한다. 방의 기존 의자는 하나만 유지한다.
+
+제공 이미지의 골반·상의 밑단, 화면 안쪽으로 가려진 허벅지, 짧은 두 종아리와 가까운 뒤꿈치를 보존한다. renderer는 hip local(20,45), scale .066과 분리된 calf를 사용한다. 기존 논리 dock(340,329), render offset(0,-6), arrival/seat/exit/commit 규칙과 TV–의자 사이 아래쪽 접근은 그대로다. 구매한 shirt/knit는 머리와 피부를 제외한 원본 의류 영역에만 색을 반영한다.
+
+V08은 정후면의 앞으로 모인 팔을 유지한다. 상체의 작은 움직임과 소매 앞 제품/손끝 일부를 노출해 행동이 보이며, 긴 팔을 별도로 덧그리지 않는다. 제품과 접점은 같은 transform 안에서 이동한다. 화장대 소유권이 있는 동안 `.beauty-selection` 상태 문구는 숨겨 머리와 겹치지 않게 하고 종료 후 복원한다. 실제 390×844/320×568 검증 범위는 최신 main_screen_review와 visual_polish_review를 따른다.

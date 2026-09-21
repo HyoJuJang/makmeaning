@@ -1,54 +1,31 @@
 import type { DemoHome } from '../types/home.ts';
+import { demoDisclosure, demoPurchaseSeeds, demoUser } from './demo-purchases.ts';
 
-// Fictional customer, purchases, names and prices for the interactive demo.
-// These records are not scraped from GS SHOP and do not describe a real account.
+/**
+ * Verified catalog snapshot for deterministic fixtures (public API checked 2026-09-21).
+ * The runtime home API must resolve these IDs from ProductRepository; this is NOT its fallback.
+ * The fictional purchase events and generic illustrations remain separate from real catalog data.
+ */
+const catalogFixture: Record<string, { name: string; price: number }> = {
+  '1106041553': { name: '타미힐피거 크루넥 케이블 니트 남여공용 소매 로고 포인트', price: 69000 },
+  '1083830467': { name: '[지오다노/본사] 345518 여 린넨셔츠', price: 31120 },
+  '1113622242': { name: '서울우유 멸균우유 1000mlx10개', price: 26500 },
+  '1033331215': { name: '동원샘물 미니 생수 300ml x 20개', price: 5000 },
+  '19026466': { name: '고려은단 비타민C 1000 180정 x 1개 (6개월분) +쇼핑백', price: 20900 },
+  '32470670': { name: '러프 쿠션솜 45x45 소파쿠션 사각쿠션 속통 쿠션속통 1P', price: 4310 },
+  '1056652878': { name: '[이케아 무료배송] 스탠드조명 무드등 장스탠드(전구포함) TP124', price: 29400 },
+  '16052422': { name: '아이소이 로즈PDRN 브라이트닝 세럼(NEW잡티세럼) 15ml', price: 28000 },
+  '1088835047': { name: '아브카 [체험특가] 히알루론산 고수분 크림 200ml', price: 8900 },
+};
+
 export const demoHome: DemoHome = {
-  user: { id: 'demo-user', name: '민서', avatarId: 'short' },
-  purchases: [
-    {
-      id: 'knit', category: 'fashion', name: '데일리 크림 니트', price: 39000,
-      imageUrl: '/products/knit.svg', roomSlot: 'wardrobe-1',
-      purchasedAt: '2026.09.18', illustrationKey: 'knit', state: { wearing: true },
-    },
-    {
-      id: 'shirt', category: 'fashion', name: '코튼 블루 셔츠', price: 32000,
-      imageUrl: '/products/shirt.svg', roomSlot: 'wardrobe-2',
-      purchasedAt: '2026.09.16', illustrationKey: 'shirt', state: { wearing: false },
-    },
-    {
-      id: 'milk', category: 'food', name: '아침을 여는 우유', price: 6900,
-      imageUrl: '/products/milk.svg', roomSlot: 'fridge-1',
-      purchasedAt: '2026.09.20', illustrationKey: 'milk', state: { quantity: 3 },
-    },
-    {
-      id: 'water', category: 'food', name: '매일 마시는 생수', price: 4900,
-      imageUrl: '/products/water.svg', roomSlot: 'fridge-2',
-      purchasedAt: '2026.09.20', illustrationKey: 'water', state: { quantity: 3 },
-    },
-    {
-      id: 'vitamin', category: 'food', name: '데일리 멀티비타민', price: 18900,
-      imageUrl: '/products/vitamin.svg', roomSlot: 'pantry-1',
-      purchasedAt: '2026.09.17', illustrationKey: 'vitamin', state: { quantity: 3 },
-    },
-    {
-      id: 'cushion', category: 'living', name: '올리브 린넨 쿠션', price: 15900,
-      imageUrl: '/products/cushion.svg', roomSlot: 'sofa-1',
-      purchasedAt: '2026.09.15', illustrationKey: 'cushion', state: {},
-    },
-    {
-      id: 'lamp', category: 'living', name: '웜 우드 플로어 램프', price: 49000,
-      imageUrl: '/products/lamp.svg', roomSlot: 'lamp-1',
-      purchasedAt: '2026.09.12', illustrationKey: 'lamp', state: { on: true },
-    },
-    {
-      id: 'serum', category: 'beauty', name: '촉촉한 데일리 세럼', price: 22900,
-      imageUrl: '/products/serum.svg', roomSlot: 'vanity-1',
-      purchasedAt: '2026.09.19', illustrationKey: 'serum', state: { featured: true },
-    },
-    {
-      id: 'cream', category: 'beauty', name: '편안한 보습 크림', price: 19800,
-      imageUrl: '/products/cream.svg', roomSlot: 'vanity-2',
-      purchasedAt: '2026.09.19', illustrationKey: 'cream', state: { featured: false },
-    },
-  ],
+  user: { ...demoUser },
+  demo: { ...demoDisclosure },
+  purchases: demoPurchaseSeeds.map(seed => ({
+    ...seed,
+    ...catalogFixture[seed.id],
+    state: { ...seed.state },
+    imageUrl: `/products/${seed.illustrationKey}.svg`,
+    catalogSource: 'shared-products', imageKind: 'illustration', priceKind: 'catalog-reference',
+  })),
 };

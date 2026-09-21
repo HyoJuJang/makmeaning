@@ -17,6 +17,10 @@ export function adaptCatalogProducts(
     id: row.prd_id, name: row.view_name,
     shortName: presentation[row.prd_id]?.shortName || row.view_name,
     imageUrl: presentation[row.prd_id]?.imageUrl || FALLBACK_IMAGE,
+    illustrationKey: presentation[row.prd_id]?.illustrationKey || row.prd_id,
+    imageKind: 'illustration',
+    catalogSource: presentation[row.prd_id]?.catalogSource || 'fictional-example',
+    priceKind: presentation[row.prd_id]?.catalogSource === 'shared-products' ? 'catalog-reference' : 'fictional-example',
   }));
 }
 
@@ -33,10 +37,21 @@ function readCart(value: unknown): CartLine[] {
   return [...quantities].map(([productId, quantity]) => ({ productId, quantity }));
 }
 
+/** Only known formerly alias-keyed purchased products migrate; fictional IDs remain distinct. */
+function canonicalProductId(data: DemoCatalog, value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const exact = data.products.find(product => product.id === value);
+  if (exact) return exact.id;
+  return data.products.find(product => product.catalogSource === 'shared-products' && product.illustrationKey === value)?.id ?? null;
+}
+
 /** Scope recovered lines to this catalog and keep bounded positive whole counts. */
 export function normalizeCart(data: DemoCatalog, value: unknown): CartLine[] {
-  const ids = new Set(data.products.map(product => product.id));
-  return readCart(value).filter(line => ids.has(line.productId));
+  const mapped = readCart(value).flatMap(line => {
+    const productId = canonicalProductId(data, line.productId);
+    return productId ? [{ productId, quantity: line.quantity }] : [];
+  });
+  return readCart(mapped);
 }
 
 /** Increment selected quantities without mutating either input. */
@@ -64,10 +79,9 @@ function readObject(value: unknown): Record<string, unknown> | null {
 export function restoreCatalogState(data: DemoCatalog, stored: unknown, legacy?: unknown): CatalogState {
   const current = readObject(stored);
   if (current?.version === 1 && Array.isArray(current.cart) && Array.isArray(current.savedProductIds)) {
-    const ids = new Set(data.products.map(product => product.id));
     return {
       cart: normalizeCart(data, current.cart),
-      savedProductIds: [...new Set(current.savedProductIds.filter((id): id is string => typeof id === 'string' && ids.has(id)))],
+      savedProductIds: [...new Set(current.savedProductIds.map(id => canonicalProductId(data, id)).filter((id): id is string => id !== null))],
     };
   }
   if (data.category === 'food') {

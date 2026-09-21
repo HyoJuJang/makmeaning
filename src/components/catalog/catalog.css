@@ -8,7 +8,7 @@
 .catalog-page .sc-anchor-caption small{display:block;font-size:10px;color:#65755c;margin-top:3px}
 .catalog-page .sc-anchor-caption>.sc-text-button{flex-shrink:0}
 .catalog-page .sc-anchor-caption>.sc-text-button:focus-visible{outline-offset:0}
-.catalog-page .sc-owned-item>span:last-child{line-height:1.5}
+.catalog-page .sc-owned-name{line-height:1.5}
 .catalog-page .sc-room-controls button{min-height:26px}
 .catalog-recommendation{margin:19px 0 9px;padding:16px;border:1px dashed #c5cebb;border-radius:3px;background:#f3f4ec;text-align:center}
 .catalog-recommendation h2{font-size:13px;line-height:1.6;color:#66775c;font-weight:500;margin:5px 0 0}
@@ -27,3 +27,5 @@
 @media(pointer:coarse){.catalog-quantity button{min-height:44px;min-width:38px}}
 
 .catalog-dialog-notice{padding:10px 12px;background:#e8efdf;color:#3c5f3d;font-size:12px;border-radius:3px;margin:0 0 14px}
+
+.catalog-owned-status{display:block;font-size:10px;line-height:1.5;color:#506b55;margin-top:4px}.catalog-source{display:block;font-size:10px;line-height:1.5;color:#6a7766;margin:8px 0 3px}.catalog-state-note{padding:12px 3px;text-align:left}.catalog-page .sc-collection .sc-owned-item{min-width:100px}.sc-card-name,.sc-dialog-item h3{overflow-wrap:anywhere}

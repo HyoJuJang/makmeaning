@@ -1,9 +1,8 @@
-import { demoHome } from '../../../../src/data/demo-home.ts';
+import { demoHomeResponse } from '../../../../src/lib/demo-home.ts';
+import { getProductRepository } from '../../../../src/lib/products/database.ts';
 
 export const dynamic = 'force-dynamic';
 
-export function GET(): Response {
-  return Response.json(demoHome, {
-    headers: { 'Cache-Control': 'no-store' },
-  });
+export async function GET(): Promise<Response> {
+  return demoHomeResponse(getProductRepository);
 }

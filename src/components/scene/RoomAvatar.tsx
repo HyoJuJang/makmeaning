@@ -2,12 +2,14 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { avatarSVG, type AvatarId, type AvatarOutfit } from '../../../app/avatar.js';
+import { DEMO_STATE_KEY, outfitArtKey, readDemoState, type DemoState } from '../../../app/demo-state.js';
+import type { DemoHome } from '../../types/home';
 import { createAvatarMotionRunner, restingAvatar, type AvatarPositions } from '../../lib/scene/avatar-motion';
-
-const STORAGE_KEY = 'gscene-main-v1';
 
 type Appearance = { avatarId: AvatarId; outfitId: AvatarOutfit };
 export type RoomAvatarProps = {
+  home?: DemoHome;
+  confirmedState?: DemoState;
   fallbackAvatarId?: string;
   fallbackOutfitId?: string;
   category?: 'fashion' | 'living';
@@ -42,21 +44,13 @@ function canonicalAvatar(value: unknown): AvatarId | null {
   }
 }
 
-function readAppearance(fallback: AvatarId, outfit: AvatarOutfit): Appearance {
-  const appearance: Appearance = { avatarId: fallback, outfitId: outfit };
-  try {
-    const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (!saved || typeof saved !== 'object' || Array.isArray(saved)) return appearance;
-    const record = saved as Record<string, unknown>;
-    appearance.avatarId = canonicalAvatar(record.avatarId) ?? fallback;
-    if (record.outfitId === 'base' || record.outfitId === 'knit' || record.outfitId === 'shirt') {
-      appearance.outfitId = record.outfitId;
-    }
-  } catch { /* Missing, blocked or malformed storage keeps the safe defaults. */ }
-  return appearance;
+function readAppearance(home: DemoHome | undefined, confirmed: DemoState | undefined, fallback: AvatarId, outfit: AvatarOutfit): Appearance {
+  if (!home) return { avatarId: fallback, outfitId: outfit };
+  const state = confirmed ?? readDemoState(home);
+  return { avatarId: state.avatarId, outfitId: outfitArtKey(home, state) };
 }
 
-export default function RoomAvatar({ fallbackAvatarId, fallbackOutfitId, category = 'fashion', outfitPreview = null, seated = false, interactionKey = 0 }: RoomAvatarProps) {
+export default function RoomAvatar({ home, confirmedState, fallbackAvatarId, fallbackOutfitId, category = 'fashion', outfitPreview = null, seated = false, interactionKey = 0 }: RoomAvatarProps) {
   const fallback = canonicalAvatar(fallbackAvatarId) ?? 'm01';
   const fallbackOutfit: AvatarOutfit = fallbackOutfitId === 'knit' || fallbackOutfitId === 'shirt' ? fallbackOutfitId : 'base';
   // The initial render is identical on server and client; storage is read after hydration.
@@ -71,9 +65,9 @@ export default function RoomAvatar({ fallbackAvatarId, fallbackOutfitId, categor
   const hasPreviewInteraction = useRef(interactionKey !== 0);
 
   useEffect(() => {
-    const restore = () => { setAppearance(readAppearance(fallback, fallbackOutfit)); setReady(true); };
+    const restore = () => { setAppearance(readAppearance(home, confirmedState, fallback, fallbackOutfit)); setReady(true); };
     const onStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY || event.key === null) restore();
+      if (event.key === DEMO_STATE_KEY || event.key === null) restore();
     };
     restore();
     window.addEventListener('storage', onStorage);
@@ -82,7 +76,7 @@ export default function RoomAvatar({ fallbackAvatarId, fallbackOutfitId, categor
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('pageshow', restore);
     };
-  }, [fallback, fallbackOutfit]);
+  }, [home, confirmedState, fallback, fallbackOutfit]);
 
   useEffect(() => {
     const media = matchMedia('(prefers-reduced-motion: reduce)');

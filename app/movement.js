@@ -2,7 +2,7 @@
 export const WORLD={width:400,height:600};
 export const RADIUS=7;
 export const START={x:234,y:300};
-export const APPROACHES={fashion:{x:162,y:164},food:{x:262,y:197},beauty:{x:340,y:329},living:{x:124,y:389},window:{x:204,y:130},lamp:{x:306,y:444},pantry:{x:318,y:198}};
+export const APPROACHES={fashion:{x:162,y:164},food:{x:262,y:197},beauty:{x:340,y:329},living:{x:124,y:389},window:{x:204,y:130},bed:{x:124,y:235},lamp:{x:326,y:444},pantry:{x:318,y:198}};
 export const OBSTACLES=[
  {id:'wardrobe',x:40,y:116,w:106,h:40},
  {id:'fridge',x:231,y:117,w:65,h:42},

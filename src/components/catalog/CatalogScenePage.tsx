@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { CatalogCategory, CartLine, DemoCatalog, DisplayProduct } from '../../types/catalog';
 import { addToCart, cartTotal, normalizeCart, restoreCatalogState } from '../../lib/catalog';
+import {readDemoState, type DemoState} from '../../../app/demo-state.js';
 import RoomAvatar from '../scene/RoomAvatar';
 import CategoryNav from '../navigation/CategoryNav';
 import '../scene/scene.css';
@@ -55,6 +56,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   const config = CONFIG[category];
   const storageKey = `gscene-catalog-${category}-v1`;
   const [data, setData] = useState<DemoCatalog | null>(null);
+  const [confirmed, setConfirmed] = useState<DemoState | null>(null);
   const [state, setState] = useState<State>({ cart: [], savedProductIds: [] });
   const [error, setError] = useState(false);
   const [attempt, setAttempt] = useState(0);
@@ -86,7 +88,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
           if (category === 'food') legacy = localStorage.getItem('gscene-food-v1');
         } catch { /* The validated default catalog remains usable. */ }
         setState(restoreCatalogState(catalog, stored, legacy));
-        setData(catalog);
+        setData(catalog); setConfirmed(readDemoState(catalog.home));
       }).catch(() => { if (mounted) setError(true); })
       .finally(() => clearTimeout(timer));
     return () => { mounted = false; controller.abort(); clearTimeout(timer); };
@@ -112,6 +114,18 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
     });
     return () => cancelAnimationFrame(frame);
   }, [panel]);
+
+  useEffect(() => {
+    if (!data) return;
+    const restore = () => setConfirmed(readDemoState(data.home));
+    const storage = (event: StorageEvent) => { if (event.key === 'gscene-main-v1' || event.key === null) restore(); };
+    window.addEventListener('pageshow', restore); window.addEventListener('storage', storage);
+    return () => { window.removeEventListener('pageshow', restore); window.removeEventListener('storage', storage); };
+  }, [data]);
+  function ownedStatus(id: string) {
+    if (!data?.home.purchases.some(item => item.id === id)) return '';
+    return category === 'food' ? `데모 잔량 ${confirmed?.foodQuantity[id] ?? data.home.purchases.find(item => item.id === id)?.state.quantity ?? 0}회` : confirmed?.featuredBeautyId === id ? '화장대에 꺼내두었어요' : '화장대에 함께 있어요';
+  }
 
   const purchases = data?.purchases.flatMap(purchase => {
     const product = data.products.find(item => item.id === purchase.productId);
@@ -168,31 +182,31 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
         <div className="sc-room-hud"><span><i />{config.english}</span><div className="sc-room-controls"><button onClick={clearSelection} aria-label="캐릭터 제자리로">↶ 제자리로</button></div></div>
         <div className="sc-room catalog-room" style={{ '--catalog-avatar-x': interaction.x, '--catalog-avatar-bottom': 4 } as CSSProperties}>
           <img className="sc-room-art" src={config.room} alt={config.roomAlt} width="900" height="300" />
-          <RoomAvatar fallbackAvatarId={data.user.avatarId} fallbackOutfitId={data.initialOutfitId} category="living" seated={false} interactionKey={interaction.key} />
+          <RoomAvatar home={data.home} confirmedState={confirmed ?? undefined} fallbackAvatarId={data.user.avatarId} fallbackOutfitId={data.initialOutfitId} category="living" seated={false} interactionKey={interaction.key} />
           {purchases.map((product, index) => <button key={product.id} className="sc-room-pin" style={{ left: `${config.targets[index % config.targets.length]}%`, top: '46%' }} aria-label={`${product.name} 살펴보기`} aria-pressed={selectedId === product.id && tab === 'owned'} onClick={() => choose(product, 'owned')}><span>{index + 1}</span></button>)}
           <span className="sc-room-footnote">구매 상품을 눌러 살펴보세요</span>
         </div>
         <div className="sc-inventory-head"><div className="sc-tabs" role="group" aria-label="내 상품 목록"><button aria-pressed={tab === 'owned'} onClick={() => changeTab('owned')}>구매한 상품 <span>{purchases.length}</span></button><button aria-pressed={tab === 'cart'} onClick={() => changeTab('cart')}>장바구니 <span>{cartProducts.length}</span></button></div><button className="sc-text-button" onClick={() => openPanel(tab)}>전체 보기 ↗</button></div>
-        <div className="sc-inventory-rail">{rail.map((product, index) => <button key={product.id} className="sc-owned-item" aria-pressed={selectedId === product.id} onClick={() => choose(product, tab)}><span className="sc-owned-photo"><ProductVisual product={product} />{tab === 'owned' && <span className="sc-item-index">{index + 1}</span>}{selectedId === product.id && <span className="sc-selected-check"><Icon name="check" size={12} /></span>}</span><span>{product.name}</span></button>)}<button className="sc-owned-item sc-new-item" aria-pressed={!anchor} onClick={clearSelection}><span className="sc-owned-photo"><span>＋</span></span><span>새롭게 둘러보기</span></button></div>
-        <div className="sc-anchor-caption" aria-live="polite"><span className="sc-small-star" aria-hidden="true">＋</span>{anchor ? <p><b>{anchor.name}</b><small>{tab === 'owned' ? '구매 기록 · 현재 보유 상태와는 다를 수 있어요' : '장바구니 상품 · 아직 구매 전이에요'}</small></p> : <p>{rail.length ? '상품을 골라 자세히 살펴보세요.' : tab === 'owned' ? '구매 기록이 없어도 상품을 둘러볼 수 있어요.' : '아직 장바구니에 담긴 상품이 없어요.'}</p>}{anchor && <button className="sc-text-button" onClick={() => openPanel('product', anchor.id)}>상품 보기 ↗</button>}</div>
+        <div className="sc-inventory-rail">{rail.map((product, index) => <button key={product.id} className="sc-owned-item" title={product.name} aria-pressed={selectedId === product.id} onClick={() => choose(product, tab)}><span className="sc-owned-photo"><ProductVisual product={product} />{tab === 'owned' && <span className="sc-item-index">{index + 1}</span>}{selectedId === product.id && <span className="sc-selected-check"><Icon name="check" size={12} /></span>}</span><span className="sc-owned-name">{product.name}</span>{tab === 'owned' && <small className="catalog-owned-status">{ownedStatus(product.id)}</small>}</button>)}<button className="sc-owned-item sc-new-item" aria-pressed={!anchor} onClick={clearSelection}><span className="sc-owned-photo"><span>＋</span></span><span>새롭게 둘러보기</span></button></div>
+        <div className="sc-anchor-caption" aria-live="polite"><span className="sc-small-star" aria-hidden="true">＋</span>{anchor ? <p><b>{anchor.name}</b><small>{tab === 'owned' ? `가상 보유 · ${ownedStatus(anchor.id)}` : '장바구니 상품 · 아직 구매 전이에요'}</small></p> : <p>{rail.length ? '상품을 골라 자세히 살펴보세요.' : tab === 'owned' ? '구매 기록이 없어도 상품을 둘러볼 수 있어요.' : '아직 장바구니에 담긴 상품이 없어요.'}</p>}{anchor && <button className="sc-text-button" onClick={() => openPanel('product', anchor.id)}>상품 보기 ↗</button>}</div>
       </section>
-      <section className="catalog-recommendation" aria-label="추천 상품"><span className="sc-kicker">FOR YOU</span><h2>추천 상품을 준비하고 있어요</h2></section>
+      <p className="sc-demo-note catalog-state-note">가상 보유 상태는 내 공간과 연결돼요. 그림은 실제 상품 외형이 아닌 공간용 예시예요.{category === 'food' && <><br />데모 잔량은 사용 횟수이며 상품의 포장 수량·재고와 달라요.</>}</p>
       <section className="sc-results" aria-labelledby="catalog-products-title"><div className="sc-results-heading"><h2 id="catalog-products-title"><span className="sc-pixel-spark" aria-hidden="true">✳</span>{config.label} 둘러보기 <span className="sc-result-count">{products.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={sort} onChange={event => setSort(event.target.value)}><option value="catalog">기본순</option><option value="price-low">낮은 가격순</option></select></label></div>
         <div className="sc-product-grid">{products.map(product => {
           const inCart = state.cart.some(line => line.productId === product.id);
-          return <article className="sc-card" key={product.id}><div className="sc-card-image"><button className="sc-card-open" aria-label={`${product.name} 상세 보기`} onClick={() => openPanel('product', product.id)}><ProductVisual product={product} /></button><button className="sc-heart" aria-label={`${product.name} 찜`} aria-pressed={state.savedProductIds.includes(product.id)} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button></div><div className="sc-card-copy"><span className="sc-product-kind">{product.cate3_nm || product.cate2_nm}</span><button className="sc-card-name" onClick={() => openPanel('product', product.id)}>{product.name}</button><strong className="sc-price">{money(product.price)}</strong><button className={`sc-cart-button ${inCart ? 'is-added' : ''}`} onClick={() => addCart(product)}><Icon name={inCart ? 'check' : 'bag'} size={15} />{inCart ? '담은 상품 보기' : '장바구니에 담기'}</button></div></article>;
+          return <article className="sc-card" key={product.id}><div className="sc-card-image"><button className="sc-card-open" aria-label={`${product.name} 상세 보기`} onClick={() => openPanel('product', product.id)}><ProductVisual product={product} /></button><button className="sc-heart" aria-label={`${product.name} 찜`} aria-pressed={state.savedProductIds.includes(product.id)} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button></div><div className="sc-card-copy"><span className="sc-product-kind">{product.cate3_nm || product.cate2_nm}</span><button className="sc-card-name" onClick={() => openPanel('product', product.id)}>{product.name}</button><small className="catalog-source">{product.catalogSource === 'shared-products' ? '실상품 · 카탈로그 참고가' : '가상 예시 상품 · 예시 가격'}</small><strong className="sc-price">{money(product.price)}</strong><button className={`sc-cart-button ${inCart ? 'is-added' : ''}`} onClick={() => addCart(product)}><Icon name={inCart ? 'check' : 'bag'} size={15} />{inCart ? '담은 상품 보기' : '장바구니에 담기'}</button></div></article>;
         })}</div>
         {products.length === 0 && <div className="sc-empty"><p>표시할 상품이 아직 없어요.</p></div>}
       </section>
-      <p className="sc-demo-note">가상 고객 · 예시 상품과 가격으로 구성된 데모예요.<br />실제 주문은 진행되지 않아요.</p>
+      <p className="sc-demo-note">가상 고객의 구매·보유를 실상품에 연결한 데모예요.<br />추가 탐색 상품은 별도 표시한 가상 예시이며 실제 주문은 진행되지 않아요.</p>
       {storageNotice && <p className="sc-demo-note" role="status">이 브라우저에서는 저장할 수 없어 이번 방문 동안만 유지돼요.</p>}
     </>}
     <CategoryNav activeCategory={category} />
     {notice && !panel && <div className="sc-toast" role="status">{notice}</div>}
     {panel && data && <CatalogDialog title={panel === 'owned' ? `구매한 상품 ${purchases.length}` : panel === 'cart' ? `장바구니 ${cartCount}` : panel === 'saved' ? `찜한 상품 ${saved.length}` : '상품 자세히 보기'} viewKey={`${panel}:${detailId}`} onClose={closePanel}>
       {notice && <p className="catalog-dialog-notice" role="status">{notice}</p>}
-      {panel === 'product' && detail ? <><div className="sc-detail-image"><ProductVisual product={detail} /></div><div className="sc-detail-copy"><span className="sc-product-kind">{[detail.brd_mn, detail.cate3_nm || detail.cate2_nm].filter(Boolean).join(' · ')}</span><h3>{detail.name}</h3><strong className="sc-detail-price">{money(detail.price)}</strong>{data.purchases.some(item => item.productId === detail.id) && <p>{data.purchases.find(item => item.productId === detail.id)?.purchasedAt} 구매 기록</p>}<p className="sc-demo-note">예시 상품금액 · 배송비 별도</p><button className="sc-primary" onClick={() => addCart(detail)}><span>{state.cart.some(line => line.productId === detail.id) ? '담은 상품 보기' : '장바구니에 담기'}</span><Icon name="bag" /></button><button className="sc-outline catalog-save" aria-pressed={state.savedProductIds.includes(detail.id)} onClick={() => toggleSaved(detail.id)}>{state.savedProductIds.includes(detail.id) ? '찜 해제' : '상품 찜하기'}</button></div></> : panel === 'product' ? <p>상품 정보를 찾을 수 없어요.</p> : <>
-        <p className="sc-dialog-description">{panel === 'owned' ? '구매 기록이에요. 상품을 선택하면 공간에서 살펴볼 수 있어요.' : panel === 'saved' ? '찜한 상품이에요. 장바구니와는 따로 보관해요.' : '담아둔 상품이에요. 수량을 직접 바꿀 수 있어요.'}</p>
+      {panel === 'product' && detail ? <><div className="sc-detail-image"><ProductVisual product={detail} /></div><div className="sc-detail-copy"><span className="sc-product-kind">{[detail.brd_mn, detail.cate3_nm || detail.cate2_nm].filter(Boolean).join(' · ')}</span><h3>{detail.name}</h3><strong className="sc-detail-price">{money(detail.price)}</strong>{data.purchases.some(item => item.productId === detail.id) && <p>{data.purchases.find(item => item.productId === detail.id)?.purchasedAt} 가상 구매 기록</p>}<p className="sc-demo-note">{detail.catalogSource === 'shared-products' ? '실상품 카탈로그 참고가 · 가상 구매·보유' : '실제 판매 상품이 아닌 가상 예시'}<br />그림은 실제 외형·가상 피팅을 재현하지 않아요.</p>{ownedStatus(detail.id) && <p className="catalog-owned-status">{ownedStatus(detail.id)}</p>}<button className="sc-primary" onClick={() => addCart(detail)}><span>{state.cart.some(line => line.productId === detail.id) ? '담은 상품 보기' : '장바구니에 담기'}</span><Icon name="bag" /></button><button className="sc-outline catalog-save" aria-pressed={state.savedProductIds.includes(detail.id)} onClick={() => toggleSaved(detail.id)}>{state.savedProductIds.includes(detail.id) ? '찜 해제' : '상품 찜하기'}</button></div></> : panel === 'product' ? <p>상품 정보를 찾을 수 없어요.</p> : <>
+        <p className="sc-dialog-description">{panel === 'owned' ? '실상품에 연결한 가상 구매·보유예요. 상품을 선택하면 공간에서 살펴볼 수 있어요.' : panel === 'saved' ? '찜한 상품이에요. 장바구니와는 따로 보관해요.' : '담아둔 상품이에요. 수량을 직접 바꿀 수 있어요.'}</p>
         <div className="sc-dialog-list">{(panel === 'owned' ? purchases : panel === 'cart' ? cartProducts : saved).map(product => <article className="sc-dialog-item" key={product.id}><button className="sc-dialog-thumb" aria-label={`${product.name} ${panel === 'owned' ? '공간에서 살펴보기' : '상세 보기'}`} onClick={() => panel === 'owned' ? choose(product, 'owned') : openPanel('product', product.id)}><ProductVisual product={product} /></button><div><h3>{product.name}</h3><p>{money(product.price)}</p>{panel === 'cart' ? <div className="catalog-quantity"><button aria-label={`${product.shortName} 수량 줄이기`} disabled={(state.cart.find(line => line.productId === product.id)?.quantity ?? 1) <= 1} onClick={() => updateQuantity(product.id, (state.cart.find(line => line.productId === product.id)?.quantity ?? 1) - 1)}>−</button><output>{state.cart.find(line => line.productId === product.id)?.quantity}</output><button aria-label={`${product.shortName} 수량 늘리기`} disabled={(state.cart.find(line => line.productId === product.id)?.quantity ?? 1) >= 99} onClick={() => updateQuantity(product.id, (state.cart.find(line => line.productId === product.id)?.quantity ?? 1) + 1)}>＋</button></div> : <button className="sc-text-button" onClick={() => panel === 'owned' ? choose(product, 'owned') : openPanel('product', product.id)}>{panel === 'owned' ? '공간에서 살펴보기' : '상품 보기'} ↗</button>}</div>{panel !== 'owned' && <button className="sc-icon-button" aria-label={`${product.shortName} ${panel === 'cart' ? '장바구니에서 삭제' : '찜 해제'}`} onClick={() => { if (panel === 'cart') updateQuantity(product.id, 0); else toggleSaved(product.id); focusDialogTitle(); }}><Icon name="close" size={16} /></button>}</article>)}</div>
         {(panel === 'owned' ? purchases : panel === 'cart' ? cartProducts : saved).length === 0 && <div className="sc-empty"><p>{panel === 'cart' ? '아직 담긴 상품이 없어요.' : panel === 'saved' ? '아직 찜한 상품이 없어요.' : '구매 기록이 아직 없어요.'}</p><button className="sc-outline" onClick={closePanel}>상품 둘러보기</button></div>}
         {panel === 'cart' && <div className="sc-cart-total"><span>상품금액 합계</span><strong>{money(cartTotal(data, state.cart))}</strong><small>예시 가격 · 배송비 별도 · 실제 주문은 진행되지 않아요.</small></div>}

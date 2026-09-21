@@ -1,9 +1,8 @@
-import { demoCatalogs } from '../../../../src/data/demo-catalog.ts';
+import { demoCatalogResponse } from '../../../../src/lib/demo-catalog.ts';
+import { getProductRepository } from '../../../../src/lib/products/database.ts';
 
 export const dynamic = 'force-dynamic';
 
-export function GET(): Response {
-  return Response.json(demoCatalogs.food, {
-    headers: { 'Cache-Control': 'no-store' },
-  });
+export async function GET(): Promise<Response> {
+  return demoCatalogResponse('food', getProductRepository);
 }

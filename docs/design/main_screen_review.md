@@ -309,6 +309,69 @@ Main이 `http://127.0.0.1:4173/` 실제 앱을 390×844, 320×568 viewport에서
 최종 옷장 뒤적임은 왼쪽 물체 방향으로 sprite를 반전해 실제 손이 물체를 향하도록 확인했다. 독립 브라우저 탭에서도 M02의 소파 접근→중앙 착석 및 offset을 확인했고 console warning/error는 0건이다. root npm test 전체 통과: 156개 경로, 무작위 목적지100, 충돌3,000 step, 입력·controller·구매slot·API 검증. localhost4173의 local server는 기존 API GET을 재사용하고 public/products 이미지도 제공하며 root Next/API 원본은 바꾸지 않는다.
 
 
+## 물리 점검 · 조명 · 창문 · 침대 — 2026-09-21
+
+**상태: build → review → fix → 실제 앱 재확인 완료.** 기존 room/4캐릭터/구매 API/Scene entry를 유지했다. 구현 전 Builder가 `work/physics-slice-spec.md`에 작은 상태 계약을 기록했고 최종 `main_interactions.md` §12에 통합했다.
+
+### 실제 브라우저 확인
+
+Main이 http://127.0.0.1:4173/ 앱을 CUA로 직접 조작했다. QA sub-agent pose_builder는 실제 저장 screenshot과 전달된 관찰을 검토하고 코드·geometry·실제 app handler의 가상 clock 검사를 독립 수행했다. QA sub-agent가 직접 브라우저를 조작했다는 의미는 아니다.
+
+- **390×844 침대:** 침대 클릭 후 먼저 walking, 도착 전 bedProgress=0. 안전 anchor=(124,235)에 도착한 후 lying_bed, offset=(-52,+3), bedProgress=1. 얼굴은 베개 위, 몸은 이불 아래에 보인다. 조명을 누르면 get-up/exiting을 거쳐 offset=0으로 복귀한 후 걷는다.
+- **390×844 조명:** 최종 (326,444)에 도착해 손 동작 후 켜기/끄기. 별도 modal 없음. room glow opacity는 켜짐 .65/꺼짐 0, 램프와 갓 색도 바뀐다. 본체 빠른 double click은 한 번만 꺼지고, tray의 `조명 켜기`로 다시 켜졌다. 검증 후 기존 on 상태로 되돌렸다.
+- **390×844 창문:** 창문 본체 클릭 시 이동 중에는 닫힘 유지, (204,130) 도착 후 열린다. 같은 본체를 다시 누르면 닫히는 중간 progress를 거쳐 closed가 되고 접근성 이름은 `창문 열기`로 바뀐다. 기존 세로 창짝 이동과 중앙 창틀 clip을 유지한다.
+- **320×568:** 침대와 캐릭터가 접힌 tray 위에 보이고 document scrollWidth=320으로 가로 넘침 없음. 집 밖 탭은 누운 상태 유지, 짧은 ArrowRight는 get-up 후 같은 안전 anchor의 idle/offset=0에서 정지했다. 이후 바닥 탭으로 일반 walking과 새 바닥 도착을 확인했다.
+- **320 창문 재접근:** 창문을 열고 침대로 이동해 누운 동안 창문은 열린 상태로 유지됐다. 열린 창문 본체를 다시 누르면 먼저 침대에서 일어나고, 창 앞으로 걸어가 닫혔다. 최종 window 접근성 이름은 `창문 열기`, actor는 window/engaged였다.
+- 실제 QA 탭 console warning/error는 0건이었다. 이 회차의 실제 캡처는 M02이며 네 외형의 모든 pose×착장 조합을 실제 UI로 전수 검증했다고 주장하지 않는다.
+
+### 선정한 문제 — 1개, 수정 완료
+
+**[P2] 침대의 새 이불이 앞쪽 협탁과 스탠드를 덮음.** 최초 390 screenshot에서 이불 overlay가 원래 별도 가구 위까지 그려졌다. 보행/exit 실패가 아니라 layer 영역 문제였다. 새 이불을 침대 상단으로 제한하고 하단 fade mask로 원본 이불에 연결했다. 수정 후 QA reviewer가 390·320 screenshot을 다시 열어 협탁 상판·소품·스탠드가 복원되고 얼굴/몸/이불 위치가 자연스러운 것을 확인했다. **해결 PASS.** 추가로 재현 가능한 physics/controller 결함은 발견하지 않았다.
+
+### 최종 자동 검증
+
+- root `npm test` 전체 PASS: 172 경로, 무작위 목적지 100, 충돌 3,000 step; 입력·API bootstrap/오류 재시도·구매 slot·API 응답·controller 회귀.
+- controller에는 창문 raw 재접근 닫기/engaged 재탭/연타/취소 복원, lamp 접근/단일 완료 commit/commit 전 취소, bed 눕기/일어남/keyup/최신 목적지/hidden 정리를 추가했다.
+- QA의 최종 실제 app handler·frame loop 검사 16개 PASS: 일곱 object 접근/종료, 소파·화장대·침대의 짧은 키와 held key, 무효 목적지, 재지정과 blur. 모든 frame에서 발 위치 walkable, 일반 walking 시 offset=0.
+- 최종 lamp=(326,444), bed=(124,235) geometry: 유효 grid node 1,053개가 단일 연결 영역, 시작점+접근점의 순서쌍 경로 81개, 사선 sweep 4,212개 모두 PASS.
+
+증거 원본은 이번 Codex 작업의 `work/physics-refresh/`와 `work/physics-audit*.json`에 저장했다. 사용자용 review 사본과 최종 mobile 캡처는 `outputs/physics-refresh/`에 정리한다. Git push·외부 배포는 이번 요청의 검증 범위에 포함하지 않는다.
+
+
+## Visual Polish Round 1 — 2026-09-21
+
+실행 계약은 visual_polish_agent.md. 화면을 먼저 보는 독립 Visual QA가 390×844의 V01~V11와 주요 중간 프레임을 검토해 3건(High1/Medium2)을 선정했다. Builder는 화장대 다리/좌판 관계, 소파 쿠션 크기/접점, 램프 중복 실루엣/glow/손 접점을 수정했다. 동일 상태와 320×568을 다시 검토한 결과 세 건 PASS, 새 High0으로 1 round에서 조기 종료했다. 기존 이동/controller/상품/Scene architecture와 기능을 유지했다.
+
+Main 실제 기본 속도 회귀와 최종 npm test 전체 PASS, console warn/error 0, 320 overflow 0. tests/visual/capture.mjs는 현재 CUA tab으로 상태 검증+스크린샷+전후 metadata를 반복 수집하고 MISSED를 분리한다. 단순 pixel diff로 자연스러움을 판정하지 않았다. 전체 defect/증거/known detail은 [visual_polish_review.md](visual_polish_review.md)에 기록한다.
+
+
+## 사용자 재지적: 조명 팔 · 화장대 착석 · TV 쪽 접근 (2026-09-21)
+
+이전 시각 PASS를 철회하고 Main 실제 실행 → Visual QA 독립 검토 → Builder 수정 → 동일 화면 재검토를 수행했다. 조명 원본 팔 중복을 제거하고, 화장대는 몸통을 낮추고 골반·무릎이 접힌 seated pose와 offset (0,-6)으로 맞췄다. 의자 아래까지 클릭 영역을 늘려 TV 사이 통로에서도 앉을 수 있다. 보행 collider는 유지한다. 재검토에서 드러난 화장품 사용 중 어깨 틈도 native shoulder cap/pivot로 수정했다.
+
+390×844·320×740·320×568 실제 앱에서 네 외형의 착석, 주요 외형의 팔 중간 프레임, 기립과 조명 양방향 토글, TV 통로 접근을 확인했다. 관측한 이번 수정 범위에 미해결 High 없음. 일반 속도 M01 lamp peak는 capture missed로 제외했고 느린 진단 프레임의 M02/F01/F02 peak를 직접 검토했다. 전체 앱의 blanket PASS는 복원하지 않는다.
+
+`npm test` 통과: 이동 경로176/무작위목적지100/키보드3000 및 기존 입력·state·API·상품 회귀. 마지막 V08 shoulder cap 수정은 Builder84개 포즈검사와 Main/QA의 동일peak 재촬영으로 확인했다. 최종 일반 URL의 console error0, object owner/offset 정리 정상. 최신 상세 검토는 visual_polish_review.md의 사용자 피드백 재검증 절과 아래 증거를 따른다.
+/Users/gsretail/Documents/Codex/2026-09-21/agents-md-docs-ideas-doc03-final/outputs/pose-correction/review.md
+
+
+## 제공된 정후면 착석 이미지 적용 — 2026-09-21
+
+M01/M02/F01/F02의 `vanity-seated-back` PNG를 실제 화장대 착석에 직접 사용했다. 앱·배포용 파일은 제공된 원본과 SHA-256이 동일하다. SVG clip으로 배경과 참고용 나무 스툴만 제외하고 방의 흰 의자를 사용한다.
+
+- 정후면 머리·등, 가려진 허벅지, 짧은 종아리와 가까운 뒤꿈치 유지.
+- 골반과 의자 좌판의 접점을 맞추고 기존 이동 dock/충돌/접근 경로 유지.
+- 구매 셔츠·니트 착장 유지. 사용 중 머리와 겹치던 상품 상태 문구는 잠시 숨기고 종료 후 복원.
+- 화장품 사용 시 정후면 팔을 유지하며 소매 앞 상품·손끝 일부와 작은 움직임 표시.
+
+Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(High 1 / Medium 3)을 수정하고 같은 조건에서 재확인했다. 네 캐릭터의 셔츠 착석을 390×844에서, F02 니트 착석·이동·아래쪽 접근을 320×568에서 확인했다. 추가로 착석/기립 중간 상태, M02/F02 화장품 동작 두 프레임과 종료 상태를 검토했다. 미관측 외형·착장 전체 조합까지 일괄 PASS로 확대하지 않았다.
+
+`npm test` 전체 통과: 경로176/무작위목적지100/키 입력3000 및 input/controller/API/product 회귀. 브라우저 오류0, 기립 후 offset0, 상품 상태 문구 복원 확인. 기존 옷장 착장 변경과 냉장고·창문 흐름도 실제 실행했으며, 소파는 도착 상태를 관측했지만 시간 제한으로 놓친 screenshot은 시각 판정에서 제외했다.
+
+
+증거: /Users/gsretail/Documents/Codex/2026-09-21/agents-md-docs-ideas-doc03-final/outputs/vanity-reference/review.md
+
+
 ## 2026-09-21 — Room category navigation / icon integration QA
 
 - 실제 브라우저: 390×844 mobile, 1280×900 desktop. 옷장·냉장고·화장대·소파의 첫 탭은 생활 동작, 준비 후 재탭은 해당 tab으로 이동. N1–N7 PASS; Pantry 추가 경로와 뒤로 가기/동일 object 재진입도 PASS.

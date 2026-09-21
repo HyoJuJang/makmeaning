@@ -1,3 +1,5 @@
+import type { DemoHome } from './home.ts';
+
 export type CatalogCategory = 'food' | 'beauty';
 
 /** Exactly the agreed product extraction columns. */
@@ -17,6 +19,8 @@ export interface CatalogProduct {
 export interface ProductPresentation {
   shortName?: string;
   imageUrl?: string;
+  illustrationKey?: string;
+  catalogSource?: 'shared-products' | 'fictional-example';
 }
 
 export interface DisplayProduct extends CatalogProduct {
@@ -24,6 +28,10 @@ export interface DisplayProduct extends CatalogProduct {
   name: string;
   shortName: string;
   imageUrl: string;
+  illustrationKey: string;
+  imageKind: 'illustration';
+  catalogSource: 'shared-products' | 'fictional-example';
+  priceKind: 'catalog-reference' | 'fictional-example';
 }
 
 /** Quantity is a shopping choice, never an inferred product size or inventory. */
@@ -34,12 +42,14 @@ export interface CartLine {
 
 export interface DemoCatalog {
   category: CatalogCategory;
+  /** Same resolved user/purchases as the home API; confirmed personal state is overlaid client-side. */
+  home: DemoHome;
   user: { id: string; name: string; avatarId: string };
-  /** Home's initial clothing, used only when no saved avatar appearance exists. */
+  /** Illustration key (e.g. knit), NOT a product ID. Fallback artwork before saved appearance restores. */
   initialOutfitId?: string;
   products: DisplayProduct[];
   /** Historical events do not assert current possession. */
-  purchases: { productId: string; purchasedAt: string }[];
+  purchases: { productId: string; purchaseId: string; purchasedAt: string }[];
   initialCart: CartLine[];
 }
 

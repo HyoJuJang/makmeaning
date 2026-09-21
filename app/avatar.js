@@ -1,5 +1,6 @@
 // Approved A / Slouch raster artwork. Motion remains owned by InteractionController.
 import {FRAMES} from './avatar-frames.js';
+import {VANITY_FRAMES} from './vanity-frames.js';
 export const AVATARS=[
  {id:'m01',name:'M01 · 네이비',note:'헝클머리 · 남성',pants:'#353b43'},
  {id:'m02',name:'M02 · 세이지',note:'가르마 · 남성',pants:'#303944'},
@@ -29,20 +30,55 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
  const standing=(i=index)=>source(i);
  const sofaSeat=()=>source(6);
  const vanitySeat=()=>{
-  const legs=`<g fill="${a.pants}" stroke="#30353c" stroke-width=".5"><path d="M12 42h7l-1 7-5 8H7l4-11Z"/><path d="M22 42h7l1 5 4 10h-7l-4-9Z"/></g><path d="M7 56h7v4H5v-2Zm19 0h8l2 2v2H26Z" fill="#ece8db" stroke="#5a5c55" stroke-width=".5"/>`;
-  return legs+clip('vanity-upper','<rect x="-20" y="-10" width="80" height="54"/>',source(1));
+  // Reuse the approved strict-rear seated raster. Separate silhouette clips
+  // exclude its ivory background and reference stool, revealing the room stool.
+  const data=VANITY_FRAMES[a.id],href=`/assets/avatars/${a.id}-vanity-seated-back.png`;
+  const px=20-data.hipX*data.scale,py=45-data.hipY*data.scale;
+  const image=`<image href="${href}" width="${data.width}" height="${data.height}" image-rendering="pixelated"/>`;
+  const uid=key+'-vanity';
+  const color=outfit==='shirt'?[.56,.69,.77]:[.91,.875,.79];
+  const bias=color.map(c=>fmt(c-data.luma*.65));
+  const defs=`<defs><clipPath id="${uid}-body"><path d="${data.bodyMask}"/></clipPath><clipPath id="${uid}-legs"><path d="${data.legMask}"/></clipPath><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs>`;
+  const garment=outfit==='base'?'':`<g clip-path="url(#${uid}-cloth)" filter="url(#${uid}-tint)">${image}</g>`;
+  const upper=`<g transform="translate(${fmt(px)} ${fmt(py)}) scale(${data.scale})"><g clip-path="url(#${uid}-body)">${image}${garment}</g></g>`;
+  const legs=`<g transform="translate(${fmt(px)} ${fmt(py+data.legOffsetY)}) scale(${data.scale})" clip-path="url(#${uid}-legs)">${image}</g>`;
+  // The native arms already bend forward. A tiny hip-pivoted motion preserves
+  // their connected silhouette. Draw the small held bottle over the sleeve
+  // edge so the native forward arm cannot completely occlude the action.
+  const reach=pose==='use-cosmetic'&&!reduced?Math.sin(p*Math.PI):0;
+  const product=pose==='use-cosmetic'&&options.heldProductId&&p>.22&&p<.84?`<g class="avatar-held-product" transform="translate(${fmt(31.5+reach*.5)} ${fmt(34-reach*2)})"><rect x="-1.7" y="-5" width="3.4" height="5.2" rx=".4" fill="${options.heldProductId==='cream'?'#eee5cf':'#c6aa60'}" stroke="#64705a" stroke-width=".4"/><rect x="-1.7" y="-6" width="3.4" height="1.3" fill="#4c6958"/><path d="M-1.8-.8H.8L1.4.1 .5 1H-1.8Z" fill="#e7b493" stroke="#9b7158" stroke-width=".35"/></g>`:'';
+  return `${defs}${legs}<g data-vanity-source="seated-back" transform="rotate(${fmt(-1.2*reach)} 20 45)">${upper}${product}</g>`;
  };
  let body='';
+ const bed=unit(options.bedProgress),isBed=['lie-down','lying-idle','get-up'].includes(pose);
  const isSeat=pose==='sit-down'||pose==='stand-up'||pose==='seated-idle'||pose==='use-cosmetic';
- if(isSeat){
+ if(isBed){
+  // Lie face-up on the existing pillow; the bedspread covers the lower body.
+  // The world anchor stays collision-safe and the controller owns this progress.
+  const settle=bed*bed*(3-2*bed);
+  const rest=clip('bed-upper','<rect x="-20" y="-10" width="80" height="54"/>',source(0,{transform:`rotate(${fmt(-5*settle)} 20 18)`,part:'bed'}));
+  const cover=`<defs><linearGradient id="${key}-bed-fade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="white"/><stop offset=".66" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient><mask id="${key}-bed-mask" maskUnits="userSpaceOnUse" x="-8" y="30" width="65" height="47"><rect x="-8" y="30" width="65" height="47" fill="url(#${key}-bed-fade)"/></mask></defs><g mask="url(#${key}-bed-mask)" data-bed-cover="${fmt(settle)}" opacity="${fmt(settle)}"><path d="M-6 36Q7 31 20 35T55 37L55 76H-6Z" fill="#547795" stroke="#365970" stroke-width="1.2"/><path d="M-5 40Q11 36 24 40T54 41" fill="none" stroke="#a6bac9" stroke-width="3"/><path d="M-5 57H54M-5 74H54M8 39V76M27 40V76M45 40V76" fill="none" stroke="#adc3d0" stroke-opacity=".3" stroke-width="1.2"/><path d="M-2 43Q2 60-1 76M50 44Q46 60 51 76" fill="none" stroke="#294c66" opacity=".3" stroke-width="2"/></g>`;
+  body=settle>=.999?rest+cover:`<g opacity="${fmt(1-settle)}">${standing()}</g><g opacity="${fmt(settle)}">${rest}</g>${cover}`;
+ }else if(isSeat){
   const seated=options.objectId==='sofa'?sofaSeat():vanitySeat();
   if(seat>=.99)body=seated;
   else if(seat<=.01)body=standing();
   else body=`<g opacity="${fmt(1-seat)}" transform="translate(0 ${fmt(seat*3)})">${standing()}</g><g opacity="${fmt(seat)}">${seated}</g>`;
-  if(pose==='use-cosmetic'){
-   const reach=Math.sin(p*Math.PI),handY=37-reach*7;
-   body+=`<g transform="translate(0 ${fmt(-reach*1.1)})"><path d="M28 36 30 ${fmt(handY)} 29 ${fmt(handY-3)}" stroke="#d9ad8b" stroke-width="3" fill="none" stroke-linecap="square"/>${options.heldProductId&&p>.22&&p<.84?`<g class="avatar-held-product"><rect x="27" y="${fmt(handY-8)}" width="4" height="6" rx=".7" fill="${options.heldProductId==='cream'?'#eee5cf':'#c6aa60'}" stroke="#64705a" stroke-width=".6"/><rect x="27" y="${fmt(handY-9)}" width="4" height="2" fill="#4c6958"/></g>`:''}</g>`;
-  }
+
+ }else if(pose==='reach'&&options.objectId==='lamp'){
+  // Separate the actual near arm from the approved side sprite. Removing it
+  // from the body prevents the old hanging arm remaining beside a new reach.
+  const reach=reduced?1:Math.sin(p*Math.PI);
+  const armShape='M14 25H22L25 31V40L24 46H16L14 40L13 33Z';
+  const arm=clip('lamp-native-arm',`<path d="${armShape}"/>`,source(3,{part:'moving-arm'}));
+  const armMask=`<defs><mask id="${key}-lamp-body" maskUnits="userSpaceOnUse" x="-20" y="-10" width="80" height="90"><rect x="-20" y="-10" width="80" height="90" fill="white"/><path d="${armShape}" fill="black"/></mask></defs>`;
+  const withoutArm=part=>`<g mask="url(#${key}-lamp-body)">${source(3,{part})}</g>`;
+  const torso=clip('lamp-without-arm','<rect x="-20" y="-10" width="80" height="54"/>',withoutArm('body-without-arm'));
+  // A narrow strip of the same garment restores the torso behind the arm.
+  const repair=clip('lamp-shirt-strip','<rect x="24" y="26" width="3" height="18"/>',source(3,{part:'torso-strip'}));
+  const legs=clip('lamp-planted-legs','<rect x="-20" y="44" width="80" height="25"/>',withoutArm('planted-legs'));
+  const leanX=5*reach,leanY=8*reach;
+  body=armMask+legs+`<g data-lamp-reach="${fmt(reach)}" transform="translate(${fmt(leanX)} ${fmt(leanY)})"><g transform="translate(14 0) scale(3.667 1) translate(-24 0)">${repair}</g>${torso}<g transform="rotate(${fmt(-60*reach)} 19 28)">${arm}</g></g>`;
  }else if(pose==='browse'||pose==='reach'){
   const amount=pose==='browse'?1:Math.sin(p*Math.PI);
   // Use the supplied raised-arm art, preserving its actual rear-three-quarter silhouette.
@@ -60,7 +96,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
    body+=clip('walk-leg-b','<rect x="20" y="43" width="30" height="23"/>',source(index,{x:-stride*.38,y:-stride*.48,part:'leg-b'}));
   }
  }else body=standing();
- const shadow=seat>.4?'':`<ellipse cx="20" cy="61" rx="10" ry="2.1" fill="#45483a" opacity=".18"/>`;
+ const shadow=seat>.4||bed>.1?'':`<ellipse cx="20" cy="61" rx="10" ry="2.1" fill="#45483a" opacity=".18"/>`;
  return `${shadow}<g class="pixel-avatar" data-avatar-art="${a.id}" data-pose="${pose}">${body}</g>`;
 
  function tinted(data,uid,href){

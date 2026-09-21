@@ -1,18 +1,28 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { GET as getFood } from '../app/api/demo/food/route.ts';
-import { GET as getBeauty } from '../app/api/demo/beauty/route.ts';
+import { demoCatalogResponse } from '../src/lib/demo-catalog.ts';
+import { resolveDemoHome } from '../src/lib/demo-home.ts';
 import { demoCatalogRows, demoCatalogs } from '../src/data/demo-catalog.ts';
 import { demoHome } from '../src/data/demo-home.ts';
 import {
   adaptCatalogProducts, addToCart, cartTotal, normalizeCart, restoreCatalogState,
 } from '../src/lib/catalog.ts';
 
+const sharedRows = demoHome.purchases.map(p => ({
+  prd_id: p.id, view_name: p.name, discprice: p.price, domain: p.category,
+  cate1_nm: null, cate2_nm: null, cate3_nm: null, cate4_nm: null,
+  brand_name: null, opt1: null, opt2: null, opt3: null, opt4: null,
+}));
+const repository = () => ({ async find(id) { return sharedRows.find(p => p.prd_id === id) ?? null; } });
+const getFood = () => demoCatalogResponse('food', repository);
+const getBeauty = () => demoCatalogResponse('beauty', repository);
+const productId = alias => demoHome.purchases.find(p => p.illustrationKey === alias)?.id ?? alias;
+
 const sourceColumns = ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain'].sort();
 const removedFields = ['scenarios', 'recipes', 'intent', 'tags', 'steps', 'minutes', 'packSize', 'unit', 'optionLabel', 'available', 'amountPerServing', 'requiredAmount', 'requiredPacks', 'servings', 'owned'];
 const food = demoCatalogs.food;
 const beauty = demoCatalogs.beauty;
-const line = (productId, quantity = 1) => ({ productId, quantity });
+const line = (id, quantity = 1) => ({ productId: productId(id), quantity });
 const legacy = (cart, version = 2) => ({
   version, profileId: 'cart',
   contexts: {
@@ -64,16 +74,17 @@ test('display adaptation works from the nine source columns without images, sizi
 
 for (const [category, get] of [['food', getFood], ['beauty', getBeauty]]) {
   test(`${category} API preserves home user, avatar, and purchase events without inventory or scenarios`, async () => {
-    const response = get();
+    const response = await get();
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     const result = await response.json();
-    assert.deepEqual(Object.keys(result).sort(), ['category', 'initialCart', 'initialOutfitId', 'products', 'purchases', 'user']);
+    assert.deepEqual(Object.keys(result).sort(), ['category', 'home', 'initialCart', 'initialOutfitId', 'products', 'purchases', 'user']);
     assert.equal(result.category, category);
     assert.deepEqual(result.user, demoHome.user);
-    assert.equal(result.initialOutfitId, demoHome.purchases.find(purchase => purchase.category === 'fashion' && purchase.state.wearing === true)?.id);
+    assert.equal(result.initialOutfitId, demoHome.purchases.find(purchase => purchase.category === 'fashion' && purchase.state.wearing === true)?.illustrationKey);
     const purchases = demoHome.purchases.filter(purchase => purchase.category === category);
-    assert.deepEqual(result.purchases, purchases.map(purchase => ({ productId: purchase.id, purchasedAt: purchase.purchasedAt })));
+    assert.deepEqual(result.purchases, purchases.map(purchase => ({ productId: purchase.id, purchaseId: purchase.purchaseId, purchasedAt: purchase.purchasedAt })));
+    assert.deepEqual(result.home, await resolveDemoHome(repository()));
     assert.deepEqual(result.initialCart, []);
     for (const purchase of purchases) {
       const product = result.products.find(product => product.id === purchase.id);
@@ -82,10 +93,14 @@ for (const [category, get] of [['food', getFood], ['beauty', getBeauty]]) {
       assert.equal(product.imageUrl, purchase.imageUrl);
       assert.equal(product.prd_id, purchase.id);
       assert.equal(product.view_name, purchase.name);
+      assert.equal(product.catalogSource, 'shared-products');
+      assert.equal(product.illustrationKey, purchase.illustrationKey);
+      assert.equal(product.imageKind, 'illustration');
+      assert.equal(product.priceKind, 'catalog-reference');
     }
     assertNoRemovedFields(result);
     result.products[0].price = 0;
-    assert.notEqual((await get().json()).products[0].price, 0, 'response objects do not mutate the shared fixture');
+    assert.notEqual((await (await get()).json()).products[0].price, 0, 'response objects do not mutate the shared fixture');
   });
 }
 
@@ -97,7 +112,7 @@ test('current version 1 state is authoritative and restores only known unique pr
     savedIds: ['daily-food'],
   };
   const result = restoreCatalogState(food, JSON.stringify(stored), JSON.stringify(legacy([line('egg', 7)])));
-  assert.deepEqual(result, { cart: [line('milk', 5)], savedProductIds: ['vitamin'] });
+  assert.deepEqual(result, { cart: [line('milk', 5)], savedProductIds: [productId('vitamin')] });
   assert.deepEqual(restoreCatalogState(food, { version: 1, cart: [], savedProductIds: [] }, legacy([line('egg', 7)])), {
     cart: [], savedProductIds: [],
   }, 'an intentionally emptied current cart does not revive the legacy cart');
@@ -122,8 +137,8 @@ test('legacy food migration imports only the home cart and never converts scene 
 
 test('food and beauty carts and saved products remain separate, including migration', () => {
   const stored = { version: 1, cart: [line('milk'), line('serum', 2)], savedProductIds: ['milk', 'cream'] };
-  assert.deepEqual(restoreCatalogState(food, stored), { cart: [line('milk')], savedProductIds: ['milk'] });
-  assert.deepEqual(restoreCatalogState(beauty, stored), { cart: [line('serum', 2)], savedProductIds: ['cream'] });
+  assert.deepEqual(restoreCatalogState(food, stored), { cart: [line('milk')], savedProductIds: [productId('milk')] });
+  assert.deepEqual(restoreCatalogState(beauty, stored), { cart: [line('serum', 2)], savedProductIds: [productId('cream')] });
   assert.deepEqual(restoreCatalogState(beauty, null, legacy([line('serum', 9)])), { cart: [], savedProductIds: [] }, 'beauty never imports old food state');
 });
 
@@ -168,6 +183,58 @@ test('cart additions aggregate user-selected quantities, cap at 99, and do not m
   assert.deepEqual(next, [line('tomato', 99), line('milk', 5)]);
   assert.deepEqual(original, [line('tomato', 98)]);
   assert.deepEqual(additions, [line('tomato', 4), line('milk', 2), line('milk', 3)]);
-  assert.equal(cartTotal(food, next), 480000);
-  assert.equal(cartTotal(beauty, [line('milk'), line('serum', 2)]), 45800, 'totals stay scoped to the current category');
+  assert.equal(cartTotal(food, next), 578000);
+  assert.equal(cartTotal(beauty, [line('milk'), line('serum', 2)]), 56000, 'totals stay scoped to the current category');
+});
+
+
+test('existing fictional examples remain explicitly distinct from owned shared products', () => {
+  for (const catalog of [food, beauty]) {
+    const owned = new Set(catalog.purchases.map(p => p.productId));
+    for (const product of catalog.products) {
+      assert.equal(product.catalogSource, owned.has(product.id) ? 'shared-products' : 'fictional-example');
+      assert.equal(product.priceKind, owned.has(product.id) ? 'catalog-reference' : 'fictional-example');
+      assert.equal(product.imageKind, 'illustration');
+    }
+  }
+  assert.equal(food.products.filter(p => p.catalogSource === 'fictional-example').length, 6);
+  assert.equal(beauty.products.filter(p => p.catalogSource === 'fictional-example').length, 2);
+});
+
+test('prior alias IDs migrate to the same canonical purchases without losing cart or saved choices', () => {
+  const old = { version: 1, cart: [{ productId: 'milk', quantity: 2 }, line('milk', 1)], savedProductIds: ['water', productId('water')] };
+  assert.deepEqual(restoreCatalogState(food, old), { cart: [line('milk', 3)], savedProductIds: [productId('water')] });
+  assert.deepEqual(restoreCatalogState(beauty, { version: 1, cart: [{ productId: 'serum', quantity: 2 }], savedProductIds: ['cream'] }), {
+    cart: [line('serum', 2)], savedProductIds: [productId('cream')],
+  });
+});
+
+test('live category values reflect the same catalog join as home, not the fixture', async () => {
+  const changed = sharedRows.map(p => ({ ...p, view_name: `갱신 ${p.view_name}`, discprice: p.discprice + 300 }));
+  const changedRepo = () => ({ async find(id) { return changed.find(p => p.prd_id === id); } });
+  const home = await resolveDemoHome(changedRepo());
+  for (const category of ['food', 'beauty']) {
+    const response = await demoCatalogResponse(category, changedRepo);
+    assert.equal(response.status, 200);
+    const catalog = await response.json();
+    assert.deepEqual(catalog.home, home);
+    for (const purchase of home.purchases.filter(p => p.category === category)) {
+      const product = catalog.products.find(p => p.id === purchase.id);
+      assert.equal(product.name, purchase.name);
+      assert.equal(product.price, purchase.price);
+    }
+  }
+});
+
+test('category DB errors or missing purchased IDs return 503 without fixture fallback or secret leaks', async () => {
+  for (const category of ['food', 'beauty']) {
+    for (const getRepository of [() => ({ async find() { return null; } }), () => { throw new Error('private_password'); }]) {
+      const response = await demoCatalogResponse(category, getRepository);
+      assert.equal(response.status, 503);
+      assert.equal(response.headers.get('cache-control'), 'no-store');
+      const text = await response.text();
+      assert.equal(text.includes('private_password'), false);
+      assert.equal(JSON.parse(text).products, undefined);
+    }
+  }
 });

@@ -9,6 +9,7 @@ assert.match(html, /\/prototype\/app.js/);
 const response = await fetch(`${base}/api/demo/home`);
 assert.equal(response.status, 200, 'Demo API must load');
 assert.match(response.headers.get('content-type'), /application\/json/);
+assert.match(response.headers.get('cache-control'), /no-store/);
 const data = await response.json();
 assert.equal(typeof data.user.name, 'string');
 assert.equal(new Set(data.purchases.map(p => p.id)).size, data.purchases.length);
@@ -23,10 +24,15 @@ for (const category of ['fashion', 'food', 'living', 'beauty']) {
     assert.match(asset.headers.get('content-type'), /image\//);
   }
 }
-for (const file of ['app.js', 'avatar.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js']) {
+for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js']) {
   assert.equal((await fetch(`${base}/prototype/${file}`)).status, 200, `${file} must load`);
 }
 assert.equal((await fetch(`${base}/assets/gather-room.png`)).status, 200);
+for (const id of ['m01', 'm02', 'f01', 'f02']) {
+  const atlas = await fetch(`${base}/assets/avatars/${id}-states.png`);
+  assert.equal(atlas.status, 200, `${id} avatar atlas must load`);
+  assert.match(atlas.headers.get('content-type'), /image\/png/);
+}
 for (const category of ['fashion', 'living']) {
   assert.match(html, new RegExp(`data-room="${category}"`), 'The room needs an interactive category object');
   assert.equal((await fetch(`${base}/${category}`)).status, 200, `${category} page must load`);

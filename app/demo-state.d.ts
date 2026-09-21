@@ -1,0 +1,14 @@
+import type { DemoHome } from '../src/types/home';
+export interface DemoState { version:2; userId:string; outfitId:string; foodQuantity:Record<string,number>; lampOn:boolean; featuredBeautyId:string|null; avatarRoom:string; avatarId:'m01'|'m02'|'f01'|'f02'; }
+export interface DemoStorage { getItem(key:string):string|null; setItem(key:string,value:string):void; removeItem(key:string):void; }
+export const DEMO_STATE_KEY:string;
+export const DEMO_PERSONAL_KEYS:string[];
+export function initialDemoState(home:DemoHome):DemoState;
+export function normalizeDemoState(home:DemoHome,saved:unknown):DemoState;
+export function readDemoState(home:DemoHome,storage?:DemoStorage):DemoState;
+export function saveDemoState(home:DemoHome,state:DemoState,storage?:DemoStorage):boolean;
+export function resetDemoState(home:DemoHome,storage?:DemoStorage):DemoState;
+export function outfitArtKey(home:DemoHome,state:DemoState):'base'|'knit'|'shirt';
+export function toRoomVisualState(home:DemoHome,state:DemoState):DemoState;
+export function fromRoomVisualState(home:DemoHome,state:DemoState):DemoState;
+export function applyOwnedOutfit(home:DemoHome,state:DemoState,id:string):DemoState;

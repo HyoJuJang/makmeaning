@@ -129,3 +129,20 @@ test('no conditions and no selected product show the complete category without i
     }
   }
 });
+
+
+test('owned canonical product IDs use their explicit illustration pairing without changing identity', () => {
+  const anchor = { id: 'catalog-987654', name: '실상품 카탈로그 이름', illustrationKey: 'knit' };
+  const products = [
+    sample({ id: 'catalog-987654', pairsWith: ['knit'] }),
+    sample({ id: 'paired-example', pairsWith: ['knit'], reasons: { knit: '선택한 공간 그림과 조합하는 예시예요.' } }),
+    sample({ id: 'wrong-id-pair', pairsWith: ['catalog-987654'], reasons: { 'catalog-987654': '쓰면 안 되는 이유' } }),
+  ];
+  const before = structuredClone(anchor);
+  const results = recommend(products, filters({ situation: '', tastes: [] }), anchor);
+  assert.deepEqual(results.map(({ product }) => product.id), ['paired-example', 'wrong-id-pair']);
+  assert.equal(results[0].reason, '선택한 공간 그림과 조합하는 예시예요.');
+  assert.deepEqual(results[0].matches, ['선택 상품과 조합']);
+  assert.notEqual(results[1].reason, '쓰면 안 되는 이유');
+  assert.deepEqual(anchor, before);
+});

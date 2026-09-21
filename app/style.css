@@ -8,7 +8,7 @@
 .room-target{pointer-events:auto;border-radius:3px;min-height:44px;min-width:44px}
 .room-target.fashion{left:10%;top:7%;width:27%;height:19%}
 .room-target.food{left:58%;top:13%;width:20%;height:17%}
-.room-target.beauty{left:78%;top:32%;width:14%;height:17%}
+.room-target.beauty{left:78%;top:32%;width:14%;height:22%}
 .room-target.living{left:8%;top:54%;width:21%;height:22%}
 .room-target>span{top:0;left:0;font-size:9px;padding:5px 7px;background:#fcfaf1ef;gap:5px;white-space:nowrap;box-shadow:0 1px 4px #353a3226}
 .room-target small{bottom:2px;left:5px;background:#fcfaf1db;padding:2px 5px;border-radius:4px;font-size:9px;line-height:1.4}
@@ -63,6 +63,8 @@
 .window-target{position:absolute;pointer-events:auto;left:44.5%;top:3%;width:14%;height:8%;min-height:44px;min-width:44px;background:transparent;border:0;border-radius:4px;color:#48644c}
 .window-target:hover{background:transparent}
 .walker.is-interacting>svg{animation:none!important}.house-wrap:has(.walker[data-object="vanity"]) .beauty small{opacity:.3}
+/* The active vanity tray carries this status while the seated head occupies its room label. */
+.house-wrap:has(.walker[data-object="vanity"]) .beauty-selection{opacity:0}
 .context-tray{position:fixed;bottom:max(9px,env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);width:calc(100% - 20px);max-width:500px;max-height:min(220px,35svh);z-index:5;background:#faf9f2f7;border:1px solid #d9dfcf;border-radius:17px;box-shadow:0 5px 25px #2b3a2822;display:flex;flex-direction:column;overflow:hidden}
 .tray-head{display:flex;align-items:center;gap:7px;padding:7px 8px 7px 13px;min-height:60px;flex-shrink:0}.tray-head h2{font-size:11px;font-weight:500;color:#57704c;margin:0;flex:1;min-width:0;line-height:1.5;letter-spacing:-.4px}.tray-head button{height:44px;min-width:44px;border:0;background:#e8eddf;color:#315139;border-radius:10px;padding:8px 11px;font-size:11px;white-space:nowrap}.tray-head button:disabled{color:#89927e;background:#eeeee4}.tray-head .tray-exit{background:transparent;font-size:24px;padding:0;flex-shrink:0;color:#67815d}.tray-products{overflow:auto;overscroll-behavior:contain;min-height:0;padding:0 13px 8px;border-top:1px solid #e5e8dd}.tray-products .product{padding:9px 0;gap:9px}.tray-products .thumb{width:43px;height:48px;border-radius:10px}.tray-products .thumb svg{width:36px;height:40px}.tray-products .product-name{font-size:11px}.tray-products .product-meta{font-size:9px}.tray-products .action{font-size:10px;padding:8px 9px}.food-select{display:block;border:0;padding:6px 0;min-height:44px;background:transparent;color:#375b42;font-size:11px;text-align:left;font-weight:600}.food-select[aria-pressed="true"]{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:350px){.tray-head{gap:4px;padding-left:9px}.tray-head h2{font-size:10px}.tray-head button{font-size:10px;padding:8px}.context-tray{width:calc(100% - 12px)}.tray-products{padding-left:9px;padding-right:9px}.tray-products .product{gap:6px}.tray-products .thumb{width:34px}.tray-products .thumb svg{width:30px}}
@@ -83,7 +85,11 @@
 @media(max-width:350px){.tray-products .thumb img{width:30px}.product-meta{overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.loading-orbit{animation:none}}
 
+.bed-target{position:absolute;pointer-events:auto;left:10.5%;top:29%;width:18.5%;height:21%;min-width:44px;min-height:44px;background:transparent;border:0;border-radius:5px}.bed-target:hover{background:#ffffff05}
+
 /* Category names open the shopping Scene; furniture keeps its original behavior. */
 .room-category-link{appearance:none;border:0;background:transparent;font-family:inherit;cursor:pointer;position:absolute;z-index:5;pointer-events:auto;min-height:44px;display:flex;align-items:center;text-decoration:none;color:#254737;font-size:9px;letter-spacing:.2px;font-weight:600;gap:5px;padding:0 9px}
 .room-category-link::before{content:'';position:absolute;inset:9px 0;border-radius:16px;background:#fcfaf1f2;box-shadow:0 1px 4px #353a3226;z-index:-1}.room-category-link span{font-size:12px;color:#77866e}.fashion-link{left:10%;top:calc(7% - 9px)}.living-link{left:8%;top:calc(54% - 9px)}
 .room-category-link:hover::before{background:#fffef8}.tray-scene-link{min-height:44px;display:flex;align-items:center;justify-content:center;font-size:10px;text-decoration:none;border:1px solid #dbe1d3;border-radius:10px;color:#365542;padding:8px;white-space:nowrap}
+
+.room-demo-note{font-size:10px;line-height:1.6;color:#728070;text-align:center;max-width:360px;margin:6px auto 10px;padding:0 12px}.product-info{min-width:0}.product-name,.food-select{overflow-wrap:anywhere}.product-price{font-size:10px}.context-tray .product{align-items:center}
