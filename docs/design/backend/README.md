@@ -12,7 +12,7 @@
 
 **Production·Preview·Development·연결된 로컬 앱이 같은 DB를 사용합니다.** 로컬에서 저장한 변경도 팀 공통 데이터에 반영됩니다. Git 브랜치를 나눠도 DB가 분리되지는 않습니다.
 
-테이블과 초기 샘플 5건은 이미 등록되어 있습니다. 신규 팀원이 다시 만들 필요는 없습니다. 초기 분류는 Fashion 3 / Food 1 / Living 1 / Beauty 0이며, 빈 Beauty 응답도 정상입니다.
+테이블과 상품 데이터는 이미 등록되어 있습니다. 신규 팀원이 다시 만들 필요는 없습니다. **2026-09-21 CSV 6,031건을 추가해 기존 5건을 포함한 총 6,036건**을 확인했습니다. 분류별 건수·원본 파일·검증 결과는 [상품 데이터 등록 이력](DATA_IMPORTS.md)에 기록합니다. 이후 변경된 실제 건수는 API의 `pagination.total`에서 확인하세요.
 
 ## 1. 바로 조회하기
 
@@ -26,7 +26,7 @@ curl --fail --silent --show-error 'https://makmeaning.vercel.app/api/products?do
 curl --fail --silent --show-error --get 'https://makmeaning.vercel.app/api/products' --data-urlencode 'q=코튼'
 ```
 
-`GET /api/products?domain=food`의 초기 응답 예시입니다. 팀원이 데이터를 수정하면 값과 개수는 달라집니다.
+아래는 최초 샘플만 등록했을 때의 `GET /api/products?domain=food` 응답으로, 응답 구조를 설명하기 위한 예시입니다. 실제 CSV 등록 후 Food는 1,607건이며, 최신 값과 개수는 API에서 확인하세요.
 
 ```json
 {
