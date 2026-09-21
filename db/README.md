@@ -1,62 +1,11 @@
-# Shared product table
+# 상품 DB 파일
 
-`public.products` follows the 13 columns in `docs/design/backend/tables.md`.
-`prd_id` is text so leading zeroes survive. `discprice` is a non-negative whole KRW
-amount, limited to JavaScript's maximum safe integer. Nullable category, brand and
-`opt1`–`opt4` fields use SQL `NULL` for missing values.
+팀원의 조회·로컬 연결·데이터 수정 절차는 **[공통 상품 DB·API 사용 가이드](../docs/design/backend/README.md)**를 따릅니다.
 
-Use the Vercel project's connected Neon database. Keep `DATABASE_URL` only in
-Vercel environment variables or the ignored `.env.local`; never commit it.
-Obtain local variables with the team's authorized Vercel account:
+- [테이블 명세](../docs/design/backend/tables.md): 13개 상품 컬럼의 원본 정의.
+- [migrations/001_products.sql](migrations/001_products.sql): `public.products`와 domain 인덱스 생성 SQL.
+- [products.seed.json](products.seed.json): 최초 등록한 샘플 5건. `opt1~opt4`는 `NULL`.
 
-```sh
-vercel env pull .env.local
-node --env-file-if-exists=.env.local scripts/products-migrate.mjs
-node --env-file-if-exists=.env.local scripts/products-seed.mjs
-```
+기존 공통 DB에는 테이블과 샘플이 이미 등록되어 있습니다. 새 DB를 준비할 때는 저장소 루트에서 `npm run db:migrate`, `npm run db:seed`를 실행합니다. seed는 기존 상품을 갱신하지 않습니다.
 
-The migration runs in a transaction and does not drop anything. The seed inserts
-the five supplied samples and skips existing product codes, preserving teammates'
-edits. Its source aliases are normalized: `brd_nm` → `brand_name`, `price` →
-`discprice`. The broken `living` line is restored; the book keeps its source
-`fashion` domain. No beauty sample was supplied, so none is invented.
-
-## Team edits
-
-In the connected Neon SQL editor, teammates can update their shared optional
-fields directly:
-
-```sql
-UPDATE public.products
-SET opt1 = 'tab-fashion', opt2 = 'wardrobe'
-WHERE prd_id = '1000000660';
-
-SELECT * FROM public.products WHERE domain = 'fashion' ORDER BY prd_id;
-```
-
-For a JSON bulk import, include `prd_id`, `view_name`, `discprice` (or `price`) and
-`domain` for each product. Additional fields are optional:
-
-```json
-[
-  {
-    "prd_id": "1000000660",
-    "view_name": "~4XL 빅사이즈 기본코튼 와이드무지편한 무지밴딩팬츠_BP7206",
-    "discprice": 22500,
-    "domain": "fashion",
-    "opt1": "tab-fashion"
-  }
-]
-```
-
-```sh
-node scripts/products-import.mjs path/to/products.json --check
-node --env-file-if-exists=.env.local scripts/products-import.mjs path/to/products.json
-```
-
-Validation checks every row before writing. Import uses one parameterized
-transaction and upserts by `prd_id`. On existing rows, omitted optional fields
-remain unchanged; an explicit `null` or blank string clears that field. On new
-rows, omitted optional fields become `NULL`. The import accepts only the 13
-specified fields and the two source aliases; duplicate product codes within one
-file are rejected.
+팀 데이터 등록은 `npm run db:import -- 파일경로 --check`로 검사한 뒤 `npm run db:import -- 파일경로`로 실행합니다. 필수 필드와 생략·`null` 처리 규칙은 위 가이드를 확인하세요.
