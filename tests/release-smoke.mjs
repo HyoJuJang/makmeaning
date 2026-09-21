@@ -29,43 +29,40 @@ for (const file of ['app.js', 'avatar.js', 'interactions.js', 'movement.js', 'ob
 assert.equal((await fetch(`${base}/assets/gather-room.png`)).status, 200);
 console.log(`Release smoke PASS: homepage, API, ${data.purchases.length} purchase assets, room and interaction modules (${base})`);
 
-const foodPage = await fetch(`${base}/food`);
-assert.equal(foodPage.status, 200, 'Food page must load');
-assert.match(foodPage.headers.get('content-type'), /text\/html/);
-const foodHtml = await foodPage.text();
-assert.match(foodHtml, /내 주방/);
-assert.match(foodHtml, /오늘의 주방을 준비하고 있어요/, 'Food page renders its initial loading shell');
-assert.match(foodHtml, /role="status"/, 'Food loading status is accessible');
-
-const foodResponse = await fetch(`${base}/api/demo/food`);
-assert.equal(foodResponse.status, 200, 'Food API must load');
-assert.match(foodResponse.headers.get('content-type'), /application\/json/);
-assert.equal(foodResponse.headers.get('cache-control'), 'no-store', 'Food API must not cache customer demo state');
-const food = await foodResponse.json();
-assert.equal(food.user.id, data.user.id, 'Food and home use the same demo user');
-assert.ok(food.products.length > 0 && food.scenarios.length >= 6, 'Food catalog and six core scenarios must be available');
-for (const product of food.products) {
-  for (const field of ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain']) {
-    assert.ok(field in product, `${product.id} preserves promised source column ${field}`);
+for (const category of ['food', 'beauty']) {
+  const page = await fetch(`${base}/${category}`);
+  assert.equal(page.status, 200, `${category} page must load`);
+  assert.match(page.headers.get('content-type'), /text\/html/);
+  const pageHtml = await page.text();
+  assert.match(pageHtml, /나의 공간을 준비하고 있어요/);
+  assert.match(pageHtml, /role="status"/, 'Loading status is accessible');
+  const response = await fetch(`${base}/api/demo/${category}`);
+  assert.equal(response.status, 200, `${category} API must load`);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  const catalog = await response.json();
+  assert.equal(catalog.category, category);
+  assert.equal(catalog.user.id, data.user.id);
+  assert.equal(catalog.user.avatarId, data.user.avatarId);
+  assert.ok(catalog.products.length > 0);
+  for (const field of ['scenarios', 'recipes', 'profiles', 'intents']) {
+    assert.equal(field in catalog, false, `Obsolete ${field} is absent`);
   }
-  for (const field of ['packSize', 'unit', 'optionLabel', 'available', 'servings']) {
-    assert.equal(field in product, false, `${product.id} must not depend on unsupported ${field}`);
+  for (const product of catalog.products) {
+    for (const field of ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain']) {
+      assert.ok(field in product, `${product.id} preserves ${field}`);
+    }
+    for (const field of ['packSize', 'unit', 'optionLabel', 'available', 'servings']) {
+      assert.equal(field in product, false, `${product.id} must not require ${field}`);
+    }
   }
+  assert.deepEqual(catalog.purchases.map(p => p.productId), data.purchases.filter(p => p.category === category).map(p => p.id));
+  const artwork = new Set([...catalog.products.map(p => p.imageUrl), `/catalog-art/${category}-room.svg`]);
+  for (const path of artwork) {
+    assert.match(path, /^\/.*\.svg$/);
+    const asset = await fetch(new URL(path, base));
+    assert.equal(asset.status, 200, `${path} artwork must load`);
+    assert.match(asset.headers.get('content-type'), /image\/svg\+xml/);
+    assert.match(await asset.text(), /<svg\b/);
+  }
+  console.log(`${category} release smoke PASS: page, catalog API, source columns, home purchases, ${artwork.size} artwork assets (${base})`);
 }
-assert.deepEqual(
-  food.profiles.find(profile => profile.id === 'home').purchases.map(purchase => purchase.productId),
-  data.purchases.filter(purchase => purchase.category === 'food').map(purchase => purchase.id),
-  'Food home profile must preserve the homepage purchase records',
-);
-const foodArtwork = new Set([
-  ...[...food.products, ...food.scenarios].map(item => item.imageUrl),
-  '/food/kitchen-room.svg', '/food/products/generic.svg',
-]);
-for (const path of foodArtwork) {
-  assert.match(path, /^\/.*\.svg$/, 'Demo food artwork is a local SVG');
-  const asset = await fetch(new URL(path, base));
-  assert.equal(asset.status, 200, `${path} food artwork must load`);
-  assert.match(asset.headers.get('content-type'), /image\/svg\+xml/, `${path} must return SVG content`);
-  assert.match(await asset.text(), /<svg\b/, `${path} must contain an SVG image`);
-}
-console.log(`Food release smoke PASS: page loading shell, source fields, scenario API, ${foodArtwork.size} unique room, product and scenario assets (${base})`);

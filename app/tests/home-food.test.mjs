@@ -9,10 +9,12 @@ import * as objects from '../object-art.js';
 import {demoHome} from '../../src/data/demo-home.ts';
 
 const RETURN_KEY='gscene-home-return-v1';
+const catalogKeys=['gscene-food-v1','gscene-catalog-food-v1','gscene-catalog-beauty-v1'];
 const source=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8').replace(/^import .*?;\n/gm,'');
 
 async function boot(saved,blockedStorage=false){
- const elements=new Map(),events=new Map(),windowEvents=new Map(),storage=new Map(),local=new Map([['gscene-food-v1','kitchen state']]);
+ const elements=new Map(),events=new Map(),windowEvents=new Map(),storage=new Map(),local=new Map(catalogKeys.map(key=>[key,'catalog state']));
+ const captureEvents=new Set();
  if(saved!==undefined)storage.set(RETURN_KEY,saved);
  let frame,scrolledTo=null;
  function element(name){
@@ -23,7 +25,7 @@ async function boot(saved,blockedStorage=false){
   elements.set(name,result);return result;
  }
  const document={body:element('body'),activeElement:null,querySelector:element,querySelectorAll(){return[];},
-  addEventListener(type,fn){if(!events.has(type))events.set(type,[]);events.get(type).push(fn);}};
+  addEventListener(type,fn,capture){if(!events.has(type))events.set(type,[]);events.get(type).push(fn);if(capture===true)captureEvents.add(type);}};
  document.activeElement=element('.house-wrap');
  const context=vm.createContext({...movement,...avatars,...scenes,...interactions,...objects,document,
   window:{scrollY:246,scrollTo({top}){scrolledTo=top;},addEventListener(type,fn){windowEvents.set(type,fn);}},
@@ -32,7 +34,7 @@ async function boot(saved,blockedStorage=false){
   matchMedia(){return{matches:false};},requestAnimationFrame(fn){frame=fn;},
   fetch:async()=>({ok:true,json:async()=>structuredClone(demoHome)}),AbortController,setTimeout(){},clearTimeout(){},console});
  await vm.runInContext(`(async()=>{${source}\n globalThis.appTest={openRoom,renderTray,controller};})()`,context);
- return{context,element,storage,local,events,windowEvents,frame:()=>frame(16),scrolledTo:()=>scrolledTo};
+ return{context,element,storage,local,events,windowEvents,captureEvents,frame:()=>frame(16),scrolledTo:()=>scrolledTo};
 }
 
 const original={position:movement.APPROACHES.food,direction:'up',scrollY:182};
@@ -43,21 +45,28 @@ assert.equal(app.storage.has(RETURN_KEY),false,'Return snapshot is consumed afte
 app.frame();assert.equal(app.scrolledTo(),182);
 for(const handler of app.events.get('click'))handler({target:{closest:()=>({dataset:{foodEntry:'fridge'}})}});
 assert.deepEqual(JSON.parse(app.storage.get(RETURN_KEY)),{...original,scrollY:246});
-assert.equal(app.local.get('gscene-food-v1'),'kitchen state','Navigation must not infer or change inventory');
+for(const key of catalogKeys)assert.equal(app.local.get(key),'catalog state','Navigation must not infer or change catalog state');
 app.windowEvents.get('pagehide')();
 assert.equal(JSON.parse(app.storage.get(RETURN_KEY)).direction,'up');
 
-// The room's Food link must keep native navigation and never dispatch floor movement.
-const roomLink={dataset:{foodEntry:'room'},tagName:'A'};
-let prevented=false;
-const roomLinkClick={target:{closest(selector){return ['a[data-food-entry]','button,a[href]'].includes(selector)?roomLink:null;}},preventDefault(){prevented=true;}};
-for(const handler of app.events.get('click'))handler(roomLinkClick);
-app.element('.house-wrap').click(roomLinkClick);
-app.frame();
-assert.equal(prevented,false,'Food navigation must not be intercepted');
-assert.equal(app.context.appTest.controller.objectId,null,'Food must not enter the fridge interaction sequence');
-assert.equal(app.element('.walker').dataset.moving,'false','Food must not start floor movement');
-assert.deepEqual(JSON.parse(app.storage.get(RETURN_KEY)),{...original,scrollY:246});
+// Legacy Food and shared catalog links all preserve native navigation and home position.
+assert(app.captureEvents.has('click'),'Return state is saved before a tray can stop propagation');
+for(const dataset of [{foodEntry:'room'},{catalogEntry:'food'},{catalogEntry:'beauty'}]){
+ const roomLink={dataset,tagName:'A'};
+ let prevented=false;
+ app.storage.delete(RETURN_KEY);
+ const roomLinkClick={target:{closest(selector){
+  const captureMatch=selector.includes(dataset.foodEntry?'a[data-food-entry]':`a[data-catalog-entry="${dataset.catalogEntry}"]`);
+  return captureMatch||selector==='button,a[href]'?roomLink:null;
+ }},preventDefault(){prevented=true;}};
+ for(const handler of app.events.get('click'))handler(roomLinkClick);
+ app.element('.house-wrap').click(roomLinkClick);
+ app.frame();
+ assert.equal(prevented,false,'Catalog navigation must not be intercepted');
+ assert.equal(app.context.appTest.controller.objectId,null,'Catalog links must not enter furniture interactions');
+ assert.equal(app.element('.walker').dataset.moving,'false','Catalog links must not start floor movement');
+ assert.deepEqual(JSON.parse(app.storage.get(RETURN_KEY)),{...original,scrollY:246});
+}
 
 app.context.appTest.openRoom('food',null);
 assert.match(app.element('#modal-root').innerHTML,/<a[^>]*href="\/food"[^>]*data-food-entry="pantry"/);
@@ -69,7 +78,7 @@ controller.tick(650);app.context.appTest.renderTray(true);
 assert.match(app.element('#tray-root').innerHTML,/<a[^>]*href="\/food"[^>]*data-food-entry="fridge"/);
 app.element('#reset').click();
 assert.equal(app.storage.has(RETURN_KEY),false);
-assert.equal(app.local.has('gscene-food-v1'),false);
+for(const key of catalogKeys)assert.equal(app.local.has(key),false,`${key} is cleared by demo reset`);
 assert.equal(app.element('.walker').dataset.direction,'down');
 
 for(const invalid of ['{',JSON.stringify({position:{x:250,y:130},direction:'up',scrollY:300}),JSON.stringify({...original,direction:'diagonal'})]){
@@ -81,5 +90,8 @@ const blocked=await boot(undefined,true);blocked.windowEvents.get('pagehide')();
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(html,/<a[^>]*href="\/food"[^>]*data-food-entry="home"/);
 assert.match(html,/<a[^>]*href="\/food"[^>]*data-food-entry="room"[^>]*class="room-target food"[^>]*aria-label="Food 내 주방으로 이동"><span>Food<\/span><\/a>/);
+assert.match(html,/<a[^>]*href="\/food"[^>]*data-catalog-entry="food"[^>]*class="room-target food"/);
+assert.match(html,/<a[^>]*href="\/beauty"[^>]*data-catalog-entry="beauty"[^>]*class="room-target beauty"[^>]*aria-label="Beauty 내 화장대로 이동"><span>Beauty<\/span><\/a>/);
 assert.doesNotMatch(html,/<button[^>]*class="room-target food"/);
-console.log('PASS: direct Food navigation without movement, home/food anchors, validated position and scroll restoration, reset, and unavailable storage.');
+assert.doesNotMatch(html,/<button[^>]*class="room-target beauty"/);
+console.log('PASS: direct Food/Beauty navigation without movement, legacy/shared capture, validated position and scroll restoration, catalog reset, and unavailable storage.');

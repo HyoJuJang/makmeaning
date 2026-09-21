@@ -1,8 +1,8 @@
-# G:Scene Main Screen & Food prototype
+# G:Scene Main Screen · Food · Beauty prototype
 
 가상 고객 민서가 구매한 물건으로 채워지는 연결된 2D 원룸 mobile web prototype입니다. 확정 방향은 `docs/ideas/doc03_final_ideation.md`, 구현 명세는 `docs/design/main_screen_spec.md`입니다.
 
-식품 확장 명세와 구현 선택은 `docs/food/implementation.md`, 검증 결과는 `docs/food/review.md`입니다. 기존 홈과 `/api/demo/home` 계약을 유지하면서 `/food`에 내 주방 경험을 추가했습니다.
+식품·뷰티의 현재 구현 범위는 `docs/food/implementation.md`, 검증 결과는 `docs/food/review.md`, 추후 브랜치 통합 안내는 `docs/catalog/merge-preparation.md`입니다. `/food` 내 주방과 `/beauty` 내 화장대에서 같은 구매 상품·장바구니 경험을 제공합니다.
 
 ## 실행
 
@@ -42,26 +42,18 @@ node tests/release-smoke.mjs
 
 ## 데이터와 구성
 
-### 식품 페이지
+### 식품·뷰티 페이지
 
-냉장고의 **Food**를 누르면 바로 `/food`로 이동합니다. 홈 아래·팬트리 패널의 기존 링크도 유지하며 홈 복귀 시 캐릭터 위치·방향·스크롤을 복원합니다.
+홈 냉장고의 **Food**와 화장대의 **Beauty**는 각각 `/food`, `/beauty`로 즉시 연결됩니다. 홈 복귀 시 캐릭터 위치·방향·스크롤을 복원합니다.
 
-- 패션·생활 브랜치와 같은 공간 그림·번호·구매/장바구니 탭·상품 카드·선택 체크·전체 보기 모달.
-- 한 끼 3종, 간단한 아침, 일상 식품 챙기기, 외출 준비의 6개 장면. 멀티비타민에도 요리와 구분되는 결과 제공.
-- 상품 직접 연결→카테고리 연결→일반 추천과 실제 근거 설명, 드래그·저장·되돌리기.
-- 용량·포장 단위·인분 계산 없이 상품을 선택하고 담을 수량을 직접 변경.
-- 기존 장바구니 상품 기본 제외, 추가 상품금액, 수량 수정·삭제·재구매.
-- 하단 **다른 사용자 상태로 체험하기**에서 홈과 연결 / 첫 방문 / 파스타 구매 / 장바구니 상태를 전환합니다.
+- 패션·생활 브랜치의 공통 스타일·실제 캐릭터·이동 로직을 원본 그대로 재사용합니다. 구매 상품을 선택하면 캐릭터가 해당 공간으로 걸어갑니다.
+- 구매 상품/장바구니 탭, 선택 체크, 전체 보기, 상품 상세, 상품 찜, 장바구니 수량 변경·삭제·합계를 제공합니다.
+- 식품 시나리오·레시피·장면 저장·로컬 추천 규칙을 제거했습니다. 추천 영역은 준비 안내만 표시하며 일반 상품 목록과 구분합니다.
+- 상품 원천은 `prd_id`, `view_name`, `price`, `cate1_nm`, `cate2_nm`, `cate3_nm`, `cate4_m`, `brd_mn`, `domain` 9개 컬럼입니다. 용량·사이즈·판매 옵션은 요구하지 않습니다.
+- `GET /api/demo/food`, `GET /api/demo/beauty`는 같은 홈 사용자·구매 기록을 사용합니다. 구매 기록을 현재 재고로 간주하지 않습니다.
+- 장바구니·찜은 `gscene-catalog-food-v1`, `gscene-catalog-beauty-v1`에 각각 저장합니다. 이전 식품 데이터에서는 홈 장바구니만 복구하며 장면 저장은 상품 찜으로 변환하지 않습니다.
 
-원천 상품 데이터는 `prd_id`, `view_name`, `price`, `cate1_nm`, `cate2_nm`, `cate3_nm`, `cate4_m`, `brd_mn`, `domain`만 사용합니다. 화면 이름·로컬 그림 매핑은 별도입니다. 구매 기록은 현재 보유가 아니며 `집에 있어요`는 이번 장면에서 구매 제외하는 선택입니다. 시나리오별 상품 화면 재진입·새로고침에서 초기화합니다.
-
-`GET /api/demo/food`가 예시 상품·시나리오·프로필을 제공합니다. 장바구니·저장한 장면·탐색 상태는 `gscene-food-v1`의 내부 버전 2에 프로필별로 저장하고 이전 버전의 장바구니·저장 목록을 복구합니다. 실제 주문·GS SHOP 연동·추천 모델은 없으며 로컬 데모 규칙을 사용합니다. 홈의 **데모 초기화**는 식품 상태도 초기화합니다.
-
-- `app/food/`: React 식품 UI와 CSS module.
-- `src/types/food.ts`, `src/data/demo-food.ts`: 원천 컬럼·표시 정보·시나리오·데모 프로필.
-- `src/lib/food.ts`: 상품 매핑, 추천과 fallback, 선택 수량·장바구니·합계.
-- `public/food/`: 주방·상품·시나리오 SVG.
-- `tests/food.test.mjs`, `app/tests/home-food.test.mjs`: 원천 계약·추천·중복 제외·홈 즉시 연결 검사.
+`src/components/catalog/`는 두 화면의 공통 UI, `src/lib/catalog.ts`는 상품·장바구니·저장 복구, `src/data/demo-catalog.ts`는 9컬럼 데모 데이터입니다. `public/catalog-art/`는 두 공간 배경이며 상품 그림은 별도 로컬 표시 자산입니다. 실제 브랜치 병합은 수행하지 않았습니다.
 
 ### 기존 홈
 
@@ -79,7 +71,7 @@ node tests/release-smoke.mjs
 
 ## 검증
 
-`npm test`는 경로/충돌, 실제 입력 handler, 동작 controller, 상품 그림, 홈·식품 API contract, 식품 수량·금액, 홈 복귀를 검증합니다. `node tests/release-smoke.mjs`는 실행 중인 production 서버의 홈·식품 페이지, API, 상품·메뉴 이미지, 필수 runtime module을 검증합니다. 배포 주소에서는 `SMOKE_BASE_URL=https://배포주소 node tests/release-smoke.mjs`로 같은 검사를 실행할 수 있습니다.
+`npm test`는 경로/충돌, 실제 입력 handler, 동작 controller, 상품 그림, 홈·식품·뷰티 API contract, 장바구니 수량·금액·저장 복구, 캐릭터 이동, 홈 복귀를 검증합니다. `node tests/release-smoke.mjs`는 실행 중인 production 서버의 홈·식품·뷰티 페이지, API, 상품·공간 이미지, 필수 runtime module을 검증합니다. 배포 주소에서는 `SMOKE_BASE_URL=https://배포주소 node tests/release-smoke.mjs`로 같은 검사를 실행할 수 있습니다.
 
 실제 모바일 화면과 interaction, review → fix → rerun 증거는 `docs/design/main_screen_review.md`에 기록합니다. 자동 검사를 모바일 화면 QA 대신 사용하지 않습니다.
 
