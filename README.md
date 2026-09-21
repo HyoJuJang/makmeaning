@@ -79,3 +79,20 @@ npm run dev
 Node.js 24 LTS를 권장합니다. 저장소 접근 권한이 있는 GitHub 계정을 사용합니다. 기능 브랜치에서 작업하고 main으로 Pull Request를 보내면 GitHub Actions가 테스트·production build·HTTP smoke를 검사합니다. 방 데모 실행에는 인증 정보나 환경변수가 필요하지 않습니다. 로컬 상품 API·DB 작업은 [상품 DB·API 가이드](docs/design/backend/README.md)의 연결 절차를 추가로 따릅니다.
 
 데이터 작업은 `src/data/`, `src/types/`, `app/api/`, 화면 작업은 `app/app.js`·`app/style.css`, 캐릭터·동작 작업은 `app/avatar.js`·`app/interactions.js`·`app/movement.js`를 중심으로 나눕니다. 같은 파일을 수정할 때는 담당자끼리 먼저 조율합니다. 현재 방 구현을 교체하지 않고 API contract를 유지하세요.
+
+## Fashion / Living Scene (2026-09-21)
+
+메인 공간의 **Fashion / Living 이름표**, 또는 옷장·소파 사용 중 **추천 보기**를 누르면 `/fashion`, `/living`으로 이동합니다. 가구 자체는 기존 캐릭터 동작을 유지합니다.
+
+- 구매한 상품은 기존 `/api/demo/home`에서 가져옵니다. 작은 픽셀 공간의 번호와 상품 목록이 연결됩니다.
+- 구매품·장바구니 상품 선택, 기준 상품 없이 새롭게 둘러보기를 지원합니다.
+- 상황 1개, 복수 취향, 새 상품 1개당 예산으로 추천 조건을 적용합니다. 추가 조건에서 종류·직접 예산을 정합니다.
+- 예산·종류는 필수 필터이고, 상황·취향·조합은 추천 순서에 반영됩니다. 연결 근거가 있는 경우에만 조합 이유를 표시합니다.
+- 상품 상세, 찜, 장바구니 담기·삭제·합계를 지원합니다. 구매와 결제는 진행되지 않습니다.
+- 찜·장바구니는 카테고리별 localStorage에 보관되며 메인의 **데모 초기화**로 초기 상태로 돌아갑니다.
+
+추가 API: `GET /api/demo/scenes?category=fashion|living` (입력 누락/오류 400). 상품 14개와 가격은 가상 데이터이며 실제 GS SHOP 상품이 아닙니다. 실제 상품 샘플은 `src/data/demo-scenes.ts`의 계약에 맞춰 교체하면 됩니다. 일반 이미지 URL도 지원합니다. 현재 `public/scene-art/products.png#셀명`은 이전 디자인 시안에서 생성한 이미지의 CSS 스프라이트 표현입니다. 공간 이미지 역시 승인된 이전 픽셀 디자인 자산을 재사용했고, 소유 상품에는 기존 API 이미지와 번호를 겹쳐 표시합니다.
+
+추천 규칙은 `src/lib/scene/recommend.ts`, 공통 화면은 `src/components/scene/ScenePage.tsx`에 있습니다. 실제 추천 모델/회원/주문 연동은 다음 단계입니다. 실행은 기존과 같이 `npm ci`, `npm run build`, `npm start`이며 Vercel 설정은 유지됩니다.
+
+검증: `npm test`, `npm run typecheck`, `npm run build`, 서버 실행 후 `node tests/release-smoke.mjs`. 화면 검수 기록은 `docs/design/category_screen_review.md`를 참고합니다.

@@ -82,3 +82,8 @@
 .thumb img{width:49px;height:51px;object-fit:contain}.tray-products .thumb img{width:36px;height:40px}.product-price{font-size:9px;color:#92988c}.product-name,.food-select{overflow-wrap:anywhere}
 @media(max-width:350px){.tray-products .thumb img{width:30px}.product-meta{overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.loading-orbit{animation:none}}
+
+/* Category names open the shopping Scene; furniture keeps its original behavior. */
+.room-category-link{position:absolute;z-index:5;pointer-events:auto;min-height:44px;display:flex;align-items:center;text-decoration:none;color:#254737;font-size:9px;letter-spacing:.2px;font-weight:600;gap:5px;padding:0 9px}
+.room-category-link::before{content:'';position:absolute;inset:9px 0;border-radius:16px;background:#fcfaf1f2;box-shadow:0 1px 4px #353a3226;z-index:-1}.room-category-link span{font-size:12px;color:#77866e}.fashion-link{left:10%;top:calc(7% - 9px)}.living-link{left:8%;top:calc(54% - 9px)}
+.room-category-link:hover::before{background:#fffef8}.tray-scene-link{min-height:44px;display:flex;align-items:center;justify-content:center;font-size:10px;text-decoration:none;border:1px solid #dbe1d3;border-radius:10px;color:#365542;padding:8px;white-space:nowrap}

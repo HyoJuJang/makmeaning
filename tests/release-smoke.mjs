@@ -27,4 +27,21 @@ for (const file of ['app.js', 'avatar.js', 'interactions.js', 'movement.js', 'ob
   assert.equal((await fetch(`${base}/prototype/${file}`)).status, 200, `${file} must load`);
 }
 assert.equal((await fetch(`${base}/assets/gather-room.png`)).status, 200);
+for (const category of ['fashion', 'living']) {
+  assert.match(html, new RegExp(`href="/${category}"`), 'The room needs a category entry');
+  assert.equal((await fetch(`${base}/${category}`)).status, 200, `${category} page must load`);
+  const sceneResponse = await fetch(`${base}/api/demo/scenes?category=${category}`);
+  assert.equal(sceneResponse.status, 200);
+  const scene = await sceneResponse.json();
+  assert.equal(scene.category, category);
+  for (const imageUrl of new Set(scene.products.map(product => product.imageUrl.split('#')[0]))) {
+    const asset = await fetch(new URL(imageUrl, base));
+    assert.equal(asset.status, 200, 'Scene product image must load');
+    assert.match(asset.headers.get('content-type'), /image\//);
+  }
+}
+for (const room of ['wardrobe-room.png', 'living-room.png']) {
+  assert.equal((await fetch(`${base}/scene-art/${room}`)).status, 200);
+}
 console.log(`Release smoke PASS: homepage, API, ${data.purchases.length} purchase assets, room and interaction modules (${base})`);
+console.log('Release smoke PASS: fashion/living pages, category entries, scene APIs and artwork');
