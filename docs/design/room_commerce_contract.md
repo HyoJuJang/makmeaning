@@ -7,7 +7,7 @@
 - `Purchase.id` = 공통 상품 DB의 `prd_id`. `/api/products/:id`, `/api/demo/home`, 구매 목록은 같은 ID/name/catalog reference price를 사용한다.
 - `purchaseId` = 가상 고객의 가상 구매 이벤트. 실상품 카탈로그와 가상 보유 여부를 구분한다.
 - `illustrationKey` / `roomSlot` = 기존 공간 그림·동작 연결. 그림은 실상품 사진, 정확한 외형, 가상 피팅이 아니다.
-- `/api/demo/home`는 지정한 9개 상품만 DB에서 읽어 가상 구매 이벤트에 연결한다. 실패 시 명확한 오류를 내고 가짜 실상품으로 대체하지 않는다. DB에는 쓰지 않는다.
+- `/api/demo/home`는 지정한 10개 상품(Fashion 3, Food 3, Living 2, Beauty 2)만 DB에서 읽어 가상 구매 이벤트에 연결한다. 실패 시 명확한 오류를 내고 가짜 실상품으로 대체하지 않는다. DB에는 쓰지 않는다.
 - Food 잔량은 데모에서 남은 사용 횟수이며 실상품의 포장 수량·재고가 아니다. 가격은 카탈로그 참고가이며 가상 주문의 결제 금액을 뜻하지 않는다.
 - 기존 Scene 추천의 가상 예시 상품은 유지하고 실상품 구매 목록과 명시적으로 구분한다.
 

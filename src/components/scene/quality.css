@@ -1,0 +1,98 @@
+/* Shared consumer-app surfaces around the existing illustrated rooms. */
+.sc-page {
+  --sc-paper: #f7f5ee;
+  --sc-line: #dfe2d6;
+  --sc-ink: #244b3d;
+  --sc-muted: #697568;
+  --sc-green: #315943;
+}
+.sc-page .sc-header { min-height: 60px; }
+.sc-page .sc-back { font-size: 11px; color: #61715f !important; }
+.sc-page .sc-heading { padding: 18px 0 14px; }
+.sc-page .sc-heading h1 { font-size: 24px; font-weight: 650; letter-spacing: -1px; }
+.sc-category-mark { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 11px; color: #44664e; background: #e9eddf; }
+.sc-category-mark .gs-category-icon { width: 22px; height: 22px; }
+.sc-page .sc-person { color: #75816f; font-size: 10px; }
+.sc-page .sc-collection { border: 1px solid #d2d9c9; border-radius: 16px; background: #fcfbf6; box-shadow: 0 3px 12px #354b3310; overflow: hidden; }
+.sc-page .sc-room-hud { min-height: 40px; height: auto; padding: 6px 12px; gap: 8px; background: #edf0e5; color: #59705b; font-family: inherit; font-size: 9px; font-weight: 600; letter-spacing: 1.2px; }
+.sc-page .sc-room-hud i { width: 5px; height: 5px; border-radius: 50%; background: #859778; box-shadow: none; }
+.sc-page .sc-room-hud b { font-family: inherit; font-size: 9px; letter-spacing: 1px; font-weight: 500; }
+.sc-page .sc-room { border-bottom: 1px solid #d3ccba; }
+.sc-page .sc-room-controls { gap: 5px; }
+.sc-page .sc-room-controls button,
+.sc-page .sc-outfit-reset { min-height: 36px; padding: 5px 8px; border: 1px solid #d3dbc9 !important; border-radius: 8px; background: #f8f9f1; color: #4d664d !important; font-size: 10px !important; }
+.sc-page .sc-room-controls button[aria-pressed=true] { background: #dfe8d8; border-color: #acbba3 !important; }
+.sc-page .sc-room-footnote { border-radius: 5px; color: #57654f; }
+.sc-page .sc-room-pin > span:first-child { border-radius: 7px; border: 1px solid #fffdf0; box-shadow: 0 2px 4px #364c3729; font-family: inherit; }
+.sc-page .sc-room-pin[aria-pressed=true] > span:first-child { box-shadow: 0 2px 4px #364c3729; }
+.sc-page .sc-inventory-head { min-height: 46px; padding: 2px 12px 0; gap: 10px; }
+.sc-page .sc-tabs { gap: 14px; }
+.sc-page .sc-tabs button { min-height: 44px; font-size: 12px; padding: 9px 0 8px; }
+.sc-page .sc-tabs span { font-family: inherit; font-size: 11px; }
+.sc-page .sc-inventory-head .sc-text-button { min-height: 44px; font-size: 11px !important; }
+.sc-page .sc-inventory-rail { gap: 12px; padding: 8px 12px 14px; scroll-padding: 12px; }
+.sc-page .sc-owned-item { flex-basis: 104px; min-width: 104px; align-self: flex-start; text-align: left; }
+.sc-page .sc-owned-photo { height: 70px; border-radius: 10px; border: 1px solid #e0e2d6; background: #eeefe5; box-shadow: none; }
+.sc-page .sc-owned-photo .sc-product-visual { width: 58px; height: 58px; }
+.sc-page .sc-owned-item[aria-pressed=true] .sc-owned-photo { border: 1.5px solid #597352; background: #e5eddf; box-shadow: none; }
+.sc-page .sc-owned-item .sc-owned-name { font-size: 11px; line-height: 1.5; min-height: 38px; padding-top: 6px; color: #41583f; }
+.sc-page .sc-owned-item > small { font-size: 10px; line-height: 1.5; color: #6d7965; margin-top: 3px; }
+.sc-page .sc-item-index { font-family: inherit; font-size: 10px; }
+.sc-page .sc-selected-check { border-radius: 50%; right: 4px; bottom: 4px; }
+.sc-page .sc-new-item .sc-owned-photo { border: 1px dashed #b8c4ad; box-shadow: none; background: #f8f9f0; }
+.sc-page .sc-new-item > span:last-child { font-size: 11px; padding-top: 7px; text-align: center; }
+.sc-page .sc-anchor-caption { padding: 10px 12px; min-height: 44px; background: #eff2e8; border-color: #e0e5d8; font-size: 11px; line-height: 1.55; }
+.sc-page .sc-ownership-note { font-size: 10px; line-height: 1.6; padding: 10px 12px; background: #fcfbf6; border-color: #e8eade; }
+.sc-page .sc-results { margin-top: 20px; }
+.sc-page .sc-filter-summary { border-radius: 11px; min-height: 46px; background: #edf1e5; border-color: #dce3d2 !important; padding: 10px 12px !important; }
+.sc-page .sc-results-heading { min-height: 58px; }
+.sc-page .sc-results-heading h2 { font-size: 17px; font-weight: 650; }
+.sc-page .sc-result-count { font-family: inherit; font-size: 11px; border-radius: 5px; padding: 3px 6px; }
+.sc-page .sc-pixel-spark { font-size: 16px; color: #7a9271; }
+.sc-page .sc-product-grid { gap: 26px 14px; }
+.sc-page .sc-card { display: flex; flex-direction: column; }
+.sc-page .sc-card-image { flex-shrink: 0; border-radius: 12px; border: 1px solid #e4e6da; background: #efefe8; aspect-ratio: 1; }
+.sc-page .sc-card-copy { display: flex; flex-direction: column; flex: 1; padding-top: 10px; }
+.sc-page .sc-card-name { font-size: 13px !important; line-height: 1.5; min-height: 39px; text-align: left; }
+.sc-page .sc-product-kind { font-size: 10px; color: #78836d; }
+.sc-page .sc-price { font-size: 18px; line-height: 1.35; margin: 6px 0 10px; }
+.sc-page .sc-heart { border-radius: 50%; width: 36px; height: 36px; background: #fcfbf2ee; }
+.sc-page .sc-top-pick { border-radius: 5px; font-size: 9px; }
+.sc-page .sc-preview-button { border-radius: 9px; min-height: 44px; font-size: 11px !important; box-shadow: none; border-color: #a4b799 !important; margin: 0 0 10px; }
+.sc-page .sc-reason { font-size: 11px; line-height: 1.65; color: #63745b; }
+.sc-page .sc-match-tags { margin: 6px 0 10px; }
+.sc-page .sc-cart-button { min-height: 44px; border-radius: 9px; font-size: 11px !important; margin-top: auto; }
+.sc-page .sc-card-copy .sc-cart-button { margin-top: 12px; }
+.sc-page .sc-demo-note { font-size: 10px; line-height: 1.7; color: #77836d; }
+.sc-page .catalog-state-note { padding: 12px 2px 0; margin: 0; }
+.sc-page .catalog-source { margin: 5px 0 2px; color: #75816c; }
+.sc-page .sc-dialog { border: 1px solid #d6deca; border-radius: 22px; box-shadow: 0 10px 50px #233c302e; }
+.sc-page .sc-dialog-head h2 { font-size: 22px; }
+.sc-page .sc-chip-group button { min-height: 44px; border-radius: 10px; }
+.sc-page .sc-budget-input input { border-radius: 9px; }
+.sc-page .sc-conditions .sc-primary { border-radius: 12px; box-shadow: none; }
+.sc-page .sc-confirmed-preview { padding: 10px 12px; gap: 6px 10px; background: #eaf0e2; }
+.sc-page .sc-confirmed-preview button { min-height: 44px; border-radius: 9px; }
+.sc-page .sc-confirmed-preview .sc-apply-outfit { background: #355b43; color: #fff !important; border: 1px solid #355b43 !important; }
+.sc-page .sc-placement-caption { padding: 10px 12px; }
+.sc-page .sc-placement-caption button { min-height: 44px; }
+.sc-page .sc-look-board { border-radius: 12px; box-shadow: none; padding: 12px; }
+.sc-page .sc-look-slot { border-radius: 9px; box-shadow: none; }
+.sc-page .catalog-eat-button { border-radius: 9px; }
+@media (max-width: 760px) {
+  .sc-page .sc-dialog { border-radius: 22px 22px 0 0; }
+}
+@media (max-width: 359px) {
+  .sc-page { padding-left: 12px; padding-right: 12px; }
+  .sc-page .sc-heading { padding: 14px 0 12px; }
+  .sc-page .sc-heading h1 { font-size: 22px; }
+  .sc-page .sc-owned-item { flex-basis: 100px; min-width: 100px; }
+  .sc-page .sc-owned-photo { height: 64px; }
+  .sc-page .sc-owned-photo .sc-product-visual { width: 52px; height: 52px; }
+  .sc-page .sc-room-hud { letter-spacing: .7px; padding-left: 10px; padding-right: 8px; }
+  .sc-page .sc-room-controls button { font-size: 9px !important; padding-left: 6px; padding-right: 6px; }
+  .sc-page .sc-results-heading h2 { font-size: 16px; }
+  .sc-page .sc-product-grid { gap: 24px 12px; }
+  .sc-page .sc-card-name { font-size: 12px !important; min-height: 36px; }
+  .sc-page .sc-cart-button { font-size: 10px !important; }
+}

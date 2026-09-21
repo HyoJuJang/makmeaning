@@ -1,3 +1,4 @@
+:root { --gs-nav-height: calc(66px + env(safe-area-inset-bottom, 0px)); }
 .gs-category-nav {
   position: fixed;
   z-index: 6;
@@ -5,9 +6,10 @@
   bottom: 0;
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  width: min(440px, 100%);
-  padding: 4px 10px max(5px, env(safe-area-inset-bottom));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  width: min(520px, 100%);
+  height: var(--gs-nav-height);
+  padding: 4px 8px calc(5px + env(safe-area-inset-bottom, 0px));
   border: 1px solid #dedfd4;
   border-bottom: 0;
   background: #fbfaf6fa;
@@ -41,3 +43,10 @@
 .gs-category-nav a:focus-visible { outline: 2px solid #537465; outline-offset: -3px; border-radius: 4px; }
 @media (hover: hover) { .gs-category-nav a:hover { color: #305442; } }
 @media (prefers-reduced-motion: reduce) { .gs-category-nav a,.gs-category-nav .gs-category-icon-wash { transition: none; } }
+
+.gs-category-nav .gs-room-nav-item { gap: 1px; color: #52634f; }
+.gs-category-nav .gs-room-nav-item .gs-category-nav-label { font-weight: 650; }
+html { scroll-padding-bottom: calc(var(--gs-nav-height) + 20px); }
+body .sc-page { padding-bottom: calc(var(--gs-nav-height) + 22px); }
+/* A room sheet owns focus and the entire viewport until it closes. */
+body:has(#modal-root .overlay) .gs-category-nav { visibility: hidden; }

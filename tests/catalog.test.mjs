@@ -4,6 +4,8 @@ import { demoCatalogResponse } from '../src/lib/demo-catalog.ts';
 import { resolveDemoHome } from '../src/lib/demo-home.ts';
 import { demoCatalogRows, demoCatalogs } from '../src/data/demo-catalog.ts';
 import { demoHome } from '../src/data/demo-home.ts';
+import { catalogRoomItems, catalogRoomPlacement } from '../src/lib/catalog-room.ts';
+import { roomArtworkIsVisible, repeatedEatingPointer } from '../src/lib/catalog-eating-input.ts';
 import {
   adaptCatalogProducts, addToCart, cartTotal, normalizeCart, restoreCatalogState,
 } from '../src/lib/catalog.ts';
@@ -20,6 +22,30 @@ const productId = alias => demoHome.purchases.find(p => p.illustrationKey === al
 
 const sourceColumns = ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain'].sort();
 const removedFields = ['scenarios', 'recipes', 'intent', 'tags', 'steps', 'minutes', 'packSize', 'unit', 'optionLabel', 'available', 'amountPerServing', 'requiredAmount', 'requiredPacks', 'servings', 'owned'];
+
+test('eating keeps a visible room stable and only reveals clipped artwork', () => {
+  for (const bottom of [778, 502]) {
+    const usable = { top: 0, bottom };
+    assert.equal(roomArtworkIsVisible({ top: 104, bottom: 226 }, usable), true);
+    assert.equal(roomArtworkIsVisible({ top: 0, bottom }, usable), true);
+    assert.equal(roomArtworkIsVisible({ top: -1, bottom: 120 }, usable), false);
+    assert.equal(roomArtworkIsVisible({ top: bottom - 120, bottom: bottom + 1 }, usable), false);
+  }
+  assert.equal(roomArtworkIsVisible({ top: 55, bottom: 175 }, { top: 60, bottom: 502 }), false);
+});
+
+test('eating reveal rejects a same-position follow-up click without blocking deliberate input', () => {
+  const first = { clientX: 280, clientY: 460, timeStamp: 1000, detail: 1 };
+  assert.equal(repeatedEatingPointer(first, { ...first, timeStamp: 1210, detail: 2 }), true);
+  // Re-targeting another element may reset click detail to 1, including on touch.
+  assert.equal(repeatedEatingPointer(first, { ...first, clientX: 284, timeStamp: 1200 }), true);
+  assert.equal(repeatedEatingPointer(first, { ...first, clientX: 320, timeStamp: 1200 }), false);
+  assert.equal(repeatedEatingPointer(first, { ...first, timeStamp: 1451 }), false);
+  assert.equal(repeatedEatingPointer(first, { ...first, timeStamp: 999 }), false);
+  assert.equal(repeatedEatingPointer(first, { ...first, timeStamp: 1200, detail: 0 }), false);
+  assert.equal(repeatedEatingPointer({ ...first, detail: 0 }, first), false);
+  assert.equal(repeatedEatingPointer(null, first), false);
+});
 const food = demoCatalogs.food;
 const beauty = demoCatalogs.beauty;
 const line = (id, quantity = 1) => ({ productId: productId(id), quantity });
@@ -237,4 +263,35 @@ test('category DB errors or missing purchased IDs return 503 without fixture fal
       assert.equal(JSON.parse(text).products, undefined);
     }
   }
+});
+
+
+test('room placement follows canonical purchase slots even when API arrays reorder', () => {
+  const before=JSON.stringify(food),items=catalogRoomItems(food,null);
+  assert.equal(items.length,3);
+  const byArt=Object.fromEntries(items.map(item=>[item.purchase.illustrationKey,item]));
+  assert.equal(byArt.milk.placement.zone,'fridge');
+  assert.equal(byArt.water.placement.zone,'fridge');
+  assert.equal(byArt.vitamin.placement.zone,'pantry');
+  assert.equal(byArt.milk.placement.approachX,byArt.water.placement.approachX);
+  assert.notEqual(byArt.water.placement.approachX,byArt.vitamin.placement.approachX);
+  const reordered=structuredClone(food);reordered.purchases.reverse();reordered.products.reverse();reordered.home.purchases.reverse();
+  assert.deepEqual(catalogRoomItems(reordered,null),items);
+  for(const item of items){assert.equal(item.product.id,item.purchase.id);assert.equal(item.product.imageUrl,item.purchase.imageUrl);assert.equal(catalogRoomPlacement(item.purchase),item.placement);}
+  assert.equal(JSON.stringify(food),before);
+});
+
+test('room objects use confirmed remaining/beauty state without inventing possessions', () => {
+  const waterId=productId('water'),before=JSON.stringify(food);
+  const depleted=catalogRoomItems(food,{foodQuantity:{[waterId]:0}});
+  assert.equal(depleted.find(item=>item.purchase.id===waterId).visible,false);
+  assert.equal(depleted.find(item=>item.purchase.illustrationKey==='milk').visible,true);
+  assert.equal(depleted.length,3,'Empty goods retain an inspectable purchase marker');
+  const beautyItems=catalogRoomItems(beauty,{featuredBeautyId:productId('cream')});
+  assert.equal(beautyItems.length,2);assert.deepEqual(beautyItems.filter(item=>item.featured).map(item=>item.purchase.id),[productId('cream')]);
+  const bogus=structuredClone(food);bogus.purchases.push({productId:food.products.find(item=>item.catalogSource==='fictional-example').id,purchaseId:'fake',purchasedAt:'never'});
+  assert.equal(catalogRoomItems(bogus,null).length,3,'Fictional catalog examples cannot appear as owned room objects');
+  assert.equal(catalogRoomPlacement(undefined),null);
+  assert.equal(catalogRoomPlacement({category:'food',roomSlot:'vanity-1'}),null);
+  assert.equal(JSON.stringify(food),before);
 });

@@ -7,7 +7,7 @@ import {demoHome} from '../../src/data/demo-home.ts';
 const qa=dirname(fileURLToPath(import.meta.url)),root=resolve(qa,'../..'),assets=resolve(root,'app/assets');
 const port=Number(process.env.QA_PORT||3202);
 if(!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid QA_PORT');
-const moduleNames=new Set(['avatar.js','avatar-frames.js','vanity-frames.js','object-art.js','interactions.js','movement.js','category-routes.js','eating-frames.js','food-action.js','demo-state.js']);
+const moduleNames=new Set(['avatar.js','avatar-frames.js','vanity-frames.js','object-art.js','interactions.js','movement.js','category-routes.js','eating-frames.js','food-action.js','demo-state.js','garment-art.js']);
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.mjs':'text/javascript; charset=utf-8','.png':'image/png','.svg':'image/svg+xml','.jpg':'image/jpeg','.json':'application/json; charset=utf-8'};
 createServer(async(req,res)=>{
  try{
@@ -17,6 +17,7 @@ createServer(async(req,res)=>{
   if(path==='/')file=resolve(qa,'canonical.html');
   else if(['/canonical.js','/canonical-state.mjs'].includes(path))file=resolve(qa,path.slice(1));
   else if(path.startsWith('/app/')&&moduleNames.has(path.slice(5)))file=resolve(root,path.slice(1));
+  else if(['/products/knit.svg','/products/shirt.svg'].includes(path))file=resolve(root,'public',path.slice(1));
   else if(path.startsWith('/assets/')){
    file=await realpath(resolve(assets,path.slice(8)));
    if(!file.startsWith((await realpath(assets))+sep)){res.writeHead(403);return res.end();}

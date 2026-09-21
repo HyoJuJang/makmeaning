@@ -1,0 +1,29 @@
+{
+  "revision": "quality-c2r1",
+  "slideCount": 5,
+  "pdfPageCount": 5,
+  "nativeTextRunsPerSlide": [
+    8,
+    9,
+    11,
+    8,
+    9
+  ],
+  "actualPptxReimport": true,
+  "allFinalSlideRendersInspected": true,
+  "allPdfPageRendersInspected": true,
+  "independentNarrativeCritiques": 2,
+  "independentVisualCritiques": 2,
+  "finalVisualCorrectionRechecked": true,
+  "powerPointApplicationTested": false,
+  "pdfKind": "image preview of the final PPTX render",
+  "sha256": {
+    "GScene_Final_52g.pptx": "00709a288307a5753d05167b6ab87fc0717b681eb5a4813935484612a7de9310",
+    "GScene_Final_52g.pdf": "a6afb33e32e60fd1c2bd89d20b61082732be9a5221ce212f7cdd9f3192908189"
+  },
+  "byteCount": {
+    "GScene_Final_52g.pptx": 711722,
+    "GScene_Final_52g.pdf": 320369
+  },
+  "userOutputs": "/Users/gsretail/Documents/Codex/2026-09-21/agents-md-docs-ideas-doc03-final/outputs/quality-presentation"
+}

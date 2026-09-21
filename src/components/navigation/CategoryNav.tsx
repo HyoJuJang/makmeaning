@@ -1,8 +1,9 @@
-import Link from 'next/link';
 import { CATEGORY_ROUTES } from '../../../app/category-routes.js';
 import './category-nav.css';
 
 export type CategoryNavKey = keyof typeof CATEGORY_ROUTES;
+type NavigationKey = CategoryNavKey | 'room';
+const NAVIGATION_ORDER: NavigationKey[] = ['fashion', 'food', 'room', 'living', 'beauty'];
 
 /** A shared 24px family, drawn around the everyday objects in the room. */
 export function CategoryIcon({ category }: { category: CategoryNavKey }) {
@@ -28,11 +29,23 @@ export function CategoryIcon({ category }: { category: CategoryNavKey }) {
   return <svg className="gs-category-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{shapes[category]}</svg>;
 }
 
-export default function CategoryNav({ activeCategory }: { activeCategory: CategoryNavKey }) {
-  return <nav className="gs-category-nav" aria-label="카테고리">
-    {(Object.keys(CATEGORY_ROUTES) as CategoryNavKey[]).map(category => <Link key={category} href={CATEGORY_ROUTES[category].href} className="gs-category-nav-item" aria-current={activeCategory === category ? 'page' : undefined}>
-      <CategoryIcon category={category} />
-      <span className="gs-category-nav-label">{CATEGORY_ROUTES[category].label}</span>
-    </Link>)}
+/** A small cutaway home: the room is the center of the same everyday-object family. */
+function RoomIcon() {
+  return <svg className="gs-category-icon gs-room-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    <path className="gs-category-icon-wash" d="M3.5 10 12 3.5 20.5 10v10h-17Z" />
+    <path d="M3.5 13h17M12 13v7M10.5 8.5h3v2.5h-3Z" />
+  </svg>;
+}
+
+export default function CategoryNav({ activeCategory }: { activeCategory: NavigationKey }) {
+  return <nav className="gs-category-nav" aria-label="공간과 쇼핑">
+    {NAVIGATION_ORDER.map(destination => {
+      const route = destination === 'room' ? { href: '/', label: '내 공간' } : CATEGORY_ROUTES[destination];
+      // Native document navigation boots/cleans up the vanilla room exactly once.
+      return <a key={destination} href={route.href} className={`gs-category-nav-item${destination === 'room' ? ' gs-room-nav-item' : ''}`} data-destination={destination} aria-current={activeCategory === destination ? 'page' : undefined}>
+        {destination === 'room' ? <RoomIcon /> : <CategoryIcon category={destination} />}
+        <span className="gs-category-nav-label">{route.label}</span>
+      </a>;
+    })}
   </nav>;
 }

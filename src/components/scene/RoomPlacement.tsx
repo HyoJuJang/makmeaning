@@ -22,7 +22,7 @@ function RoomLayer({ children, className = '' }: { children: ReactNode; classNam
 }
 
 function Cushion() {
-  return <RoomLayer className="sc-placement__item"><g transform="translate(-32 0)">
+  return <RoomLayer className="sc-placement__item"><g transform="translate(-22 0)">
     <path fill="#594e44" opacity=".24" d="M301 104h31v2h8v3h-5v2h-34v-2h-6v-3h6Z" />
     <path fill="#454c4d" d="M300 61h4v2h25v-2h6v5h-2v8h-1v17h1v10h2v5h-7v-2h-22v2h-8v-5h2V90h1V75h-1Z" />
     <path fill="#3e5b75" d="M302 65h4v1h22v-1h4v9h-1v20h1v8h-5v-1h-22v2h-4v-3h1V89h1V76h-1Z" />

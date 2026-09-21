@@ -49,7 +49,11 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   // Reuse the approved strict-rear seated raster. Separate silhouette clips
   // exclude its ivory background and reference stool, revealing the room stool.
   const data=VANITY_FRAMES[a.id],href=`/assets/avatars/${a.id}-vanity-seated-back.png`;
-  const px=20-data.hipX*data.scale,py=45-data.hipY*data.scale;
+  // The rear pelvis contacts the front half of the visible seat at world
+  // y=298. Its hem must nearly meet the lip, not float above the seat center.
+  // Shins stay below the front rim rather than moving up with the pelvis.
+  const px=20-data.hipX*data.scale,py=39-data.hipY*data.scale;
+  const legY=40-data.hipY*data.scale;
   const image=`<image href="${href}" width="${data.width}" height="${data.height}" image-rendering="pixelated"/>`;
   const uid=key+'-vanity';
   const color=outfit==='shirt'?[.56,.69,.77]:[.91,.875,.79];
@@ -57,13 +61,16 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const defs=`<defs><clipPath id="${uid}-body"><path d="${data.bodyMask}"/></clipPath><clipPath id="${uid}-legs"><path d="${data.legMask}"/></clipPath><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs>`;
   const garment=outfit==='base'?'':`<g clip-path="url(#${uid}-cloth)" filter="url(#${uid}-tint)">${image}</g>`;
   const upper=`<g transform="translate(${fmt(px)} ${fmt(py)}) scale(${data.scale})"><g clip-path="url(#${uid}-body)">${image}${garment}</g></g>`;
-  const legs=`<g transform="translate(${fmt(px)} ${fmt(py+data.legOffsetY)}) scale(${data.scale})" clip-path="url(#${uid}-legs)">${image}</g>`;
+  const legs=`<g transform="translate(${fmt(px)} ${fmt(legY+data.legOffsetY)}) scale(${data.scale})" clip-path="url(#${uid}-legs)">${image}</g>`;
   // The native arms already bend forward. A tiny hip-pivoted motion preserves
   // their connected silhouette. Draw the small held bottle over the sleeve
   // edge so the native forward arm cannot completely occlude the action.
   const reach=pose==='use-cosmetic'&&!reduced?Math.sin(p*Math.PI):0;
-  const product=pose==='use-cosmetic'&&options.heldProductId&&p>.22&&p<.84?`<g class="avatar-held-product" transform="translate(${fmt(31.5+reach*.5)} ${fmt(34-reach*2)})"><rect x="-1.7" y="-5" width="3.4" height="5.2" rx=".4" fill="${options.heldProductId==='cream'?'#eee5cf':'#c6aa60'}" stroke="#64705a" stroke-width=".4"/><rect x="-1.7" y="-6" width="3.4" height="1.3" fill="#4c6958"/><path d="M-1.8-.8H.8L1.4.1 .5 1H-1.8Z" fill="#e7b493" stroke="#9b7158" stroke-width=".35"/></g>`:'';
-  return `${defs}${legs}<g data-vanity-source="seated-back" transform="rotate(${fmt(-1.2*reach)} 20 45)">${upper}${product}</g>`;
+  const product=pose==='use-cosmetic'&&options.heldProductId&&p>.22&&p<.84?`<g class="avatar-held-product" transform="translate(${fmt(31.5+reach*.5)} ${fmt(28-reach*2)})"><rect x="-1.7" y="-5" width="3.4" height="5.2" rx=".4" fill="${options.heldProductId==='cream'?'#eee5cf':'#c6aa60'}" stroke="#64705a" stroke-width=".4"/><rect x="-1.7" y="-6" width="3.4" height="1.3" fill="#4c6958"/><path d="M-1.8-.8H.8L1.4.1 .5 1H-1.8Z" fill="#e7b493" stroke="#9b7158" stroke-width=".35"/></g>`:'';
+  // Restore only the existing chair's front lip over the upper shins. It
+  // connects the naturally separated rear-pose legs to the room's real stool.
+  const rim=clip('vanity-seat-front','<path d="M2 36Q20 43 38 36L36 45Q20 53 4 45Z"/>','<image href="/assets/gather-room.png" x="-320" y="-259" width="400" height="600"/>');
+  return `${defs}<g transform="translate(0 ${fmt(6*(1-seat))})">${legs}</g><g transform="translate(0 ${fmt(-6*(1-seat))})">${rim}</g><g data-vanity-source="seated-back" transform="translate(0 ${fmt(6*(1-seat))}) rotate(${fmt(-1.2*reach)} 20 39)">${upper}${product}</g>`;
  };
  let body='';
  const bed=unit(options.bedProgress),isBed=['lie-down','lying-idle','get-up'].includes(pose);
@@ -77,7 +84,11 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   body=settle>=.999?rest+cover:`<g opacity="${fmt(1-settle)}">${standing()}</g><g opacity="${fmt(settle)}">${rest}</g>${cover}`;
  }else if(isSeat){
   const seated=options.objectId==='sofa'?sofaSeat():vanitySeat();
-  if(seat>=.99)body=seated;
+  if(options.objectId==='vanity'){
+   // Use one opaque whole pose per frame. Align the two source silhouettes
+   // through the settle so sit/stand does not display two ghost heads/bodies.
+   body=seat<.5?`<g transform="translate(0 ${fmt(-6*seat)})">${standing()}</g>`:seated;
+  }else if(seat>=.99)body=seated;
   else if(seat<=.01)body=standing();
   else body=`<g opacity="${fmt(1-seat)}" transform="translate(0 ${fmt(seat*3)})">${standing()}</g><g opacity="${fmt(seat)}">${seated}</g>`;
 

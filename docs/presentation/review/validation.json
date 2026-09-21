@@ -1,7 +1,7 @@
 {
   "schemaVersion": "presentation-finalization.v1",
-  "finalSha256": "f6bd57084b720d657797b96290059dc08460f1cd9002e54c60cc7434c494cf98",
-  "byteCount": 636298,
+  "finalSha256": "00709a288307a5753d05167b6ab87fc0717b681eb5a4813935484612a7de9310",
+  "byteCount": 711722,
   "packageIntegrity": {
     "chart_count": 0,
     "claim_boundary": "Structural package checks only; no slide text, notes, formulas, chart values, or native PowerPoint execution were inspected.",
@@ -19,13 +19,13 @@
     "finding_count": 0,
     "findings": [],
     "font_policy": {
-      "checked_text_script_count": 48,
+      "checked_text_script_count": 61,
       "native_font_rendering_verified": false,
       "observed_font_families": [
         "IBM Plex Sans KR"
       ],
       "observed_font_use_counts": {
-        "IBM Plex Sans KR": 48
+        "IBM Plex Sans KR": 61
       },
       "passed": true,
       "performed": true
@@ -40,13 +40,13 @@
     "exitCode": 0,
     "findingCount": 0,
     "fontPolicy": {
-      "checked_text_script_count": 48,
+      "checked_text_script_count": 61,
       "native_font_rendering_verified": false,
       "observed_font_families": [
         "IBM Plex Sans KR"
       ],
       "observed_font_use_counts": {
-        "IBM Plex Sans KR": 48
+        "IBM Plex Sans KR": 61
       },
       "passed": true,
       "performed": true
@@ -60,13 +60,13 @@
     "scriptFonts": {},
     "referenceSha256": null,
     "referenceFontsVerifiedInEncodedText": false,
-    "checked_text_script_count": 48,
+    "checked_text_script_count": 61,
     "native_font_rendering_verified": false,
     "observed_font_families": [
       "IBM Plex Sans KR"
     ],
     "observed_font_use_counts": {
-      "IBM Plex Sans KR": 48
+      "IBM Plex Sans KR": 61
     },
     "passed": true,
     "performed": true
@@ -75,7 +75,7 @@
     "performed": true,
     "passed": true,
     "slideCount": 5,
-    "sha256": "f6bd57084b720d657797b96290059dc08460f1cd9002e54c60cc7434c494cf98",
+    "sha256": "00709a288307a5753d05167b6ab87fc0717b681eb5a4813935484612a7de9310",
     "runtimeNodeModules": "/Users/gsretail/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules",
     "nodeExecutable": "/Users/gsretail/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/bin/node"
   },
@@ -103,7 +103,7 @@
     "native_chart_count": 0,
     "native_powerpoint_verified": false,
     "passed": true,
-    "presentation_sha256": "f6bd57084b720d657797b96290059dc08460f1cd9002e54c60cc7434c494cf98",
+    "presentation_sha256": "00709a288307a5753d05167b6ab87fc0717b681eb5a4813935484612a7de9310",
     "schema_version": "presentation-native-chart-titles.v1",
     "slide_count": 5,
     "source_text_emitted": false,

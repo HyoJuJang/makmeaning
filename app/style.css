@@ -96,3 +96,25 @@
 .eating-status{margin:4px 0 10px;padding:8px 12px;color:#365947;font-size:13px;line-height:1.5}.eating-status small{font-size:11px;color:#6b756d}
 /* Keep the rail and all owned collars visible when the wardrobe is open. */
 .house-wrap:has([data-object-art="wardrobe"][data-open="1.000"]) .fashion-link{top:calc(1% - 9px)}
+
+/* Shared bottom navigation stays below life interactions and outside the room. */
+#app{padding-bottom:calc(var(--gs-nav-height,66px) + 24px)}
+.home-section>.touch-hint{justify-content:flex-start;margin:0 3px 9px;min-height:18px;font-size:11px;line-height:1.6;color:#657760}
+.home-section>.touch-hint svg{flex:none;width:15px;height:15px}
+.house-wrap{scroll-margin-bottom:calc(var(--gs-nav-height,66px) + 20px)}
+.context-tray{bottom:calc(var(--gs-nav-height,66px) + 8px);z-index:8}
+#modal-root .overlay{z-index:30}
+
+/* Keep the entire Scene choice form readable on short mobile screens. */
+@media(max-height:650px){
+ .scene-sheet{max-height:calc(100svh - 16px);padding-bottom:max(16px,env(safe-area-inset-bottom))}
+ .scene-sheet .handle{margin:10px auto}
+ .scene-sheet .sheet-desc{margin:8px 0 12px}
+ .scene-sheet .scene-content{padding-top:4px;scroll-padding-block:4px}
+ .scene-sheet .scene-option-group{margin-bottom:14px}
+ .scene-sheet .scene-option-group h3{margin-bottom:8px;line-height:1.5}
+ .scene-sheet .scene-options button{min-height:44px;padding-top:9px;padding-bottom:9px}
+ .scene-sheet .scene-preview{min-height:72px;margin-bottom:0}
+ .scene-sheet .scene-actions{padding-top:12px}
+ .scene-sheet .scene-summary-art svg{width:145px;height:110px}
+}

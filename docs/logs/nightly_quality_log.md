@@ -19,3 +19,28 @@ Fixed — Safe rollback and isolated worktree only; no product edits yet.
 Quality — Baseline score pending actual rendered review.
 Presentation — Parallel narrative/visual revision track will use actual prototype evidence and two critique cycles.
 Next — Capture all canonical mobile states; select at most five material defects per cycle before Builder edits.
+
+## Cycle 1 — same-state review and next cycle
+
+Baseline 63 → provisional 82/100 (independent rendered-screen Critic). Twenty canonical state concepts reviewed at both mobile sizes; closed wardrobe, bottom navigation and return flow are included in the corresponding room/category captures.
+
+- UX clarity 17/20 — central 내 공간 and first-use walk/object hint clarify orientation; Scene wording still needed refinement.
+- Visual plausibility 16/20 — vanity hip/legs meet the stool, a rejected higher pose and double-image transition were corrected; category Food placement remained weak.
+- Consistency 16/20 — same canonical wardrobe IDs, generic garment art and stable slot numbers across room/Fashion; owned rail alignment follow-up remained.
+- Product identity 13/15 — warm paper/forest surfaces and one quiet icon family support the room as home.
+- Interaction quality 12/15 — first interaction/ready second click and explicit outfit application work; same-state review found and repaired the applied-card scroll regression.
+- Mobile polish 8/10 — nav and interaction tray no longer compete; small Scene sheet label clipping selected for the next cycle.
+
+Selected original five: vanity P1; wardrobe/Fashion artwork identity P1; persistent Room navigation P2; category visual coherence P2; initial interaction affordance P2. Applied-card reveal bug was fixed during same-state validation. Fresh Critic required one remaining image-top alignment adjustment within category coherence.
+
+Cycle 2 selects three material P2 follow-ups: owned rail alignment, Food roomSlot placement, and Scene selection copy/320-height clipping. No new feature scope. Presentation completed two narrative/visual critique and revision cycles; Main opened all five final renders and approved the message/evidence with customer impact explicitly unverified.
+
+## Cycle 2 — local release gate
+
+Observed — Five P2 issues selected: owned-card baseline, canonical Food placement, Scene clipping/copy, duplicate Food pointer after reveal, and obscured Living cushion preview.
+Fixed — All five repaired without adding features. Same-state 390/320 rechecks and explicit cancel/apply/return/reload passed. Critic reviewed all canonical concepts, four-avatar pose frames and final category consistency.
+Quality — 82 → **91/100**: UX18, plausibility18, consistency19, identity14, interaction13, mobile9. Local reviewed scope P0=0, P1=0, majorP2=0. This is an internal comparative design score.
+Presentation — Five-slide PPTX/PDF complete after two narrative/visual critique and revision cycles; all final slides opened and inspected.
+QA / Deploy — Build, typecheck, 74 tests and assertion regressions, critical API/asset contracts PASS. Original 6,036-row catalog hash unchanged. Public deployment gate remains.
+Blocker — None.
+Next — Fast-forward verified work into main, deploy the same commit and repeat core flows at the public URL. No goal completion claim yet.

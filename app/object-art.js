@@ -1,3 +1,5 @@
+import {garmentPresentation} from './garment-art.js';
+
 // Code-native object layers share the room's 400 × 600 world coordinates.
 // The original bitmap remains intact; clipped local texture covers its fixed open door.
 const clamp = n => Math.max(0, Math.min(1, Number(n) || 0));
@@ -6,10 +8,10 @@ const points = ps => ps.map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
 const escapeAttribute = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const purchasedArt = (purchase, art) => purchase ? `<g data-product="${escapeAttribute(purchase.catalogProductId||purchase.id)}" data-room-slot="${escapeAttribute(purchase.roomSlot)}">${art}</g>` : '';
 
-function garment(x, blue, sway = 0, scale = 1) {
-  const cloth = blue ? '#8daac0' : '#eee3c9';
-  const edge = blue ? '#5c7486' : '#b9ac92';
-  return `<g transform="translate(${x + sway} ${53+9*scale}) scale(${scale})"><path d="M-10 0 0-5 10 0" fill="none" stroke="#997853" stroke-width="1.8"/><path d="M0-5v-4q4-4 5 0" fill="none" stroke="#726650" stroke-width="1.2"/><path d="M-9 1-18 7-19 33-11 35-8 17-8 48H9V17l3 18 8-2-2-26-9-6-9 5Z" fill="${cloth}" stroke="${edge}" stroke-width="1.3"/><path d="M-7 41H8M-7 44H8" stroke="${edge}" opacity=".35"/>${blue ? '<path d="M0 7v38M3 13h5v6H3" stroke="#5c788c" fill="none" stroke-width="1"/>' : '<path d="M-6 3q6 8 12 0" fill="none" stroke="#b9ad94" stroke-width="2"/>'}</g>`;
+function garment(product, x, sway = 0, scale = 1) {
+  const visual = garmentPresentation(product);
+  if (!visual) return '';
+  return `<g transform="translate(${x + sway} ${53+9*scale}) scale(${scale})"><image data-garment-source="${visual.source}" href="${visual.source}" x="-22" y="-12" width="44" height="64"/></g><g data-garment-number="${visual.number}" transform="translate(${x} 111)"><circle r="4.5" fill="#eee9dc" stroke="#9c8e75" stroke-width=".65"/><text y="2.1" text-anchor="middle" fill="#3d5143" font-family="sans-serif" font-size="6.5" font-weight="700">${visual.number}</text></g>`;
 }
 
 function wardrobe(open, browse, purchases) {
@@ -21,7 +23,7 @@ function wardrobe(open, browse, purchases) {
     <path d="M48 51h88v73H48Z" fill="#514c3e"/>
     <path d="M47 53h91" stroke="#d3c4a7" stroke-width="2"/>
     <defs><clipPath id="wardrobe-owned-interior"><path d="M48 52H136V123H48Z"/></clipPath></defs>
-    <g clip-path="url(#wardrobe-owned-interior)">${purchases.filter(p=>p.category==='fashion').slice(0,4).map((p,i,items)=>purchasedArt(p,garment(48+88/items.length*(i+.5),p.illustrationKey==='shirt',i%2?-sway:sway,Math.min(1,2.2/items.length)))).join('')}</g>
+    <g clip-path="url(#wardrobe-owned-interior)">${purchases.filter(p=>p.category==='fashion').slice(0,4).map((p,i,items)=>purchasedArt(p,garment(p,48+88/items.length*(i+.5),i%2?-sway:sway,Math.min(1,2.2/items.length)))).join('')}</g>
     <path d="M47 124h91v24H47Z" fill="#aa9070" stroke="#665944"/>
     <path d="M49 127h42v18H49Zm46 0h41v18H95Z" fill="#87745a"/>
     <path d="M63 135h14M109 135h14" stroke="#d2c8af" stroke-width="2.6"/>

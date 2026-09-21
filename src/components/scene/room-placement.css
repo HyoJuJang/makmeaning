@@ -96,3 +96,10 @@
     transition: none;
   }
 }
+
+/* Place the owned-cushion pin on the left sofa arm, clear of both cushions.
+   The button keeps its existing 44px hit area; only the marker position moves. */
+.sc-living .sc-room-pin.sc-pin-cushion {
+  left: 30%;
+  top: 35%;
+}

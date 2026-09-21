@@ -31,3 +31,9 @@
 .catalog-owned-status{display:block;font-size:10px;line-height:1.5;color:#506b55;margin-top:4px}.catalog-source{display:block;font-size:10px;line-height:1.5;color:#6a7766;margin:8px 0 3px}.catalog-state-note{padding:12px 3px;text-align:left}.catalog-page .sc-collection .sc-owned-item{min-width:100px}.sc-card-name,.sc-dialog-item h3{overflow-wrap:anywhere}
 .catalog-eat-button{flex-shrink:0;border:1px solid #3d604d;border-radius:4px;background:#3d604d;color:#fff;padding:10px 15px;min-height:44px;font-size:12px;font-weight:600;cursor:pointer}.catalog-eat-button:disabled{background:#e2e5d9;color:#71796b;border-color:#d1d6c8;cursor:default}.catalog-eating-status{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;background:#eef0e5;color:#4d634f;font-size:11px}.catalog-page .sc-anchor-caption{flex-wrap:wrap}.catalog-eating-avatar{transition:none!important}.catalog-page .sc-detail-copy>.catalog-eat-button{width:100%;margin-bottom:12px}.catalog-page .sc-collection{scroll-margin-top:62px}
 .catalog-page .sc-anchor-caption .catalog-eat-button{color:#fff;font-size:12px}.catalog-page .sc-anchor-caption .catalog-eat-button:disabled{color:#71796b}
+
+/* The owned API items sit in the same fridge/pantry/vanity slots as the room. */
+.catalog-owned-layer{position:absolute;inset:0;z-index:1;width:100%;height:100%;pointer-events:none}
+.catalog-owned-layer image{filter:drop-shadow(.5px .7px .2px #3b4a3826)}
+.catalog-room .catalog-owned-pin{width:44px;height:44px;min-width:44px;min-height:44px}
+.catalog-room .catalog-owned-pin>span:first-child{width:20px;height:20px;font-size:10px}

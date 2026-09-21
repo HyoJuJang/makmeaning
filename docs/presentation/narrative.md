@@ -1,46 +1,39 @@
-# G:Scene 발표 서사
+# G:Scene 52g 발표 서사
 
-52g 발표용, 최대 5장. 고객 문제와 제품이 주인공이며 Agent의 역할은 마지막 장의 실행 방식에만 둔다.
+2026-09-22 품질 루프에서 기존 화면 소개 중심 덱을 다시 구성했다. 총 5장. 확정 제품 방향은 doc03이며 고객 효과나 전환 개선은 주장하지 않는다.
 
-1. **상품은 많은데, 내 생활은 잘 보이지 않는다** — 2030 고객이 상품을 쓰는 자기 모습을 떠올리기 어렵다는 기획의 문제 가설. 조사 인용이나 수치로 포장하지 않는다. 큰 문장 중심의 어두운 오프닝.
-2. **이 상품이 내 생활 어디에 들어올까?** — 보유 물건을 생활 공간에 놓고 다음 쇼핑을 시작한다. 실제 Living 방 화면과 질문을 연결한다.
-3. **G:Scene** — 내가 산 물건과 살아가는 나의 공간. 실제 Main room을 가장 크게 보여주고 네 생활 영역이 공간에 있음을 드러낸다.
-4. **입어보고, 고르고, 내 공간으로** — 같은 가상 고객과 M01 캐릭터의 옷장 열림, 보유 셔츠 미리보기와 명시 적용, 적용한 셔츠를 입고 방에 복귀한 연속 QA 캡처를 보여준다.
-5. **다음 쇼핑의 출발점은 나의 생활** — 제품의 의미로 마무리한다. Agent 팀은 구현과 QA를 나눠 같은 사용자 흐름을 반복 검토했다는 실제 실행 방식만 짧게 언급한다. 고객 효과·전환 성과는 아직 검증하지 않았음을 보인다.
+| 장 | Claim | Why | Evidence | So what |
+|---|---|---|---|---|
+| 1 | 상품을 내 생활로 번역하는 일은 고객에게 맡겨져 있다 | 상품·가격·행사에서 자기 사용 장면까지 고객이 연결해야 한다는 문제 가설 | doc03의 2030 문제 정의. 조사 결과로 표현하지 않음 | 생활 질문을 탐색의 출발점으로 둘 이유 |
+| 2 | 내가 가진 물건에서 다음 필요를 찾는다 | 이미 가진 물건은 새 상품을 더할 장면의 구체적인 기준 | 현재 실제 room, 네 영역, 내 공간 중심 navigation | 나의 생활 공간을 커머스 입구로 삼는 G:Scene |
+| 3 | 내 옷에, 내일의 출근을 더하면 | 보유 물건·상황·예산으로 상품을 살펴볼 이유를 제안 | 실제 Fashion에서 크림 니트 기준, 출근, 5만원 이하. 가상 팬츠 39,000원과 실제 추천 설명 | GS SHOP 상품·추천 자산을 생활의 언어로 만나는 접점 |
+| 4 | 탐색하는 동안에도 내 물건과 선택은 이어진다 | 서로 다른 상품이나 사라지는 선택은 개인 공간의 연속성을 끊음 | 같은 M01 사용자의 옷장 열림, 셔츠 미리보기·명시 적용, 셔츠를 입은 방 복귀 | 생활과 상품 탐색을 같은 보유 맥락으로 연결하는 기반 |
+| 5 | 나는 어떻게 살고 싶은가 | 원하는 생활의 장면을 먼저 떠올리는 탐색을 시험할 필요 | 실제 prototype과 Agent의 옷 표현 불일치 발견·수정·재검토 | GS SHOP 상품 자산을 개인의 생활에서 탐색하는 커머스 입구 |
 
-## 사실 / 표현 경계
+## 사실과 가설
 
-- 실상품 ID와 카탈로그 참고가를 가상 고객의 구매 상태에 연결했다. 실제 고객/결제 데이터가 아니다.
-- 방 그림과 아바타 착장은 공간 표현용 예시이며 실상품 외형이나 가상 피팅이 아니다.
-- Fashion/Living 추천 목록은 가상 예시를 유지한다. Food/Beauty 카탈로그와 혼동하지 않는다.
-- 최초 object 생활 interaction 이후 준비 상태의 두 번째 탭으로 category로 이동한다.
-- preview cancel/apply, 방 복귀와 reload는 `docs/design/release_verification.md`의 기존 로컬 검증 사실에 한해 설명한다. 이번 overnight production gate가 끝나기 전 새 완료 주장이나 수치 주장 금지.
+- 가상 고객의 구매·보유 상태가 실상품 카탈로그 ID와 연결된다. 실제 고객·결제 데이터는 아니다.
+- 공간 그림과 캐릭터 착장은 일반화한 표현이며 정확한 상품 외형이나 가상 피팅이 아니다.
+- 3장의 추천 상품과 가격은 가상 예시다. 실제 UI의 추천 설명을 그대로 인용했으며 고객 발언이 아니다.
+- Main Scene entry는 상황·예산 선택까지만 체험하는 별도 흐름이다. 3장은 Fashion 내부 조건 적용을 보여주며 자동 연결을 주장하지 않는다.
+- 4장의 증거는 보유 의류의 미리보기·명시 적용·방 복귀다. 신규 구매나 고객 전환 증거로 사용하지 않는다.
+- 고객의 자기 관련성이나 전환 성과는 아직 검증하지 않았다.
 
-## 시각 방향
+## 현재 화면 근거
 
-16:9. Warm paper #F5F3EB, deep forest #263F35, muted sage #6D8069. IBM Plex Sans KR. 편집 가능한 큰 제목, 실제 screenshot, 충분한 여백. 임의 stock image/장식 icon/가짜 UI 사용하지 않음.
+`outputs/quality-20260922/cycle1/revised/`의 Main 직접 실행 local production 캡처:
 
-## Sources
+- `01-room-idle-390.png`
+- `deck-fashion-conditions-390.png`, `deck-fashion-reasons-390.png`
+- `06-wardrobe-open-390.png`, `09-outfit-preview-390.png`, `11-room-after-apply-390.png`
+- `11b-room-after-reload-390.png`는 상태 복원 확인 근거. 본문 이미지로 사용하지 않음.
 
-- docs/ideas/doc03_final_ideation.md
-- docs/criterion/crit00_proj_guide.md
-- docs/criterion/crit01_EXECUTION.md
-- docs/design/room_commerce_contract.md
-- docs/design/release_verification.md
-- docs/logs/nightly_2026-09-21.md
-- 실제 실행 screenshot: outputs/release-qa/living-320-public.png와 outputs/nightly-qa/integrated/의 wardrobe-open-390.png, fashion-apply-390.png, room-applied-shirt-390.png (work/deck/assets에 복사). 원본 픽셀을 유지한 layout crop만 사용했다.
+방의 세 옷, Fashion의 세 옷과 카드가 같은 shared garment 표현을 사용한 후의 화면이다. `10-outfit-applied-390.png`는 이후 rail 배치 회귀가 발견되어 발표 이미지로 사용하지 않았다. crop은 원본을 잘라 배치한 것뿐이며 UI를 합성하거나 다시 그리지 않았다.
 
-## Status
+## 두 번의 새 비평·수정
 
-Final R2 complete. Independent Critic R1의 3건을 수정했고 R2 actual PNG 재검토에서 모두 해결됐다. 최대 5장, 제품 중심, 가짜 성과 없음, actual apply/return loop, 글자/화면 겹침 없음 기준을 통과했다.
+- C1: Main 서사 비평, 독립 Visual Critic의 실제 5장 검토, claim 수정과 현재/제안 경계 보강. 동일 옷의 외형과 추천 이유 근거 보완을 다음 draft에 이어서 반영했다.
+- C2: Main 두 번째 서사 비평, 최신 UI로 만든 actual 5장 검토, 보유 옷·상황·예산 입력 label 보강. 독립 Critic이 마지막 P2 해소를 재확인했다.
+- 이전 nightly deck의 PASS는 이 두 cycle에 포함하지 않았다.
 
-- Final PPTX: docs/presentation/GScene_Final_52g.pptx
-- PDF preview: docs/presentation/GScene_Final_52g.pdf
-- Authored source: work/deck/build-deck.mjs
-- Final imported PPTX renders: work/deck/render-imported-r2/slide-1.png ~ slide-5.png
-- Independent reviews: work/deck/critic-r1.md, work/deck/critic-r2.md
-- Structural/layout/font/import receipt: work/deck/validation-r2.json
-- Final artifact check: work/deck/final-checks.json
-- Chat deliverables: outputs/nightly-presentation/ (PPTX/PDF/5 PNG/HTML preview)
-
-PPTX는 native editable text와 실제 screenshot을 담는다. PDF는 final PPTX 렌더의 이미지 미리보기다. 별도 Microsoft PowerPoint 앱에서의 실행을 검증했다고 주장하지 않는다.
+최종 파일은 새 PPTX를 다시 import해 5장 전부 렌더·검토했다. PDF도 5페이지로 다시 열고 렌더했다. Microsoft PowerPoint 앱에서의 실행을 확인했다고 주장하지 않는다.

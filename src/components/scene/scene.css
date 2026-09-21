@@ -428,3 +428,7 @@
 .sc-page .sc-sample-note{font-size:10px;line-height:1.6;color:#68775e;margin:-3px 0 10px}
 .sc-owned-item .sc-owned-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;min-height:30px;font-size:10px;padding-top:4px;color:#52634f}
 .sc-owned-item>small{display:block;color:#68775e;font-size:9px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}
+
+/* Shared long-sleeve artwork includes its own hanger; keep it attached to the rail. */
+.sc-fashion .sc-wardrobe-owned{top:11.5%;height:68.5%;background:linear-gradient(90deg,#d0bfa4,#dcccb3 48%,#cdbb9f);border-bottom-color:#aa8557;box-shadow:inset 0 2px 2px #594b391c}
+.sc-fashion .sc-wardrobe-garment>img{height:91%;object-position:center top}
