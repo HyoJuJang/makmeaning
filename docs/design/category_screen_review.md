@@ -70,3 +70,9 @@ Review → fix → rerun:
 Verification: production build/TypeScript PASS; full test suite PASS including eight new deterministic animation tests (rapid switch, mid-change reset, sit/stand reversal, repeated selection, reduced motion and stale callback cancellation). Release smoke PASS. Browser inspected at 390 × 844 and 1280 × 720; mobile first-row product images/prices remain visible in the initial state. Preview details grow the page only after the user opens them. No browser error/warning logs in final QA.
 
 Preview state is intentionally temporary. Main-room clothing and purchase data are unchanged. Catalog and pixel representations remain explicit demo data; placements illustrate color/mood rather than actual dimensions.
+
+## Unrestricted defaults · 2026-09-21
+
+Initial situation/tastes/budget/kind are empty/empty/unlimited/all, with no automatically selected owned/cart anchor. Summary lists only explicit choices. Reset returns filter values to these defaults. Review caught an empty situation tag being treated as a match; an explicit nonempty-situation guard and regression assertion now prevent that.
+
+Verified in the browser: Fashion starts with 8 cards and no selected purchase pin; adding office + 30,000 KRW shows exactly 19,000/29,000 KRW; reset + apply returns to 8 cards and the no-conditions summary. Living starts with all 6 cards, including the 289,000 KRW sofa. Images finish loading and no console errors/warnings. Recommendation tests (9) and production build/TypeScript PASS.

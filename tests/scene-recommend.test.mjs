@@ -111,3 +111,21 @@ test('unmatched unlimited suggestions use the description without claiming a mat
   assert.deepEqual({ products, settings }, before);
   assert.deepEqual(results.map(({ product }) => product.id), ['a', 'b']);
 });
+
+
+test('no conditions and no selected product show the complete category without invented matches', () => {
+  const unrestricted = filters({ situation: '', tastes: [], budget: 0, kind: '전체' });
+  const blankTag = recommend([sample({ situations: [''] })], unrestricted, null)[0];
+  assert.deepEqual(blankTag.matches, []);
+  assert.equal(blankTag.reason, blankTag.product.description);
+  for (const scene of Object.values(demoScenes)) {
+    const results = recommend(scene.products, unrestricted, null);
+    assert.equal(results.length, scene.products.length);
+    assert.deepEqual(new Set(results.map(({ product }) => product.id)), new Set(scene.products.map(product => product.id)));
+    assert.ok(results.some(({ product }) => product.price > 50000));
+    for (const result of results) {
+      assert.deepEqual(result.matches, []);
+      assert.equal(result.reason, result.product.description);
+    }
+  }
+});

@@ -37,7 +37,7 @@ export function recommend(
     .filter(product => filters.kind === '전체' || product.kind === filters.kind)
     .map(product => {
       const kindEnding = (product.kind.charCodeAt(product.kind.length - 1) - 0xac00) % 28 ? '이에요.' : '예요.';
-      const situationMatches = product.situations.includes(filters.situation);
+      const situationMatches = Boolean(filters.situation) && product.situations.includes(filters.situation);
       const matchedTastes = requestedTastes.filter(taste => product.tastes.includes(taste));
       const ownedReason = anchor && product.pairsWith.includes(anchor.id)
         ? product.reasons[anchor.id]?.trim()

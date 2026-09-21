@@ -28,3 +28,8 @@ Fashion: deliberately selecting a purchased knit/shirt walks the existing avatar
 Living: local light and sofa controls warm the room or move the avatar into the existing sofa pose. Supported recommended decor items can be previewed one at a time using hand-authored pixel illustrations in the room. Preview labels and undo distinguish them from purchased items. These are color/mood illustrations, not measurements or virtual fit guarantees. Unsupported product types keep their normal product detail/cart flow until an appropriate placement illustration is supplied.
 
 All preview state is page-local. It never writes purchases, the main appearance, or the cart. Product previews return focus and scroll to the room; cart actions remain explicit. Latest interactions cancel previous animation callbacks. Reduced motion skips character travel and suppresses placement/slot animation.
+
+
+## Default discovery
+
+First entry has no situation, taste, price cap, product-kind restriction, or automatically selected purchase/cart anchor. The complete category is shown immediately. Inventory tabs only switch the visible item rail; a product becomes the pairing anchor only after an explicit item click. The condition summary shows only active choices, with “조건 없이 추천받는 중” and “조건 추가” when empty. Situation has an explicit “전체” choice and budget starts at “제한 없음”. Filter reset restores the unrestricted defaults; cancelling a draft still preserves applied filters. A separately chosen pairing anchor remains until the user chooses new discovery or changes inventory source.

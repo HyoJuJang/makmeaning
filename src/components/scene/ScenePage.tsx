@@ -13,7 +13,7 @@ const CONFIG = {
     title: '내 옷장', english: 'MY WARDROBE',
     room: 'wardrobe-room.png', question: '오늘은 어떤 장면인가요?',
     situations: ['출근', '주말', '여행', '약속'], tastes: ['미니멀', '캐주얼', '포근한', '단정한'],
-    kinds: ['전체', '하의', '아우터', '신발', '상의'], firstTaste: '미니멀',
+    kinds: ['전체', '하의', '아우터', '신발', '상의'],
     anchorTitle: '함께 입을 아이템',
   },
   living: {
@@ -21,7 +21,7 @@ const CONFIG = {
     room: 'living-room.png', question: '어떤 시간을 보내고 싶나요?',
     situations: ['퇴근 후 휴식', '집들이', '주말 홈카페', '집중하는 시간'],
     tastes: ['내추럴', '미니멀', '포근한', '모던'], kinds: ['전체', '패브릭', '가구', '조명'],
-    firstTaste: '내추럴', anchorTitle: '함께 놓을 아이템',
+    anchorTitle: '함께 놓을 아이템',
   },
 } as const;
 const SPRITES: Record<string, number> = {
@@ -80,7 +80,7 @@ function Dialog({ title, viewKey, onClose, children }: { title: string; viewKey:
 
 export default function ScenePage({ category }: { category: SceneCategory }) {
   const config = CONFIG[category];
-  const initialFilters: SceneFilters = { situation: config.situations[0], tastes: [config.firstTaste], budget: 50000, kind: '전체', sort: 'recommended' };
+  const initialFilters: SceneFilters = { situation: '', tastes: [], budget: 0, kind: '전체', sort: 'recommended' };
   const [home, setHome] = useState<DemoHome | null>(null);
   const [catalog, setCatalog] = useState<DemoScene | null>(null);
   const [error, setError] = useState(false);
@@ -133,7 +133,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
           if (stored && Array.isArray(stored.savedIds)) saved = [...new Set<string>(stored.savedIds.filter((id: unknown) => typeof id === 'string' && ids.has(id)))];
         } catch { /* A blocked or corrupt local store must not prevent browsing. */ }
         setHome(homeData); setCatalog(sceneData); setCartIds(cart); setSavedIds(saved);
-        setSelectedId(homeData.purchases.find(product => product.category === category)?.id || null);
+        setSelectedId(null);
         setStorageReady(true);
       } catch { if (mounted) setError(true); }
       finally { clearTimeout(timeout); }
@@ -165,7 +165,8 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
   const isPreviewed = (product: SceneProduct) => category === 'fashion' ? lookIds[product.kind] === product.id : placedId === product.id;
   const dirty = JSON.stringify(draft) !== JSON.stringify(filters);
   const draftCount = recommend(catalog?.products || [], draft, anchor).length;
-  const filterSummary = [filters.situation, filters.tastes.join(' · ') || '모든 취향', budgetLabel(filters.budget), ...(filters.kind === '전체' ? [] : [filters.kind])].join(' · ');
+  const filterParts = [filters.situation, ...filters.tastes, filters.budget ? budgetLabel(filters.budget) : '', filters.kind === '전체' ? '' : filters.kind].filter(Boolean);
+  const filterSummary = filterParts.join(' · ') || '조건 없이 추천받는 중';
 
   useEffect(() => {
     if (panel || !returnToFilters.current) return;
@@ -216,7 +217,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
       setOutfitPreview(item.id); setInteractionKey(value => value + 1);
     }
   }
-  function changeTab(next: 'owned' | 'cart') { setTab(next); setSelectedId((next === 'owned' ? purchases : cart)[0]?.id || null); }
+  function changeTab(next: 'owned' | 'cart') { setTab(next); setSelectedId(null); }
   function addCart(id: string) {
     if (cartIds.includes(id)) { setPanel('cart'); return; }
     setCartIds(previous => [...previous, id]); setNotice('장바구니에 담았어요. 이 상품과의 조합도 찾아보세요.');
@@ -279,7 +280,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         </div>
 
         <section className="sc-results" aria-labelledby="sc-results-title">
-          <button ref={filterButtonRef} className="sc-filter-summary" onClick={openFilters} aria-haspopup="dialog" aria-label={`추천 조건 변경: ${filterSummary}`}><Icon name="sliders" size={17} /><span>{filterSummary}</span><b>조건</b><span aria-hidden="true">＋</span></button>
+          <button ref={filterButtonRef} className="sc-filter-summary" onClick={openFilters} aria-haspopup="dialog" aria-label={`추천 조건 변경: ${filterSummary}`}><Icon name="sliders" size={17} /><span>{filterSummary}</span><b>{filterParts.length ? '조건 수정' : '조건 추가'}</b><span aria-hidden="true">＋</span></button>
           <div className="sc-results-heading"><h2 id="sc-results-title"><span className="sc-pixel-spark" aria-hidden="true">✦</span>{anchor ? config.anchorTitle : '새로운 취향 발견'} <span className="sc-result-count" aria-live="polite">{recommendations.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={filters.sort} onChange={event => { const sort = event.target.value as SceneFilters['sort']; setFilters(previous => ({ ...previous, sort })); setDraft(previous => ({ ...previous, sort })); }}><option value="recommended">추천순</option><option value="price-low">낮은 가격순</option></select></label></div>
           {recommendations.length === 0 ? <div className="sc-empty"><span>◌</span><h3>이 조건에는 아직 상품이 없어요</h3><p>예산을 조금 넓히거나, 상품 종류를 바꿔보세요.</p><button className="sc-outline" onClick={resetFilters}>조건 초기화</button></div> : <div className="sc-product-grid">{recommendations.map(({ product, reason, matches }, index) => <article className="sc-card" key={product.id}>
             <div className="sc-card-image"><button className="sc-card-open" aria-label={`${product.name} 상세 보기`} onClick={() => { setDetailId(product.id); setPanel('product'); }}><ProductVisual item={product} /></button><button className="sc-heart" aria-label={`${product.name} 찜`} aria-pressed={savedIds.includes(product.id)} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button>{index === 0 && filters.sort === 'recommended' && <span className="sc-top-pick">먼저 만나볼 아이템</span>}</div>
@@ -295,9 +296,9 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
       {panel === 'filters' ? (
           <section className="sc-conditions" aria-labelledby="sc-conditions-title">
             <div className="sc-section-title"><p id="sc-conditions-title">{config.question}</p><button className="sc-text-button" onClick={resetDraft}>초기화</button></div>
-            <fieldset className="sc-chip-group"><legend>상황</legend><div>{config.situations.map(value => <button key={value} aria-pressed={draft.situation === value} onClick={() => setDraft(previous => ({ ...previous, situation: value }))}>{value}</button>)}</div></fieldset>
+            <fieldset className="sc-chip-group"><legend>상황 <small>선택 사항</small></legend><div>{['', ...config.situations].map(value => <button key={value || 'all'} aria-pressed={draft.situation === value} onClick={() => setDraft(previous => ({ ...previous, situation: value }))}>{value || '전체'}</button>)}</div></fieldset>
             <fieldset className="sc-chip-group"><legend>취향 <small>복수 선택</small></legend><div>{config.tastes.map(value => <button key={value} aria-pressed={draft.tastes.includes(value)} onClick={() => setDraft(previous => ({ ...previous, tastes: previous.tastes.includes(value) ? previous.tastes.filter(taste => taste !== value) : [...previous.tastes, value] }))}>{value}</button>)}</div></fieldset>
-            <fieldset className="sc-chip-group"><legend>예산 <small>새 상품 1개 기준</small></legend><div>{[30000, 50000, 100000, 0].map(value => <button key={value} aria-pressed={draft.budget === value} onClick={() => { setDraft(previous => ({ ...previous, budget: value })); setCustomBudget(''); setBudgetError(''); }}>{value ? `${value / 10000}만원 이하` : '전체'}</button>)}</div></fieldset>
+            <fieldset className="sc-chip-group"><legend>예산 <small>새 상품 1개 기준</small></legend><div>{[0, 30000, 50000, 100000].map(value => <button key={value} aria-pressed={draft.budget === value} onClick={() => { setDraft(previous => ({ ...previous, budget: value })); setCustomBudget(''); setBudgetError(''); }}>{value ? `${value / 10000}만원 이하` : '제한 없음'}</button>)}</div></fieldset>
             <details className="sc-more-filters" open><summary><span><Icon name="sliders" size={15} />상품 종류 · 예산 직접 입력</span><span>＋</span></summary><fieldset className="sc-chip-group"><legend>찾는 상품</legend><div>{config.kinds.map(value => <button key={value} aria-pressed={draft.kind === value} onClick={() => setDraft(previous => ({ ...previous, kind: value }))}>{value}</button>)}</div></fieldset><label className="sc-budget-input">직접 정하는 예산 <span><input type="number" inputMode="numeric" min="1000" max="10000000" step="1" placeholder="예: 45000" value={customBudget} onChange={event => setBudget(event.target.value)} aria-invalid={!!budgetError} aria-describedby={budgetError ? 'sc-budget-error' : undefined} />원 이하</span></label></details>
             {budgetError && <p id="sc-budget-error" className="sc-input-error" role="alert">{budgetError}</p>}
             <button className="sc-primary" onClick={applyFilters} disabled={!!budgetError}><span>{draftCount ? `${draftCount}개 상품 추천받기` : '이 조건으로 확인하기'}</span><Icon name="arrow" size={18} /></button>
