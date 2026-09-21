@@ -1,12 +1,32 @@
+'use client';
+
+import { useState } from 'react';
 import type { RecommendationItem, RecommendationResponse } from '@/lib/recommendation/types';
 
 const SOURCES = { behavior: '행동 추천', metadata: '카테고리 연결', popularity: '인기도 백업', catalog: '상품 목록 백업', mixed: '행동 추천 + 백업 보충' };
 const price = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
+function ProductPhoto({ productId, name }: { productId: string; name: string }) {
+  const [failed, setFailed] = useState(false);
+  return <div className="rec-product-photo">
+    {failed ? <span className="rec-photo-unavailable">이미지를 불러올 수 없어요</span> : <img
+      src={`https://asset.m-gs.kr/prod/${encodeURIComponent(productId)}/1/550`}
+      alt={name}
+      width={550}
+      height={550}
+      loading="lazy"
+      decoding="async"
+      referrerPolicy="no-referrer"
+      onError={() => setFailed(true)}
+    />}
+  </div>;
+}
+
 export function RecommendationProducts({ items, diagnostic = false }: { items: RecommendationItem[]; diagnostic?: boolean }) {
   if (!items.length) return <p className="rec-empty">현재 조건으로 추천할 상품이 없어요. 다른 카테고리나 추천 방식을 선택해 주세요.</p>;
   return <ol className="rec-products">{items.map((item, index) => <li key={item.product.prd_id} className="rec-product">
     <div className="rec-product-top"><span className="rec-rank">{String(index + 1).padStart(2, '0')}</span><span className="rec-category">{item.product.cate2_nm || item.product.cate1_nm}</span></div>
+    <ProductPhoto key={item.product.prd_id} productId={item.product.prd_id} name={item.product.view_name} />
     <p className="rec-brand">{item.product.brand_name || '브랜드 정보 없음'}</p>
     <h3>{item.product.view_name}</h3>
     <strong className="rec-price">{price(item.product.discprice)}<small>원</small></strong>
