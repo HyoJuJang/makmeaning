@@ -258,7 +258,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
               <img className="sc-room-art" src={`/scene-art/${config.room}`} alt={category === 'fashion' ? '메인 공간과 이어지는 아늑한 픽셀 옷장' : '소파와 우드 가구가 있는 아늑한 픽셀 거실'} />
               {category === 'living' && <span className="sc-room-light" aria-hidden="true" />}
               {placedProduct && <RoomPlacement key={`${placedProduct.id}-${previewSequence}`} productId={placedProduct.id} lit={lampLit} />}
-              <RoomAvatar fallbackAvatarId={home.user.avatarId} category={category} outfitPreview={outfitPreview} seated={seated} interactionKey={interactionKey} />
+              <RoomAvatar fallbackAvatarId={home.user.avatarId} fallbackOutfitId={home.purchases.find(product => product.category === 'fashion' && product.state.wearing === true)?.id} category={category} outfitPreview={outfitPreview} seated={seated} interactionKey={interactionKey} />
               {anchor && tab === 'owned' && <span key={`${anchor.id}-${interactionKey}`} className={`sc-room-target sc-target-${anchor.id}`} aria-hidden="true" /> }
               {purchases.map((product, index) => <button key={product.id} className={`sc-room-pin sc-pin-${product.id}`} aria-label={`${product.name} 기준으로 추천받기`} aria-pressed={selectedId === product.id} onClick={() => choose(product, 'owned')}><span>{index + 1}</span></button>)}
               {category === 'living' && <><img className="sc-room-cushion" src="/products/cushion.svg" alt="" aria-hidden="true" /><img className="sc-room-lamp" src="/products/lamp.svg" alt="" aria-hidden="true" /></>}
