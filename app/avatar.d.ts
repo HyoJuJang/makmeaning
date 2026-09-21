@@ -10,7 +10,7 @@ export interface AvatarDefinition {
 }
 
 export interface AvatarRenderOptions {
-  pose?: 'idle' | 'sit-down' | 'stand-up' | 'seated-idle' | 'use-cosmetic' | 'browse' | 'reach' | 'change-clothes';
+  pose?: 'eat' | 'idle' | 'sit-down' | 'stand-up' | 'seated-idle' | 'use-cosmetic' | 'browse' | 'reach' | 'change-clothes';
   progress?: number;
   seatProgress?: number;
   reduced?: boolean;

@@ -1,7 +1,7 @@
 export type Category = 'fashion' | 'food' | 'living' | 'beauty';
 
 export type RoomSlot =
-  | 'wardrobe-1' | 'wardrobe-2' | 'fridge-1' | 'fridge-2' | 'pantry-1'
+  | 'wardrobe-1' | 'wardrobe-2' | 'wardrobe-3' | 'fridge-1' | 'fridge-2' | 'pantry-1'
   | 'sofa-1' | 'lamp-1' | 'vanity-1' | 'vanity-2';
 
 export type IllustrationKey = 'knit' | 'shirt' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';

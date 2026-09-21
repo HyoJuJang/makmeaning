@@ -398,6 +398,18 @@
 
 .sc-room-controls button[aria-pressed=true]:hover{background:#f3ecd4}
 
+/* This rail covers the decorative stock clothes and uses the same owned IDs as Main. */
+.sc-wardrobe-owned{position:absolute;z-index:3;left:23.5%;top:13%;width:50.8%;height:67%;display:flex;align-items:flex-start;padding:0 1.2%;background:linear-gradient(90deg,#c9b799,#dccbb0 45%,#c6b496);border-bottom:3px solid #9d7549;box-shadow:inset 0 3px 4px #594b3930}
+.sc-wardrobe-garment{position:relative;flex:1;min-width:0;height:100%;min-height:44px;padding:0;border:0;background:transparent;color:#755535;isolation:isolate}
+.sc-wardrobe-garment .sc-owned-hanger{position:absolute;left:10%;top:0;width:80%;height:30%;z-index:0;overflow:visible}
+.sc-wardrobe-garment>img{position:absolute;left:0;top:0;width:100%;height:90%;object-fit:contain;filter:drop-shadow(2px 3px 1px #715b4040)}
+.sc-wardrobe-garment>span{position:absolute;z-index:1;left:50%;bottom:0;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:2px 4px;border:1px solid #fffbea;background:#efeee0;color:#334b3c;font:700 9px/1 ui-monospace,monospace;box-shadow:1px 1px #51483677}
+.sc-wardrobe-garment>span i{font-size:8px;font-style:normal}
+.sc-wardrobe-garment[data-wearing=true]>span,.sc-wardrobe-garment[aria-pressed=true]>span{background:#345343;color:#fff}
+.sc-wardrobe-garment[aria-pressed=true]>img{filter:drop-shadow(0 0 2px #fffdf0) drop-shadow(2px 3px 1px #715b4040)}
+.sc-wardrobe-garment:focus-visible{outline:2px solid #345343;outline-offset:-2px}
+.sc-fashion .sc-room-avatar{--sc-avatar-knit-x:var(--sc-preview-hanger-x,28);--sc-avatar-shirt-x:var(--sc-preview-hanger-x,46)}
+
 /* Keep saved items accessible while the bottom bar is dedicated to categories. */
 .sc-header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px}
 .sc-header .sc-back{width:auto;justify-self:start;white-space:nowrap}
@@ -415,4 +427,4 @@
 .sc-page .sc-ownership-note{padding:7px 10px;border-bottom:1px solid #dfded0;font-size:10px;line-height:1.65;color:#66735f;background:#f7f6ed}
 .sc-page .sc-sample-note{font-size:10px;line-height:1.6;color:#68775e;margin:-3px 0 10px}
 .sc-owned-item .sc-owned-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5;min-height:30px;font-size:10px;padding-top:4px;color:#52634f}
-.sc-owned-item>small{display:block;color:#68775e;font-size:9px;line-height:1.5;white-space:nowrap}
+.sc-owned-item>small{display:block;color:#68775e;font-size:9px;line-height:1.5;white-space:normal;overflow-wrap:anywhere}

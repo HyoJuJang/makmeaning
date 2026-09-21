@@ -9,6 +9,7 @@ import { demoDisclosure, demoPurchaseSeeds, demoUser } from './demo-purchases.ts
 const catalogFixture: Record<string, { name: string; price: number }> = {
   '1106041553': { name: '타미힐피거 크루넥 케이블 니트 남여공용 소매 로고 포인트', price: 69000 },
   '1083830467': { name: '[지오다노/본사] 345518 여 린넨셔츠', price: 31120 },
+  '1065577366': { name: '[비버리힐즈폴로클럽] 남여 자수 케이블 라운드 긴팔 니트티셔츠', price: 35910 },
   '1113622242': { name: '서울우유 멸균우유 1000mlx10개', price: 26500 },
   '1033331215': { name: '동원샘물 미니 생수 300ml x 20개', price: 5000 },
   '19026466': { name: '고려은단 비타민C 1000 180정 x 1개 (6개월분) +쇼핑백', price: 20900 },

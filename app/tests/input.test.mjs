@@ -37,6 +37,7 @@ let savedState=null;
 const sessionState=new Map(),routeRequests=[];
 const apiHome=structuredClone(demoHome);
 apiHome.user.name='API 민서';
+const purchaseId=key=>apiHome.purchases.find(p=>p.illustrationKey===key).id;
 const fetchHome=async(url,options)=>{
   assert.equal(url,'/api/demo/home');assert.equal(options.cache,'no-store');fetchCount++;
   return {ok:true,json:async()=>structuredClone(apiHome)};
@@ -58,7 +59,7 @@ await bootstrap;
 assert.equal(fetchCount,1);
 assert.equal(element('#app').dataset.homeState,'ready');
 assert(element('h1').innerHTML.includes('API 민서'),'The visible user must come from the API');
-assert.equal(context.appTest.getState().outfitId,'knit','Initial outfit must honor the API wearing purchase');
+assert.equal(context.appTest.getState().outfitId,purchaseId('knit'),'Initial outfit must honor the API wearing purchase');
 const position=()=>({x:Number(element('.walker').dataset.x),y:Number(element('.walker').dataset.y)});
 function emit(type,key){
   for(const fn of documentEvents.get(type)||[])fn({key,target:document.activeElement,preventDefault(){},repeat:false});
@@ -81,10 +82,10 @@ console.log(JSON.stringify({result:'PASS',checks:results},null,2));
 
 // Render the actual legacy modal wrapper, where Array.map must not pass its index as category.
 context.appTest.renderProductsFor('food');
-assert(element('.product-list').innerHTML.includes('data-action="milk"'));
-assert(element('.product-list').innerHTML.includes('하나 사용하기'));
+assert(element('.product-list').innerHTML.includes(`data-action="${purchaseId('milk')}"`));
+assert(element('.product-list').innerHTML.includes('먹기'));
 context.appTest.renderProductsFor('living');
-assert(element('.product-list').innerHTML.includes('data-action="lamp"'));
+assert(element('.product-list').innerHTML.includes(`data-action="${purchaseId('lamp')}"`));
 assert(element('.product-list').innerHTML.includes('조명 끄기'));
 console.log('PASS: actual renderProducts wrapper preserves pantry Food and lamp Living action buttons.');
 
@@ -105,21 +106,21 @@ console.log('PASS: API boot, API user rendering, failed response, and explicit r
 context.fetch=fetchHome;
 savedState=JSON.stringify({outfitId:'shirt',foodQuantity:{milk:1},lampOn:false,featuredBeautyId:'cream'});
 await vm.runInContext(bootstrapSource,context);
-assert.equal(context.appTest.getState().outfitId,'shirt','A saved purchased outfit wins on refresh');
-assert.equal(context.appTest.getState().foodQuantity.milk,1);
+assert.equal(context.appTest.getState().outfitId,purchaseId('shirt'),'A saved purchased outfit wins on refresh');
+assert.equal(context.appTest.getState().foodQuantity[purchaseId('milk')],1);
 element('#reset').click();
 const resetState=context.appTest.getState();
-assert.equal(resetState.outfitId,'knit','Reset must restore the API wearing purchase');
-assert.equal(resetState.foodQuantity.milk,3);
+assert.equal(resetState.outfitId,purchaseId('knit'),'Reset must restore the API wearing purchase');
+assert.equal(resetState.foodQuantity[purchaseId('milk')],3);
 assert.equal(resetState.lampOn,true);
-assert.equal(resetState.featuredBeautyId,'serum');
+assert.equal(resetState.featuredBeautyId,purchaseId('serum'));
 assert.equal(JSON.parse(savedState).outfitId,apiHome.purchases.find(p=>p.illustrationKey==='knit').id,'Reset must persist its restored outfit');
 await vm.runInContext(bootstrapSource,context);
-assert.equal(context.appTest.getState().outfitId,'knit','Reload must preserve reset state');
+assert.equal(context.appTest.getState().outfitId,purchaseId('knit'),'Reload must preserve reset state');
 
 savedState=JSON.stringify({outfitId:'not-a-purchase'});
 await vm.runInContext(bootstrapSource,context);
-assert.equal(context.appTest.getState().outfitId,'knit','Invalid saved outfit must fall back to API state');
+assert.equal(context.appTest.getState().outfitId,purchaseId('knit'),'Invalid saved outfit must fall back to API state');
 for(const purchase of apiHome.purchases)if(purchase.category==='fashion')purchase.state.wearing=false;
 savedState=null;
 await vm.runInContext(bootstrapSource,context);
@@ -158,11 +159,11 @@ const confirmedElsewhere={...demoState.initialDemoState(apiHome),outfitId:canoni
 confirmedElsewhere.foodQuantity[canonicalMilk]=1;savedState=JSON.stringify(confirmedElsewhere);
 sessionState.set('gscene-room-return-v1',JSON.stringify({position:{x:162,y:164},savedAt:Date.now()}));
 const cachePosition=position();windowEvents.get('pageshow')({persisted:true});
-assert.equal(context.appTest.getState().outfitId,'shirt');
+assert.equal(context.appTest.getState().outfitId,purchaseId('shirt'));
 assert.equal(context.appTest.getState().avatarId,'f02');
 assert.equal(context.appTest.getState().lampOn,false);
-assert.equal(context.appTest.getState().featuredBeautyId,'cream');
-assert.equal(context.appTest.getState().foodQuantity.milk,1);
+assert.equal(context.appTest.getState().featuredBeautyId,purchaseId('cream'));
+assert.equal(context.appTest.getState().foodQuantity[purchaseId('milk')],1);
 assert.equal(element('.walker').dataset.avatar,'f02','Restored appearance is rendered immediately');
 assert.deepEqual(position(),cachePosition,'BFCache restores state without teleporting');
 assert.equal(sessionState.has('gscene-room-return-v1'),false,'Cached room consumes the pending return bookmark');

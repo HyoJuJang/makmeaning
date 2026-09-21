@@ -14,6 +14,7 @@ export interface DemoPurchaseSeed {
 export const demoPurchaseSeeds: readonly DemoPurchaseSeed[] = [
   { id: '1106041553', purchaseId: 'demo-purchase-knit', category: 'fashion', illustrationKey: 'knit', roomSlot: 'wardrobe-1', purchasedAt: '2026.09.18', state: { wearing: true } },
   { id: '1083830467', purchaseId: 'demo-purchase-shirt', category: 'fashion', illustrationKey: 'shirt', roomSlot: 'wardrobe-2', purchasedAt: '2026.09.16', state: { wearing: false } },
+  { id: '1065577366', purchaseId: 'demo-purchase-polo-knit', category: 'fashion', illustrationKey: 'knit', roomSlot: 'wardrobe-3', purchasedAt: '2026.09.14', state: { wearing: false } },
   { id: '1113622242', purchaseId: 'demo-purchase-milk', category: 'food', illustrationKey: 'milk', roomSlot: 'fridge-1', purchasedAt: '2026.09.20', state: { quantity: 3 } },
   { id: '1033331215', purchaseId: 'demo-purchase-water', category: 'food', illustrationKey: 'water', roomSlot: 'fridge-2', purchasedAt: '2026.09.20', state: { quantity: 3 } },
   { id: '19026466', purchaseId: 'demo-purchase-vitamin', category: 'food', illustrationKey: 'vitamin', roomSlot: 'pantry-1', purchasedAt: '2026.09.17', state: { quantity: 3 } },
