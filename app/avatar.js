@@ -69,7 +69,10 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   // Separate the actual near arm from the approved side sprite. Removing it
   // from the body prevents the old hanging arm remaining beside a new reach.
   const reach=reduced?1:Math.sin(p*Math.PI);
-  const armShape='M14 25H22L25 31V40L24 46H16L14 40L13 33Z';
+  // Side-atlas hands end at different heights. The old broad y=46 crop
+  // rotated a rectangle of trouser pixels past the native hand (most visible on F01).
+  const [cuff,handLeft,handRight,handBottom]={m01:[39,16.5,22.5,44.8],m02:[38.5,16.1,22.1,44.5],f01:[39,16.5,22,42.8],f02:[38.5,16.5,22.5,43.5]}[a.id];
+  const armShape=`M14 25H22L25 31V${cuff}H${handRight}V${handBottom-.9}L${handRight-.8} ${handBottom}H${handLeft+.8}L${handLeft} ${handBottom-.9}V${cuff}H14L13 33Z`;
   const arm=clip('lamp-native-arm',`<path d="${armShape}"/>`,source(3,{part:'moving-arm'}));
   const armMask=`<defs><mask id="${key}-lamp-body" maskUnits="userSpaceOnUse" x="-20" y="-10" width="80" height="90"><rect x="-20" y="-10" width="80" height="90" fill="white"/><path d="${armShape}" fill="black"/></mask></defs>`;
   const withoutArm=part=>`<g mask="url(#${key}-lamp-body)">${source(3,{part})}</g>`;
