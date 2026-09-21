@@ -47,6 +47,18 @@ assert.equal(app.local.get('gscene-food-v1'),'kitchen state','Navigation must no
 app.windowEvents.get('pagehide')();
 assert.equal(JSON.parse(app.storage.get(RETURN_KEY)).direction,'up');
 
+// The room's Food link must keep native navigation and never dispatch floor movement.
+const roomLink={dataset:{foodEntry:'room'},tagName:'A'};
+let prevented=false;
+const roomLinkClick={target:{closest(selector){return ['a[data-food-entry]','button,a[href]'].includes(selector)?roomLink:null;}},preventDefault(){prevented=true;}};
+for(const handler of app.events.get('click'))handler(roomLinkClick);
+app.element('.house-wrap').click(roomLinkClick);
+app.frame();
+assert.equal(prevented,false,'Food navigation must not be intercepted');
+assert.equal(app.context.appTest.controller.objectId,null,'Food must not enter the fridge interaction sequence');
+assert.equal(app.element('.walker').dataset.moving,'false','Food must not start floor movement');
+assert.deepEqual(JSON.parse(app.storage.get(RETURN_KEY)),{...original,scrollY:246});
+
 app.context.appTest.openRoom('food',null);
 assert.match(app.element('#modal-root').innerHTML,/<a[^>]*href="\/food"[^>]*data-food-entry="pantry"/);
 const controller=app.context.appTest.controller;
@@ -68,4 +80,6 @@ for(const invalid of ['{',JSON.stringify({position:{x:250,y:130},direction:'up',
 const blocked=await boot(undefined,true);blocked.windowEvents.get('pagehide')();blocked.element('#reset').click();
 const html=fs.readFileSync(new URL('../index.html',import.meta.url),'utf8');
 assert.match(html,/<a[^>]*href="\/food"[^>]*data-food-entry="home"/);
-console.log('PASS: home/food anchors, validated position and scroll restoration, reset, and unavailable storage.');
+assert.match(html,/<a[^>]*href="\/food"[^>]*data-food-entry="room"[^>]*class="room-target food"[^>]*aria-label="Food 내 주방으로 이동"><span>Food<\/span><\/a>/);
+assert.doesNotMatch(html,/<button[^>]*class="room-target food"/);
+console.log('PASS: direct Food navigation without movement, home/food anchors, validated position and scroll restoration, reset, and unavailable storage.');

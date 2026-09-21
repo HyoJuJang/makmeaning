@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="200" viewBox="0 0 160 200" role="img" aria-label="기본 상품 이미지">
+  <title>상품 사진이 없는 식품의 기본 이미지</title>
+  <defs>
+    <linearGradient id="paper" x2="1" y2="1"><stop stop-color="#ede6d3"/><stop offset=".7" stop-color="#d9cfb7"/><stop offset="1" stop-color="#c6bba1"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-20%" width="160%" height="160%"><feDropShadow dx="1" dy="4" stdDeviation="4" flood-color="#625b3e" flood-opacity=".14"/></filter>
+  </defs>
+  <ellipse cx="80" cy="180" rx="43" ry="8" fill="#9d9e82" opacity=".12"/>
+  <g filter="url(#shadow)">
+    <path d="M44 28h72l-5 25 13 113q1 9-8 10H44q-9-1-8-10L49 53Z" fill="url(#paper)" stroke="#c0b89f" stroke-width="1.5"/>
+    <path d="M44 28h72l-3 15H47Z" fill="#a5b193"/>
+    <path d="M48 34h64" stroke="#d2d9bf" stroke-width="1.5"/>
+    <path d="M50 54h60M46 157l-4 12h76l-4-12" fill="none" stroke="#bcb399" stroke-width="1.5" opacity=".6"/>
+    <rect x="52" y="76" width="56" height="57" rx="8" fill="#f3efdf"/>
+    <path d="M80 115c-17-2-21-15-15-25 14 1 21 13 15 25Z" fill="#95a581"/>
+    <path d="m70 97 10 21" fill="none" stroke="#708862" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="94" cy="105" r="3" fill="#bbc4a4"/>
+  </g>
+</svg>

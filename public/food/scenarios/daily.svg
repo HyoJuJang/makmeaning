@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="520" viewBox="0 0 800 520" role="img" aria-label="나무 선반 위의 영양제 병과 물병">
+  <title>늘 손이 가는 식품을 가지런히 놓은 일상의 한쪽</title>
+  <defs>
+    <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#f0eddf"/><stop offset="1" stop-color="#dfdfcc"/></linearGradient>
+    <linearGradient id="table" x2="0" y2="1"><stop stop-color="#dac39e"/><stop offset="1" stop-color="#e9d8b9"/></linearGradient>
+    <linearGradient id="amber" x2="1" y2="0"><stop stop-color="#916b44"/><stop offset=".28" stop-color="#bf9966"/><stop offset=".7" stop-color="#aa7e4d"/><stop offset="1" stop-color="#86603b"/></linearGradient>
+    <linearGradient id="water" x2="1" y2="0"><stop stop-color="#a9c5b6" stop-opacity=".9"/><stop offset=".3" stop-color="#e8efe0" stop-opacity=".95"/><stop offset=".65" stop-color="#d4e1d0" stop-opacity=".9"/><stop offset="1" stop-color="#8faf9f" stop-opacity=".85"/></linearGradient>
+    <linearGradient id="linen" x2="1" y2="1"><stop stop-color="#bac3a3"/><stop offset="1" stop-color="#879877"/></linearGradient>
+    <filter id="shadow" x="-40%" y="-30%" width="190%" height="190%"><feDropShadow dx="7" dy="12" stdDeviation="11" flood-color="#625638" flood-opacity=".19"/></filter>
+    <filter id="small" x="-30%" y="-30%" width="170%" height="190%"><feDropShadow dx="2" dy="5" stdDeviation="5" flood-color="#625638" flood-opacity=".17"/></filter>
+  </defs>
+  <rect width="800" height="520" fill="url(#wall)"/>
+  <path d="M64 0h61l278 296H330ZM202 0h162l205 296H470Z" fill="#fffbea" opacity=".56"/>
+  <path d="M0 284h800v236H0Z" fill="url(#table)"/>
+  <path d="M0 290h800" stroke="#baa078" stroke-width="3" opacity=".4"/>
+  <g stroke="#ac8e62" stroke-opacity=".18" fill="none"><path d="M0 395h800M-20 502h840" stroke-width="2"/><path d="M14 414q146-13 286-2m207 72q151 12 277-1M421 318q93 9 213-1"/></g>
+  <path d="M503 317 698 353 663 479 466 438Z" fill="url(#linen)" filter="url(#small)"/>
+  <g fill="none" stroke="#d5dcc2" stroke-opacity=".42"><path d="m526 334 151 29-25 99M512 351l158 30m-163-6 158 29m-162-4 157 29" stroke-width="1.3"/></g>
+  <ellipse cx="384" cy="401" rx="191" ry="45" fill="#b7a580" opacity=".16"/>
+  <g filter="url(#shadow)">
+    <path d="M467 139h50l5 29q31 16 34 40v182q-1 20-64 20t-64-20V207q2-25 34-40Z" fill="url(#water)" stroke="#9db7a3" stroke-width="2"/>
+    <path d="M435 246q56 16 114 0v139q-1 15-57 15t-57-15Z" fill="#b9d3c2" opacity=".44"/>
+    <ellipse cx="492" cy="247" rx="57" ry="11" fill="#dce8d9" opacity=".65"/>
+    <path d="M447 212v142" stroke="#f4f7e9" stroke-width="7" stroke-linecap="round" opacity=".78"/>
+    <path d="M531 214v167" stroke="#8eac96" stroke-width="2" opacity=".5"/>
+    <rect x="461" y="117" width="63" height="31" rx="7" fill="#748e7c"/>
+    <path d="M466 125h53M466 131h53M466 137h53" stroke="#a0b29a" stroke-width="1.5" opacity=".7"/>
+    <ellipse cx="492" cy="118" rx="28" ry="5" fill="#94a88b"/>
+    <rect x="437" y="276" width="110" height="51" rx="4" fill="#edf0df" fill-opacity=".75"/>
+    <path d="M490 291c-9 12-11 15-11 20a12 12 0 0 0 24 0c0-5-3-9-11-20Z" fill="#8eac94" opacity=".7"/>
+  </g>
+  <!-- A plain amber food-supplement jar; no dosage, claims or schedule. -->
+  <g filter="url(#shadow)">
+    <rect x="288" y="230" width="104" height="157" rx="18" fill="url(#amber)"/>
+    <path d="M304 253v110" stroke="#d7b785" stroke-width="7" stroke-linecap="round" opacity=".48"/>
+    <rect x="291" y="278" width="98" height="64" rx="3" fill="#ece4cc"/>
+    <path d="M339 324c-19-1-27-14-23-26 19-2 29 11 23 26Z" fill="#83956b"/>
+    <path d="M339 324c1-18 15-31 28-25 0 18-13 27-28 25Z" fill="#a0ac83"/>
+    <path d="m325 306 15 21 18-19" fill="none" stroke="#657b54" stroke-width="1.7" stroke-linecap="round"/>
+    <rect x="286" y="208" width="108" height="34" rx="7" fill="#dcd7be"/>
+    <path d="M294 213v23m9-23v23m9-23v23m9-23v23m9-23v23m9-23v23m9-23v23m9-23v23m9-23v23m9-23v23m9-23v23" stroke="#c0bea5" stroke-width="1.4"/>
+    <ellipse cx="340" cy="210" rx="46" ry="5" fill="#eee8d1"/>
+  </g>
+  <g filter="url(#small)">
+    <ellipse cx="221" cy="409" rx="49" ry="14" fill="#b8986d"/>
+    <path d="M184 314h74l-6 83q-32 14-61 0Z" fill="url(#water)" fill-opacity=".8" stroke="#b3c3ac" stroke-width="1.5"/>
+    <path d="m189 349 64 0-4 45q-28 9-56 0Z" fill="#c4daca" opacity=".6"/>
+    <ellipse cx="221" cy="349" rx="32" ry="10" fill="#e4ecda" opacity=".7"/>
+    <ellipse cx="221" cy="314" rx="37" ry="12" fill="#e4e8d4" fill-opacity=".56" stroke="#c0cbb6" stroke-width="2"/>
+    <path d="m194 329 3 57" stroke="#f7f7e8" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- A few out-of-focus leaves frame the quiet corner. -->
+  <path d="M720 293q-2-64 25-101m-24 66-26-30m30 4 34-24" fill="none" stroke="#8c9b70" stroke-width="4"/>
+  <path d="M709 257q-52-2-48-40 41-4 48 40Z" fill="#9aac7e"/><path d="M729 239q-5-42 38-50 8 34-38 50Z" fill="#81966c"/>
+  <path d="m698 284 49 0-7 43h-35Z" fill="#c5ab80"/><ellipse cx="722" cy="284" rx="25" ry="6" fill="#dcc6a0"/>
+</svg>

@@ -1,17 +1,43 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { GET } from '../app/api/demo/food/route.ts';
-import { demoFood } from '../src/data/demo-food.ts';
+import { demoFood, demoFoodCatalog } from '../src/data/demo-food.ts';
 import { demoHome } from '../src/data/demo-home.ts';
 import {
-  addToCart, buildIngredientRows, cartTotal, normalizeCart,
-  recommendRecipes, recommendationReason,
+  adaptFoodProducts, addToCart, buildProductRows, cartTotal, normalizeCart,
+  recommendScenarios, recommendationReason,
 } from '../src/lib/food.ts';
 
+const sourceColumns = ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain'].sort();
+const forbiddenFields = ['packSize', 'unit', 'optionLabel', 'available', 'amountPerServing', 'requiredAmount', 'requiredPacks', 'servings'];
 const additions = rows => rows.filter(row => row.selected)
   .map(row => ({ productId: row.product.id, quantity: row.additionalQuantity }));
+const recommend = (profile = 'new', cart = [], selected = null, intent = 'all', saved = [], data = demoFood) =>
+  recommendScenarios(data, profile, cart, selected, intent, saved);
+const scenario = id => demoFood.scenarios.find(item => item.id === id);
+const sourceProduct = overrides => ({
+  prd_id: 'new-product', view_name: '새로운 상품', price: 1234,
+  cate1_nm: '식품', cate2_nm: '', cate3_nm: '', cate4_m: '', brd_mn: '', domain: '푸드', ...overrides,
+});
 
-test('food API preserves the home identity and purchases without treating quantities as possession', async () => {
+test('source catalog uses only promised columns; presentation adaptation does not need size, quantity, option or image inputs', () => {
+  for (const product of demoFoodCatalog) assert.deepEqual(Object.keys(product).sort(), sourceColumns);
+  const raw = sourceProduct({ prd_id: 'source-only', view_name: '새 우유', cate3_nm: '우유' });
+  const [product] = adaptFoodProducts([raw]);
+  assert.equal(product.id, raw.prd_id);
+  assert.equal(product.name, raw.view_name);
+  assert.equal(product.shortName, raw.view_name);
+  assert.equal(product.price, raw.price);
+  assert.equal(product.imageUrl, '/products/milk.svg');
+  const [decorated] = adaptFoodProducts([raw], { 'source-only': { shortName: '우유 예시', imageUrl: '/products/milk.svg' } });
+  assert.equal(decorated.shortName, '우유 예시');
+  for (const field of forbiddenFields) assert.equal(field in product, false, `${field} must not be inferred`);
+  const [stripped] = adaptFoodProducts([{ ...raw, packSize: 500, unit: 'ml', available: true }]);
+  for (const field of forbiddenFields) assert.equal(field in stripped, false, `${field} is not an extracted contract dependency`);
+  assert.deepEqual(Object.keys(raw).sort(), sourceColumns, 'adapter does not mutate the input');
+});
+
+test('food API preserves home identity and purchase events without claiming present inventory', async () => {
   const response = GET();
   assert.equal(response.status, 200);
   assert.equal(response.headers.get('cache-control'), 'no-store');
@@ -27,156 +53,176 @@ test('food API preserves the home identity and purchases without treating quanti
     assert.equal(product.imageUrl, purchase.imageUrl);
     assert.equal(product.price, purchase.price);
     const record = homeProfile.purchases.find(item => item.productId === purchase.id);
-    assert.equal(record.purchasedAt, purchase.purchasedAt);
-    assert.equal('quantity' in record, false);
-    assert.equal('owned' in record, false);
+    assert.deepEqual(record, { productId: purchase.id, purchasedAt: purchase.purchasedAt });
   }
-  const pastaScenario = data.profiles.find(profile => profile.id === 'purchased');
-  assert.match(pastaScenario.label, /체험/);
-  assert.deepEqual(pastaScenario.purchases.map(purchase => purchase.productId), ['pasta']);
+  assert.equal('recipes' in data, false);
   data.products[0].price = 0;
   assert.notEqual((await GET().json()).products[0].price, 0);
 });
 
-test('every recipe ingredient has a usable pack, exact amount, and a valid catalog reference', () => {
+test('six core scenarios link real demo catalog products without capacity or serving assumptions', () => {
   assert.equal(new Set(demoFood.products.map(product => product.id)).size, demoFood.products.length);
-  assert.equal(new Set(demoFood.recipes.map(recipe => recipe.id)).size, demoFood.recipes.length);
-  for (const recipe of demoFood.recipes) {
-    assert.ok(recipe.minutes > 0 && recipe.steps.length > 0);
-    assert.equal(new Set(recipe.ingredients.map(ingredient => ingredient.productId)).size, recipe.ingredients.length);
-    for (const ingredient of recipe.ingredients) {
-      const product = demoFood.products.find(item => item.id === ingredient.productId);
+  assert.equal(new Set(demoFood.scenarios.map(item => item.id)).size, demoFood.scenarios.length);
+  assert.ok(demoFood.scenarios.length >= 6);
+  assert.deepEqual(new Set(demoFood.scenarios.map(item => item.kind)), new Set(['meal', 'routine', 'outing']));
+  for (const item of demoFood.scenarios) {
+    assert.ok(item.steps.length > 0 && item.products.length > 0);
+    assert.equal(new Set(item.products.map(product => product.productId)).size, item.products.length);
+    assert.equal('minutes' in item, false);
+    for (const link of item.products) {
+      const product = demoFood.products.find(product => product.id === link.productId);
       assert.ok(product);
-      assert.ok(product.packSize > 0 && Number.isSafeInteger(product.price) && product.price > 0);
-      assert.ok(ingredient.amountPerServing > 0);
+      assert.ok(Number.isSafeInteger(product.price) && product.price > 0);
+      for (const field of forbiddenFields) assert.equal(field in link || field in product, false);
     }
   }
 });
 
-test('recommendations follow explicit ingredient and intent, then cart, saved, and purchase signals', () => {
-  const recommend = (profile, cart = [], selected = null, intent = 'all', saved = []) =>
-    recommendRecipes(demoFood, profile, cart, selected, intent, saved);
-  assert.equal(recommend('new')[0].id, 'tomato-pasta');
-  assert.equal(recommend('home')[0].id, 'creamy-pasta');
+test('purchases, cart choices and saves ground recommendation ranking', () => {
+  assert.equal(recommend()[0].id, 'tomato-pasta');
   assert.equal(recommend('purchased')[0].id, 'tomato-pasta');
-  assert.equal(recommend('home', [{ productId: 'tomato', quantity: 1 }])[0].id, 'tomato-pasta');
+  assert.equal(recommend('new', [{ productId: 'tomato', quantity: 1 }])[0].id, 'tomato-pasta');
   assert.equal(recommend('new', [], null, 'all', ['mushroom-rice'])[0].id, 'mushroom-rice');
-  assert.deepEqual(recommend('new', [], 'milk').map(recipe => recipe.id), ['creamy-pasta']);
-  assert.deepEqual(recommend('new', [], 'milk', 'quick'), []);
-  assert.deepEqual(recommend('home', [], 'vitamin'), []);
-  assert.deepEqual(recommend('home', [], 'water'), []);
-  assert.deepEqual(recommend('new', [], 'unknown'), []);
-  assert.ok(recommend('new', [], null, 'quick').every(recipe => recipe.minutes <= 20));
+  assert.ok(recommend('new', [], 'milk').every(item => item.products.some(product => product.productId === 'milk')));
+  assert.equal(recommend('new', [], 'milk', 'morning')[0].id, 'simple-breakfast');
+  assert.equal(recommend('new', [], null, 'outdoor')[0].id, 'outing');
 });
 
-test('recommendation reasons reflect actual source data without asserting possession', () => {
-  const recipe = demoFood.recipes.find(item => item.id === 'creamy-pasta');
-  assert.match(recommendationReason(demoFood, recipe, 'home', [], null, 'all', []), /우유 구매 기록/);
-  assert.match(recommendationReason(demoFood, recipe, 'home', [], null, 'all', []), /보유 여부는 확인/);
-  assert.match(recommendationReason(demoFood, recipe, 'new', [{ productId: 'milk', quantity: 1 }], null, 'all', []), /장바구니의 우유/);
-  assert.match(recommendationReason(demoFood, recipe, 'home', [], 'milk', 'all', []), /우유로/);
+test('vitamin and water produce relevant non-cooking scenarios, including conflicting topic selections', () => {
+  for (const intent of ['all', 'quick', 'hearty', 'morning', 'outdoor', 'routine']) {
+    const vitaminResults = recommend('home', [], 'vitamin', intent);
+    assert.ok(vitaminResults.length > 0);
+    assert.ok(vitaminResults.every(item => item.kind === 'routine'));
+    assert.equal(vitaminResults[0].id, 'daily-food');
+    const vitaminContent = vitaminResults.map(item => [item.name, item.description, ...item.steps].join(' ')).join(' ');
+    assert.doesNotMatch(vitaminContent, /복용|섭취|효능|면역|건강해|치료|예방|레시피|재료/);
+    const waterResults = recommend('home', [], 'water', intent);
+    assert.ok(waterResults.length > 0);
+    assert.ok(waterResults.every(item => item.kind !== 'meal'));
+  }
+  assert.equal(recommend('home', [], 'water', 'outdoor')[0].id, 'outing');
+  assert.equal(recommend('home', [], 'water')[0].id, 'outing', 'selected water prioritizes the outing that uses it as a core product');
+  assert.match(recommendationReason(demoFood, scenario('daily-food'), 'home', [], 'vitamin', 'quick', []), /선택한 주제 대신/);
 });
 
-test('first visit can choose a meal without history; optional oil is not added by default', () => {
-  const rows = buildIngredientRows(demoFood, 'tomato-pasta', 1, [], []);
-  assert.deepEqual(additions(rows), [
-    { productId: 'pasta', quantity: 1 },
-    { productId: 'tomato', quantity: 1 },
-    { productId: 'mushroom', quantity: 1 },
+test('every known product and every topic has a result; unknown selections fall back honestly', () => {
+  for (const id of [...demoFood.products.map(product => product.id), 'unknown']) {
+    for (const intent of ['all', 'quick', 'hearty', 'morning', 'outdoor', 'routine']) {
+      const results = recommend('new', [], id, intent);
+      assert.ok(results.length > 0, `${id}/${intent} must have a scenario or fallback`);
+      if (id === 'unknown') {
+        assert.match(recommendationReason(demoFood, results[0], 'new', [], id, intent, []), /직접 연결되는 장면이 없어 기본/);
+      }
+    }
+  }
+});
+
+test('new SKU recommendations use category/name metadata; unrelated products receive a labeled general fallback', () => {
+  const [vitamin, milk, unknown] = adaptFoodProducts([
+    sourceProduct({ prd_id: 'new-vitamin', view_name: '데일리 상품', cate2_nm: '건강식품', cate3_nm: '멀티비타민' }),
+    sourceProduct({ prd_id: 'new-milk', view_name: '새 우유' }),
+    sourceProduct({ prd_id: 'new-unknown', view_name: '알 수 없는 상품' }),
   ]);
+  const data = { ...demoFood, products: [...demoFood.products, vitamin, milk, unknown] };
+  assert.equal(unknown.imageUrl, '/food/products/generic.svg');
+  assert.equal(recommend('new', [], vitamin.id, 'quick', [], data)[0].id, 'daily-food');
+  assert.match(recommendationReason(data, scenario('daily-food'), 'new', [], vitamin.id, 'quick', []), /식품 분류를 참고/);
+  assert.match(recommendationReason(data, scenario('daily-food'), 'new', [], vitamin.id, 'quick', []), /데모 예시/);
+  assert.equal(recommend('new', [], milk.id, 'morning', [], data)[0].id, 'simple-breakfast');
+  const fallback = recommend('new', [], unknown.id, 'all', [], data);
+  assert.ok(fallback.length > 0);
+  assert.match(recommendationReason(data, fallback[0], 'new', [], unknown.id, 'all', []), /직접 연결되는 장면이 없어/);
+  const withPurchase = { ...data, profiles: [{ id: 'new', label: '신규 구매', cart: [], purchases: [{ productId: vitamin.id, purchasedAt: '2026.09.21' }] }] };
+  assert.equal(recommend('new', [], null, 'all', [], withPurchase)[0].id, 'daily-food');
+  assert.equal(recommend('new', [{ productId: vitamin.id, quantity: 1 }], null, 'all', [], data)[0].id, 'daily-food');
+});
+
+test('recommendation reasons describe their actual source without claiming possession', () => {
+  const item = scenario('creamy-pasta');
+  assert.match(recommendationReason(demoFood, item, 'home', [], null, 'all', []), /우유 구매 기록/);
+  assert.match(recommendationReason(demoFood, item, 'home', [], null, 'all', []), /현재 보유 상태와는 달라/);
+  assert.match(recommendationReason(demoFood, item, 'new', [{ productId: 'milk', quantity: 1 }], null, 'all', []), /장바구니 상품 ‘우유’/);
+  assert.match(recommendationReason(demoFood, item, 'home', [], 'milk', 'all', []), /‘우유’에 맞춰 골라본 장면/);
+  assert.match(recommendationReason(demoFood, scenario('daily-food'), 'home', [], 'vitamin', 'all', []), /‘멀티비타민’에 맞춰 골라본 장면/);
+});
+
+test('specific source categories override ambiguous product-name words', () => {
+  const products = adaptFoodProducts([
+    sourceProduct({ prd_id: 'water-name', view_name: '비타민 워터', cate3_nm: '생수' }),
+    sourceProduct({ prd_id: 'sauce-name', view_name: '우유 버섯 파스타소스', cate3_nm: '파스타소스' }),
+  ]);
+  const data = { ...demoFood, products: [...demoFood.products, ...products] };
+  assert.equal(recommend('new', [], 'water-name', 'all', [], data)[0].id, 'outing');
+  assert.equal(recommend('new', [], 'sauce-name', 'all', [], data)[0].id, 'tomato-pasta');
+  assert.equal(products[0].imageUrl, '/products/water.svg');
+  assert.equal(products[1].imageUrl, '/food/products/tomato.svg');
+});
+
+test('first visit selects one of each core product, while optional oil stays unselected', () => {
+  const rows = buildProductRows(demoFood, 'tomato-pasta', [], []);
+  assert.deepEqual(additions(rows), [{ productId: 'pasta', quantity: 1 }, { productId: 'tomato', quantity: 1 }, { productId: 'mushroom', quantity: 1 }]);
   assert.equal(cartTotal(demoFood, additions(rows)), 11200);
   assert.equal(rows.find(row => row.product.id === 'olive-oil').selected, false);
-  const optedIn = buildIngredientRows(demoFood, 'tomato-pasta', 1, [], [], []);
+  const optedIn = buildProductRows(demoFood, 'tomato-pasta', [], [], []);
   assert.equal(cartTotal(demoFood, additions(optedIn)), 20100);
+  for (const row of rows) for (const field of forbiddenFields) assert.equal(field in row, false);
 });
 
-test('current possession is explicit for any product and independent from historical purchases', () => {
-  const homeRows = buildIngredientRows(demoFood, 'creamy-pasta', 1, [], []);
-  const milk = homeRows.find(row => row.product.id === 'milk');
+test('purchase history never excludes a product; exclusions apply only to the current shopping choice', () => {
+  const milk = buildProductRows(demoFood, 'creamy-pasta', [], []).find(row => row.product.id === 'milk');
   assert.equal(milk.owned, false);
   assert.equal(milk.selected, true);
-  const owned = buildIngredientRows(demoFood, 'tomato-pasta', 1, ['pasta', 'olive-oil'], [], []);
-  assert.equal(owned.find(row => row.product.id === 'pasta').additionalQuantity, 0);
-  assert.equal(owned.find(row => row.product.id === 'olive-oil').additionalQuantity, 0);
-  assert.equal(cartTotal(demoFood, additions(owned)), 7400);
-  const excluded = buildIngredientRows(demoFood, 'tomato-pasta', 1, [], [], ['pasta', 'olive-oil']);
-  assert.equal(excluded.find(row => row.product.id === 'pasta').owned, false);
-  assert.equal(excluded.find(row => row.product.id === 'pasta').selected, false);
-  assert.equal(excluded.find(row => row.product.id === 'pasta').additionalQuantity, 1);
+  const excluded = buildProductRows(demoFood, 'tomato-pasta', ['pasta', 'olive-oil'], [], []);
+  assert.equal(excluded.find(row => row.product.id === 'pasta').additionalQuantity, 0);
+  assert.equal(excluded.find(row => row.product.id === 'olive-oil').additionalQuantity, 0);
+  assert.equal(cartTotal(demoFood, additions(excluded)), 7400);
+  assert.equal(buildProductRows(demoFood, 'tomato-pasta', [], [])[0].selected, true, 'new scenario check does not retain exclusions');
 });
 
-test('four exact portions calculate required amounts and only the packs missing from the cart', () => {
-  const existing = [
-    { productId: 'pasta', quantity: 1 },
-    { productId: 'tomato', quantity: 1 },
-    { productId: 'mushroom', quantity: 1 },
-  ];
-  const rows = buildIngredientRows(demoFood, 'tomato-pasta', 4, [], existing);
-  assert.deepEqual(rows.slice(0, 3).map(row => [row.requiredAmount, row.requiredPacks, row.inCart, row.additionalQuantity]), [
-    [400, 1, 1, 0], [600, 2, 1, 1], [320, 2, 1, 1],
-  ]);
-  assert.equal(cartTotal(demoFood, additions(rows)), 7400);
+test('existing cart products are excluded by default without calculating sufficiency', () => {
+  const existing = [{ productId: 'tomato', quantity: 1 }];
+  const rows = buildProductRows(demoFood, 'tomato-pasta', [], existing);
+  const tomato = rows.find(row => row.product.id === 'tomato');
+  assert.deepEqual([tomato.inCart, tomato.additionalQuantity, tomato.selected, tomato.owned], [1, 0, false, false]);
+  assert.equal(cartTotal(demoFood, additions(rows)), 6700);
   const cart = addToCart(existing, additions(rows));
-  assert.deepEqual(cart, [
-    { productId: 'pasta', quantity: 1 },
-    { productId: 'tomato', quantity: 2 },
-    { productId: 'mushroom', quantity: 2 },
-  ]);
-  assert.equal(cartTotal(demoFood, cart), 18600);
-  const reopened = buildIngredientRows(demoFood, 'tomato-pasta', 4, [], cart, undefined, { tomato: 1 });
-  assert.deepEqual(additions(reopened), []);
-  assert.equal(existing[1].quantity, 1, 'cart helper must not mutate the original state');
+  assert.equal(cart.find(line => line.productId === 'tomato').quantity, 1);
+  assert.deepEqual(additions(buildProductRows(demoFood, 'tomato-pasta', [], cart)), []);
+  assert.deepEqual(existing, [{ productId: 'tomato', quantity: 1 }], 'original cart remains untouched');
 });
 
-test('cart sufficiency, owning everything, and deselecting everything remain different states', () => {
-  const ingredientIds = demoFood.recipes[0].ingredients.map(item => item.productId);
-  const owned = buildIngredientRows(demoFood, 'tomato-pasta', 1, ingredientIds, []);
-  const deselected = buildIngredientRows(demoFood, 'tomato-pasta', 1, [], [], ingredientIds);
-  const covered = buildIngredientRows(demoFood, 'tomato-pasta', 1, [], ingredientIds.map(productId => ({ productId, quantity: 1 })));
-  for (const rows of [owned, deselected, covered]) assert.deepEqual(additions(rows), []);
-  assert.ok(owned.every(row => row.owned));
-  assert.ok(deselected.every(row => !row.owned && row.additionalQuantity > 0));
-  assert.ok(covered.every(row => !row.owned && row.inCart > 0));
-});
-
-test('quantity overrides are additional packs and bounded; unavailable products cannot be selected', () => {
-  const rows = buildIngredientRows(demoFood, 'tomato-pasta', 4, [], [{ productId: 'tomato', quantity: 1 }], undefined,
+test('explicit quantities are user choices, bounded at 99 and never based on serving counts', () => {
+  const rows = buildProductRows(demoFood, 'tomato-pasta', [], [{ productId: 'tomato', quantity: 1 }], undefined,
     { tomato: 4, pasta: 1000, mushroom: -1 });
   assert.equal(rows.find(row => row.product.id === 'tomato').additionalQuantity, 4);
   assert.equal(rows.find(row => row.product.id === 'pasta').additionalQuantity, 99);
-  assert.equal(rows.find(row => row.product.id === 'mushroom').additionalQuantity, 2);
-  const unavailable = structuredClone(demoFood);
-  unavailable.products.find(product => product.id === 'tomato').available = false;
-  const row = buildIngredientRows(unavailable, 'tomato-pasta', 1, [], []).find(item => item.product.id === 'tomato');
-  assert.equal(row.selected, false);
-  assert.equal(row.additionalQuantity, 0);
+  assert.equal(rows.find(row => row.product.id === 'mushroom').additionalQuantity, 1);
+  const capped = buildProductRows(demoFood, 'tomato-pasta', [], [{ productId: 'tomato', quantity: 98 }], undefined, { tomato: 9 });
+  assert.equal(capped.find(row => row.product.id === 'tomato').additionalQuantity, 1);
+  const full = buildProductRows(demoFood, 'tomato-pasta', [], [{ productId: 'tomato', quantity: 99 }], undefined, { tomato: 1 });
+  assert.equal(full.find(row => row.product.id === 'tomato').selected, false);
 });
 
-test('corrupt or stale stored carts cannot introduce unknown products, fractional counts or unbounded totals', () => {
+test('user exclusions, deselection and existing cart states stay distinct', () => {
+  const ids = scenario('tomato-pasta').products.map(item => item.productId);
+  const excluded = buildProductRows(demoFood, 'tomato-pasta', ids, []);
+  const deselected = buildProductRows(demoFood, 'tomato-pasta', [], [], ids);
+  const inCart = buildProductRows(demoFood, 'tomato-pasta', [], ids.map(productId => ({ productId, quantity: 1 })));
+  for (const rows of [excluded, deselected, inCart]) assert.deepEqual(additions(rows), []);
+  assert.ok(excluded.every(row => row.owned));
+  assert.ok(deselected.every(row => !row.owned && row.additionalQuantity > 0));
+  assert.ok(inCart.every(row => !row.owned && row.inCart > 0));
+});
+
+test('corrupt or stale carts cannot introduce unknown products, fractional counts or unbounded totals', () => {
   for (const value of [null, undefined, 'not json', 12, {}]) assert.deepEqual(normalizeCart(demoFood, value), []);
-  const cart = normalizeCart(demoFood, [
-    null, true, {},
-    { productId: 'pasta', quantity: 2 },
-    { productId: 'pasta', quantity: 3 },
-    { productId: 'tomato', quantity: 999 },
-    { productId: 'unknown', quantity: 1 },
-    { productId: 'milk', quantity: -1 },
-    { productId: 'water', quantity: 1.5 },
-    { productId: 'vitamin', quantity: '2' },
-    { productId: 'egg', quantity: Infinity },
-    { productId: 'rice', quantity: NaN },
+  const cart = normalizeCart(demoFood, [null, true, {},
+    { productId: 'pasta', quantity: 2 }, { productId: 'pasta', quantity: 3 }, { productId: 'tomato', quantity: 999 },
+    { productId: 'unknown', quantity: 1 }, { productId: 'milk', quantity: -1 }, { productId: 'water', quantity: 1.5 },
+    { productId: 'vitamin', quantity: '2' }, { productId: 'egg', quantity: Infinity }, { productId: 'rice', quantity: NaN },
   ]);
   assert.deepEqual(cart, [{ productId: 'pasta', quantity: 5 }, { productId: 'tomato', quantity: 99 }]);
   assert.equal(cartTotal(demoFood, cart), 464500);
-  assert.deepEqual(addToCart([{ productId: 'tomato', quantity: 98 }], [{ productId: 'tomato', quantity: 4 }]), [
-    { productId: 'tomato', quantity: 99 },
-  ]);
-});
-
-test('invalid servings and missing recipes have predictable bounded results', () => {
-  assert.deepEqual(buildIngredientRows(demoFood, 'unknown', 1, [], []), []);
-  for (const servings of [NaN, Infinity, -1, 0]) {
-    assert.equal(buildIngredientRows(demoFood, 'tomato-pasta', servings, [], [])[0].requiredAmount, 100);
-  }
-  assert.equal(buildIngredientRows(demoFood, 'tomato-pasta', 200, [], [])[0].requiredAmount, 400);
+  assert.deepEqual(addToCart([{ productId: 'tomato', quantity: 98 }], [{ productId: 'tomato', quantity: 4 }]), [{ productId: 'tomato', quantity: 99 }]);
+  assert.deepEqual(buildProductRows(demoFood, 'unknown', [], []), []);
 });
