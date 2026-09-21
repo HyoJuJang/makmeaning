@@ -1,8 +1,8 @@
 export type Category = 'fashion' | 'food' | 'living' | 'beauty';
 
-export type RoomSlot =
-  | 'wardrobe-1' | 'wardrobe-2' | 'wardrobe-3' | 'fridge-1' | 'fridge-2' | 'pantry-1'
-  | 'sofa-1' | 'lamp-1' | 'vanity-1' | 'vanity-2';
+/** Legacy room placement metadata; never determines category ownership or selection. */
+export type RoomSlot = `${'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity'}-${number}`;
+export type PresentationRole = 'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity' | 'shelf';
 
 export type IllustrationKey = 'knit' | 'shirt' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';
 
@@ -31,16 +31,50 @@ export interface Purchase {
   price: number;
   imageUrl: string;
   roomSlot: RoomSlot;
+  /** Category-owned presentation semantics, independent of either screen's coordinates. */
+  presentationRole: PresentationRole;
+  displayOrder: number;
   purchasedAt: string;
   illustrationKey: IllustrationKey;
   state: PurchaseState;
   catalogSource: 'shared-products';
   imageKind: 'illustration';
   priceKind: 'catalog-reference';
+  /** Optional catalog extraction metadata, never inferred from the generic illustration. */
+  catalogDetails?: {
+    cate1_nm: string | null; cate2_nm: string | null; cate3_nm: string | null;
+    cate4_nm: string | null; brand_name: string | null;
+  };
+}
+
+/** Primary owned-product source shared by a category hero and its room mirror. */
+export interface CategoryCollection {
+  category: Category;
+  user: DemoUser;
+  ownedProducts: Purchase[];
+}
+export type CategoryCollections = Record<Category, CategoryCollection>;
+
+export interface CategoryProductEntry {
+  id: string;
+  productId: string;
+  product: Purchase;
+  category: Category;
+  status: 'owned' | 'applied' | 'consumed';
+  remaining: number | null;
+  featured: boolean;
+  on: boolean | null;
+  displayIndex: number;
+  presentationRole: PresentationRole;
+  imageUrl: string;
+  illustrationKey: IllustrationKey;
+  artVisible: boolean;
 }
 
 export interface DemoHome {
   user: DemoUser;
+  categories: CategoryCollections;
+  /** Compatibility projection of categories' ownedProducts, not an independent source. */
   purchases: Purchase[];
   demo: {
     isDemo: true;

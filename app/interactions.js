@@ -55,8 +55,8 @@ export class InteractionController {
   if(e.type==='EXPAND'&&this.phase==='engaged'){this.trayExpanded=!this.trayExpanded;this.emit('tray');}
   if(e.type==='SELECT_FOOD'&&['fridge','pantry'].includes(this.objectId)&&this.phase==='engaged'&&typeof e.productId==='string'){this.selectedFood=e.productId;this.emit('tray');}
   if(e.type==='ACTION'&&this.phase==='engaged'){
-   const id=this.objectId,kind=id==='wardrobe'?'outfit':id==='vanity'?'beauty':null;
-   if(kind&&((kind==='outfit'&&['knit','shirt'].includes(e.productId))||(kind==='beauty'&&['serum','cream'].includes(e.productId)))&&e.productId!==e.current){this.epoch++;this.action={id:++this.serial,kind,productId:e.productId,committed:false};this.trayExpanded=false;this.beginStep('gesture',kind==='outfit'?600:500,'acting');this.emit('action-start');}
+   const id=this.objectId,kind=id==='wardrobe'?'outfit':id==='vanity'?'beauty':null,art=e.artKey||e.productId;
+   if(kind&&((kind==='outfit'&&['knit','shirt'].includes(art))||(kind==='beauty'&&['serum','cream'].includes(art)))&&e.productId!==e.current){this.epoch++;this.action={id:++this.serial,kind,productId:e.productId,committed:false};this.trayExpanded=false;this.beginStep('gesture',kind==='outfit'?600:500,'acting');this.emit('action-start');}
   }
   if(e.type==='EAT'&&['fridge','pantry'].includes(this.objectId)&&this.phase==='engaged'&&e.productId===this.selectedFood&&Number.isInteger(e.quantity)&&e.quantity>0){
    this.epoch++;this.action={id:++this.serial,kind:'food',productId:e.productId,committed:false};this.trayExpanded=false;this.beginStep('eat',EATING_DURATION,'acting');this.duration=this.reduced?REDUCED_EATING_DURATION:EATING_DURATION;this.emit('action-start');

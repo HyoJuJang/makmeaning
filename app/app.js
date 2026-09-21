@@ -1,7 +1,9 @@
 import {InteractionController,OBJECTS} from './interactions.js';
 import {CATEGORY_ROUTES,CATEGORY_OBJECTS,OBJECT_CATEGORIES} from './category-routes.js';
-import {DEMO_STATE_KEY,readDemoState,resetDemoState,toRoomVisualState,outfitArtKey,consumeOwnedFood,selectWardrobeProducts,updateDemoState} from './demo-state.js';
+import {DEMO_STATE_KEY,readDemoState,resetDemoState,outfitArtKey,consumeOwnedFood,updateDemoState} from './demo-state.js';
 import {objectArt} from './object-art.js';
+import {getCategoryProducts,getRoomMirrorProducts} from './category-products.js';
+import {placedMirrorProducts,roomMirrorPlacement} from './room-mirror.js';
 import {SCENE_SITUATIONS,SCENE_BUDGETS,validScene,scenePreview,sceneContext,sceneArt,sceneSheetHTML} from './scene-entry.js';
 import {AVATARS,avatarById,avatarSVG} from './avatar.js';
 import {START,APPROACHES,isWalkable,findPath,moveWithCollision} from './movement.js';
@@ -10,21 +12,23 @@ const ROOM_RETURN_KEY='gscene-room-return-v1';
 const LEGACY_AVATARS=new Map([['short','m01'],['wave','m02'],['bob','f01']]);
 const canonicalAvatarId=id=>LEGACY_AVATARS.get(id)||id;
 const escapeHTML=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const SLOT_CATEGORIES={'wardrobe-1':'fashion','wardrobe-2':'fashion','wardrobe-3':'fashion','fridge-1':'food','fridge-2':'food','pantry-1':'food','sofa-1':'living','lamp-1':'living','vanity-1':'beauty','vanity-2':'beauty'};
-const SLOT_PRODUCT_KEYS={'wardrobe-1':'knit','wardrobe-2':'shirt','wardrobe-3':'knit','fridge-1':'milk','fridge-2':'water','pantry-1':'vitamin','sofa-1':'cushion','lamp-1':'lamp','vanity-1':'serum','vanity-2':'cream'};
-const PRODUCT_KEYS=new Set(['knit','shirt','milk','water','vitamin','cushion','lamp','serum','cream']);
+const CATEGORIES=['fashion','food','living','beauty'];
 function validateHome(data){
- if(!data||typeof data.user?.id!=='string'||!data.user.id||typeof data.user.name!=='string'||!data.user.name.trim()||!Array.isArray(data.purchases))throw new Error('Invalid home response');
- const ids=new Set(),slots=new Set();
- const purchases=data.purchases.map(p=>{
-  if(!p||typeof p.id!=='string'||!p.id||!PRODUCT_KEYS.has(p.illustrationKey)||ids.has(p.id)||slots.has(p.roomSlot)||SLOT_PRODUCT_KEYS[p.roomSlot]!==p.illustrationKey||SLOT_CATEGORIES[p.roomSlot]!==p.category||typeof p.name!=='string'||!p.name.trim()||!Number.isFinite(p.price)||p.price<0||typeof p.purchasedAt!=='string'||!p.state||typeof p.state!=='object')throw new Error('Invalid purchase response');
-  if(p.category==='food'&&(!Number.isInteger(p.state.quantity)||p.state.quantity<0||p.state.quantity>99))throw new Error('Invalid food quantity');
-  ids.add(p.id);slots.add(p.roomSlot);
-  return {...p,name:p.name.slice(0,100),purchasedAt:p.purchasedAt.slice(0,30),imageUrl:typeof p.imageUrl==='string'&&/^\/products\/[a-z0-9-]+\.svg$/.test(p.imageUrl)?p.imageUrl:`/products/${p.illustrationKey}.svg`};
- });
- if(Object.values(SLOT_CATEGORIES).some(category=>purchases.filter(p=>p.category===category).length<2)||ids.size<PRODUCT_KEYS.size)throw new Error('Incomplete demo home');
- return {demo:data.demo,user:{id:data.user.id,name:data.user.name.trim().slice(0,40),avatarId:avatarById(canonicalAvatarId(data.user.avatarId)).id},purchases};
+ if(!data||typeof data.user?.id!=='string'||!data.user.id||typeof data.user.name!=='string'||!data.user.name.trim()||!data.categories)throw new Error('Invalid category source response');
+ const ids=new Set(),categories={};
+ for(const category of CATEGORIES){
+  const source=data.categories[category];
+  if(source?.category!==category||source.user?.id!==data.user.id||!Array.isArray(source.ownedProducts))throw new Error('Invalid category collection');
+  const ownedProducts=source.ownedProducts.map(p=>{
+   if(!p||typeof p.id!=='string'||!p.id||ids.has(p.id)||p.category!==category||p.catalogSource!=='shared-products'||typeof p.name!=='string'||!p.name.trim()||!Number.isFinite(p.price)||p.price<0||typeof p.purchasedAt!=='string'||!p.state||typeof p.state!=='object'||typeof p.imageUrl!=='string'||!/^\/products\/[a-z0-9-]+\.svg$/.test(p.imageUrl))throw new Error('Invalid category product');
+   if(category==='food'&&(!Number.isInteger(p.state.quantity)||p.state.quantity<0||p.state.quantity>99))throw new Error('Invalid food quantity');
+   ids.add(p.id);return {...p,state:{...p.state},name:p.name.slice(0,100),purchasedAt:p.purchasedAt.slice(0,30)};
+  });
+  categories[category]={...source,ownedProducts};
+ }
+ return {demo:data.demo,user:{...data.user,name:data.user.name.trim().slice(0,40),avatarId:avatarById(canonicalAvatarId(data.user.avatarId)).id},categories,purchases:CATEGORIES.flatMap(category=>categories[category].ownedProducts)};
 }
+
 async function loadHome(){
  const app=document.querySelector('#app'),loader=document.querySelector('#home-load-state');
  const controls=[...app.querySelectorAll('button')].filter(button=>!loader.contains(button));
@@ -47,10 +51,10 @@ async function loadHome(){
  }
 }
 const home=await loadHome();
-const products=home.purchases;
+const products=CATEGORIES.flatMap(category=>getCategoryProducts(home.categories[category]).map(entry=>entry.product));
+const mirrorProducts=()=>CATEGORIES.flatMap(category=>getRoomMirrorProducts(home.categories[category],state));
 let state=readDemoState(home,localStorage);
 const artKey=id=>products.find(p=>p.id===id)?.illustrationKey;
-const productId=key=>products.find(p=>p.illustrationKey===key)?.id;
 let preloadedEatingAvatar=null;
 function preloadEatingAsset(){if(preloadedEatingAvatar===state.avatarId||typeof Image!=='function')return;preloadedEatingAvatar=state.avatarId;const image=new Image();image.src=`/assets/avatars/${state.avatarId}-eating-states.png`;}
 document.querySelector('h1').innerHTML=`${escapeHTML(home.user.name)}의 작은 일상<span>.</span>`;
@@ -60,24 +64,23 @@ document.title=`G:Scene — ${home.user.name}의 공간`;
 let active=null,returnFocus=null,draftAvatar=null;
 let sceneSituation=null,sceneBudget=null,sceneStep='choose';
 const icons={knit:'<path d="M17 8 8 13 2 29l9 4 5-9v28h28V24l5 9 9-4-6-16-9-5-7 5h-12Z" fill="#e5ddc6"/><path d="M24 9q6 12 12 0M18 46h24M18 49h24" fill="none" stroke="#c3b898" stroke-width="2"/>',shirt:'<path d="m17 8-9 5-6 16 9 4 5-9v28h28V24l5 9 9-4-6-16-9-5-13 4Z" fill="#93afbe"/><path d="m23 9 7 6 7-6M30 15v36M35 24h6v7h-6Z" fill="none" stroke="#648493" stroke-width="1.5"/>',milk:'<path d="m19 9 7-7h16l5 9v44H19Z" fill="#f5f1db"/><path d="M19 11h28v13H19Z" fill="#7c9a8c"/><path d="m19 9 7-7v9M26 2l6 9h15" fill="none" stroke="#bec8b4"/><text x="23" y="36" font-size="8" fill="#678571">MILK</text>',water:'<rect x="24" y="3" width="13" height="6" rx="2" fill="#7d9f9e"/><path d="m24 9-5 10v31q0 5 5 5h14q5 0 5-5V19L37 9Z" fill="#c5dcdb"/><path d="M20 31h22v13H20Z" fill="#f5f6e9"/><path d="M25 18v10" stroke="#f4fbef" stroke-width="3" stroke-linecap="round"/>',vitamin:'<rect x="19" y="8" width="25" height="9" rx="3" fill="#ded9c7"/><rect x="17" y="17" width="29" height="38" rx="6" fill="#ad8552"/><rect x="19" y="27" width="25" height="18" rx="1" fill="#f1ead9"/><path d="M31 31v10M26 36h10" stroke="#859574" stroke-width="2"/>',cushion:'<rect x="8" y="11" width="43" height="40" rx="10" fill="#829471" transform="rotate(-6 30 30)"/><rect x="12" y="15" width="35" height="32" rx="7" fill="none" stroke="#a4b191"/>',lamp:'<path d="M28 23h4v29H28Z" fill="#9b7752"/><ellipse cx="30" cy="53" rx="15" ry="3" fill="#947652"/><path d="m19 5-8 21h38L41 5Z" fill="#e6d5a5"/><ellipse cx="30" cy="26" rx="19" ry="3" fill="#c9b882"/>',serum:'<rect x="22" y="5" width="16" height="6" rx="2" fill="#526c59"/><path d="M30 2h13v4H30v9" fill="none" stroke="#526c59" stroke-width="3"/><rect x="18" y="14" width="25" height="40" rx="5" fill="#b4c3a1"/><rect x="20" y="27" width="21" height="16" rx="1" fill="#edf0de"/><path d="M26 32h9M27 36h7" stroke="#7a8f70"/>',cream:'<rect x="11" y="28" width="39" height="25" rx="7" fill="#e6dbbf"/><rect x="9" y="22" width="43" height="10" rx="4" fill="#698372"/><path d="M20 40h21M23 44h15" stroke="#b5a887"/>'};
-const ROOM_PLACEMENTS={'sofa-1':{x:49,y:337,w:43,h:40},'lamp-1':{x:331,y:405,w:43,h:50},'vanity-1':{x:316,y:224,w:27,h:32},'vanity-2':{x:341,y:233,w:28,h:29}};
-const SLOT_LABELS={'wardrobe-1':'옷장','wardrobe-2':'옷장','wardrobe-3':'옷장','fridge-1':'냉장고','fridge-2':'냉장고','pantry-1':'팬트리','sofa-1':'소파','lamp-1':'거실 스탠드','vanity-1':'화장대','vanity-2':'화장대'};
-const roomCushion='<path d="M12 12Q27 8 47 12Q45 29 49 44Q30 48 12 45Q15 30 12 12Z" fill="#829471" stroke="#68795c" stroke-width="1.2"/><path d="M16 15Q30 12 43 15M15 40Q28 44 44 41" fill="none" stroke="#a4b191" stroke-width="1.4"/><path d="M13 43Q29 47 48 43L49 46Q31 51 12 47Z" fill="#637758" opacity=".45"/>';
-// Reuse the original lamp pixels at exactly their room coordinates so the shade,
-// stem and base never acquire a second, mismatched silhouette from a product icon.
-const roomLamp='<defs><clipPath id="purchased-room-lamp"><path d="M350 411Q356 408 362 412L364 417Q369 421 369 428Q368 433 361 435L361 443Q356 447 350 443V435Q344 433 343 428Q343 421 348 417Z"/></clipPath></defs><g clip-path="url(#purchased-room-lamp)"><image href="/assets/gather-room.png" width="400" height="600"/></g>';
-function placedPurchases(){return products.filter(p=>ROOM_PLACEMENTS[p.roomSlot]).map(p=>{const {x,y,w,h}=ROOM_PLACEMENTS[p.roomSlot];return `<g data-room-product="${p.id}" data-room-slot="${p.roomSlot}" data-category="${p.category}" style="filter:${p.illustrationKey==='lamp'&&!state.lampOn?'brightness(.66) saturate(.7)':'none'}" aria-label="${escapeHTML(p.name)} · ${SLOT_LABELS[p.roomSlot]}"><title>${escapeHTML(p.name)} · ${SLOT_LABELS[p.roomSlot]}</title>${p.illustrationKey==='cushion'?'<ellipse cx="71" cy="368" rx="15" ry="2.4" fill="#4d483c" opacity=".16"/>':''}${p.illustrationKey==='lamp'?roomLamp:`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 60 60" transform="${p.illustrationKey==='cushion'?'rotate(-9 70 356)':''}">${p.illustrationKey==='cushion'?roomCushion:icons[p.illustrationKey]}</svg>`}</g>`;}).join('');}
+const roleLabels={wardrobe:'옷장',fridge:'냉장고',pantry:'팬트리',sofa:'소파',lamp:'거실 스탠드',vanity:'화장대',shelf:'선반'};
+const productLocation=p=>roleLabels[p.presentationRole]||'공간';
+function placedPurchases(){return placedMirrorProducts(mirrorProducts());}
 function renderHouse(){
  preloadEatingAsset();
  const house=document.querySelector('#house');
  if(!document.querySelector('.room-art'))house.innerHTML=`<img class="room-art" src="/assets/gather-room.png" alt="햇살이 드는 하나의 원룸. 왼쪽 옷장과 침대, 오른쪽 냉장고와 화장대, 아래쪽 소파와 조명이 놓여 있어요." draggable="false"><svg class="object-art" viewBox="0 0 400 600" aria-hidden="true"></svg><svg class="purchase-layer" viewBox="0 0 400 600" aria-label="구매한 생활·뷰티 상품"></svg><svg class="state-layer" viewBox="0 0 400 600" aria-hidden="true"></svg><div class="destination-mark" hidden></div><div class="walker" aria-label="민서 캐릭터"><svg viewBox="0 0 40 64" aria-hidden="true"></svg></div>`;
  document.querySelector('.purchase-layer').innerHTML=placedPurchases();
- document.querySelector('.state-layer').innerHTML=`<ellipse cx="355" cy="424" rx="26" ry="32" fill="url(#roomGlow)" opacity="${state.lampOn?'.24':'0'}"/><defs><radialGradient id="roomGlow"><stop stop-color="#fff1c6" stop-opacity=".5"/><stop offset=".45" stop-color="#ffebbb" stop-opacity=".18"/><stop offset="1" stop-color="#ffebbb" stop-opacity="0"/></radialGradient></defs><g class="beauty-selection" opacity="${controller.view().heldProductId?0:1}"><ellipse cx="${artKey(state.featuredBeautyId)==='serum'?330:354}" cy="254" rx="12" ry="3" fill="#718b66" opacity=".45"/><rect x="315" y="257" width="55" height="14" rx="4" fill="#f8f4e9" fill-opacity=".92"/><text x="343" y="267" text-anchor="middle" font-size="8.5" fill="#284b3c">${artKey(state.featuredBeautyId)==='serum'?'세럼':'크림'} 꺼냄</text></g>`;
+ const mirror=mirrorProducts(),featured=mirror.find(entry=>entry.category==='beauty'&&entry.featured),lamp=mirror.find(entry=>entry.presentationRole==='lamp');
+ const beautyPosition=featured?roomMirrorPlacement(featured,mirror):null;
+ document.querySelector('.state-layer').innerHTML=`<defs><radialGradient id="roomGlow"><stop stop-color="#fff1c6" stop-opacity=".5"/><stop offset=".45" stop-color="#ffebbb" stop-opacity=".18"/><stop offset="1" stop-color="#ffebbb" stop-opacity="0"/></radialGradient></defs>${lamp?`<ellipse cx="355" cy="424" rx="26" ry="32" fill="url(#roomGlow)" opacity="${lamp.on?'.24':'0'}"/>`:''}${featured?`<g class="beauty-selection" data-featured-product-id="${featured.productId}" opacity="${controller.view().heldProductId?0:1}"><ellipse cx="${beautyPosition.x+beautyPosition.w/2}" cy="254" rx="10" ry="2" fill="#718b66" opacity=".45"/><rect x="315" y="257" width="55" height="14" rx="4" fill="#f8f4e9" fill-opacity=".92"/><text x="343" y="267" text-anchor="middle" font-size="8.5" fill="#284b3c">${featured.displayIndex}번 꺼냄</text></g>`:''}`;
+
  if(typeof paintActor==='function')paintActor(true);paintObjects(true);
 }
 function persist(message,patch={}){state=updateDemoState(home,state,patch,localStorage).state;renderHouse();document.querySelector('#status').textContent=message;}
 const roomInfo={fashion:['Fashion','내 옷장','오늘의 나에게 어울리는 옷을 골라보세요.'],food:['Food','내 냉장고','하나씩 꺼내 쓰는, 나를 위한 작은 습관.'],living:['Living','내 거실','좋아하는 물건과 편안하게 쉬어가는 시간.'],beauty:['Beauty','내 화장대','오늘 사용할 물건을 가까이 꺼내두세요.']};
-function productHTML(p,category=active){let label='',disabled=false,meta=`${escapeHTML(p.purchasedAt)} 가상 구매 · ${SLOT_LABELS[p.roomSlot]}`;
+function productHTML(p,category=active){let label='',disabled=false,meta=`${escapeHTML(p.purchasedAt)} 가상 구매 · ${productLocation(p)}`;
  if(category==='fashion'){label=state.outfitId===p.id?'입고 있어요':'Fashion에서 입기';disabled=state.outfitId===p.id;}
  if(category==='food'){meta+=` · 데모 잔량 ${state.foodQuantity[p.id]}회`;label=state.foodQuantity[p.id]?'먹기':'다 먹었어요';disabled=!state.foodQuantity[p.id]||controller.selectedFood!==p.id;}
  if(category==='living'&&p.illustrationKey==='lamp')label=state.lampOn?'조명 끄기':'조명 켜기';
@@ -134,7 +137,7 @@ function handleEffects(effects){for(const effect of effects){
  if(effect.type==='engaged'){if(effect.id==='sofa')direction='right';if(effect.id==='vanity')direction='up';renderTray(true);inform(trayStatus()+(OBJECT_CATEGORIES[effect.id]?' · 한 번 더 누르면 '+CATEGORY_ROUTES[OBJECT_CATEGORIES[effect.id]].label+' 카테고리로 이동':''));}
  if(effect.type==='action-start'){renderTray(true);ensureInteractionVisible();}
  if(effect.type==='tray')renderTray(true);
- if(effect.type==='commit'){commitProduct(effect.kind==='beauty'?{...effect,productId:productId(effect.productId)}:effect);renderTray(true);}
+ if(effect.type==='commit'){commitProduct(effect);renderTray(true);}
  if(effect.type==='exit'){renderTray(true);if(!effect.intent){scene.focus({preventScroll:true});inform('바닥을 눌러 이동 · 가구를 눌러 사용');}}
  if(effect.type==='intent')requestIntent(effect.intent);
  if(effect.type==='modal'){stopMovement();renderTray(true);if(effect.id==='scene')showScene();else if(effect.id==='avatar')showAvatarPicker();else openRoom(effect.id==='lamp'?'living':'food',objectTrigger);}
@@ -151,7 +154,7 @@ function productAction(id){
  const product=products.find(p=>p.id===id);if(!product)return;
  const category=controller.objectId?OBJECTS[controller.objectId].category:active;
  if(category==='fashion'){requestIntent({type:'category',id:'fashion'});return;}
- if(category==='beauty')handleEffects(controller.dispatch({type:'ACTION',productId:artKey(id),current:artKey(state.featuredBeautyId)}));
+ if(category==='beauty')handleEffects(controller.dispatch({type:'ACTION',productId:id,artKey:artKey(id),current:state.featuredBeautyId}));
  else if(category==='food'){handleEffects(controller.dispatch({type:'EAT',productId:id,quantity:state.foodQuantity[id]}));}
  else if(category==='living'&&product.illustrationKey==='lamp')handleEffects(controller.dispatch({type:'IMMEDIATE',kind:'lamp',actionId:++activation}));
  renderTray();
@@ -162,9 +165,9 @@ function renderTray(force=false){const id=controller.objectId,root=document.quer
  if(focusAction)root.querySelector(`[data-action="${focusAction}"]:not(:disabled)`)?.focus({preventScroll:true});else if(focusFood)root.querySelector(`[data-food-select="${focusFood}"]`)?.focus({preventScroll:true});else if(focusTray)root.querySelector(`[data-tray="${focusTray}"]:not(:disabled)`)?.focus({preventScroll:true});
 }
 function ensureInteractionVisible(){const box=scene.getBoundingClientRect(),tray=document.querySelector('.context-tray');const safeBottom=(tray?.getBoundingClientRect().top||window.innerHeight)-12,top=box.top+(position.y-90)/600*box.height,bottom=box.top+(position.y+22)/600*box.height;let shift=bottom>safeBottom?bottom-safeBottom:top<55?top-55:0;if(shift&&typeof window.scrollBy==='function')window.scrollBy({top:shift,behavior:'instant'});}
-function paintObjects(force=false){const view=controller.view(),stamp=JSON.stringify([state.lampOn,view.wardrobeOpen,view.fridgeOpen,view.windowOpen,controller.objects.window.stable,view.browseProgress,view.selectedFood,view.sofaOccupied,view.vanityOccupied,state.foodQuantity,state.outfitId,view.heldProductId]);if(!force&&stamp===lastObjects)return;lastObjects=stamp;const art=document.querySelector('.object-art');if(art)art.innerHTML=objectArt({...view,lampOn:state.lampOn,foodQuantity:toRoomVisualState(home,state).foodQuantity,selectedFood:artKey(view.selectedFood),purchases:products,wardrobeProducts:selectWardrobeProducts(home,state)});const lampButton=document.querySelector('button.lamp-target');if(lampButton)lampButton.setAttribute('aria-label',state.lampOn?'스탠드 조명 끄기':'스탠드 조명 켜기');const windowButton=document.querySelector('button.window-target');if(windowButton)windowButton.setAttribute('aria-label',controller.objects.window.stable==='open'?'창문 닫기':'창문 열기');const beauty=document.querySelector('.beauty-selection');if(beauty)beauty.setAttribute('opacity',view.heldProductId?0:1);document.querySelectorAll('[data-room-product]').forEach(item=>item.setAttribute('opacity',artKey(item.dataset.roomProduct)===view.heldProductId?'0':'1'));}
+function paintObjects(force=false){const view=controller.view(),stamp=JSON.stringify([state.lampOn,view.wardrobeOpen,view.fridgeOpen,view.windowOpen,controller.objects.window.stable,view.browseProgress,view.selectedFood,view.sofaOccupied,view.vanityOccupied,state.foodQuantity,state.outfitId,view.heldProductId]);if(!force&&stamp===lastObjects)return;lastObjects=stamp;const art=document.querySelector('.object-art');if(art)art.innerHTML=objectArt({...view,lampOn:state.lampOn,selectedFood:view.selectedFood,mirrorProducts:mirrorProducts()});const lampButton=document.querySelector('button.lamp-target');if(lampButton)lampButton.setAttribute('aria-label',state.lampOn?'스탠드 조명 끄기':'스탠드 조명 켜기');const windowButton=document.querySelector('button.window-target');if(windowButton)windowButton.setAttribute('aria-label',controller.objects.window.stable==='open'?'창문 닫기':'창문 열기');const beauty=document.querySelector('.beauty-selection');if(beauty)beauty.setAttribute('opacity',view.heldProductId?0:1);document.querySelectorAll('[data-room-product]').forEach(item=>item.setAttribute('opacity',item.dataset.roomProduct===view.heldProductId?'0':'1'));}
 function paintActor(force=false){const actor=document.querySelector('.walker');if(!actor)return;const view=controller.view();actor.style.left=(position.x+view.renderOffset.x)/4+'%';actor.style.top=(position.y+view.renderOffset.y)/6+'%';actor.dataset.x=position.x.toFixed(2);actor.dataset.y=position.y.toFixed(2);actor.dataset.direction=direction;actor.dataset.moving=String(walking);actor.dataset.primary=controller.primary;actor.dataset.phase=controller.phase;actor.dataset.object=view.objectId||'';actor.dataset.pose=view.pose;actor.dataset.bedProgress=view.bedProgress.toFixed(3);actor.dataset.offsetX=view.renderOffset.x.toFixed(2);actor.dataset.offsetY=view.renderOffset.y.toFixed(2);actor.classList.toggle('is-walking',walking);actor.classList.toggle('is-interacting',Boolean(view.objectId));actor.setAttribute('aria-label',`${home.user.name}, ${avatarById(state.avatarId).name}, ${state.outfitId==='base'?'기본 옷':products.find(p=>p.id===state.outfitId)?.name||'기본 옷'} · 공간 예시 착장`);
- const frame=walking&&!reduced?Math.floor(walkClock*8)%4:0;const stamp=`${state.avatarId}-${direction}-${frame}-${state.outfitId}-${view.pose}-${view.progress.toFixed(3)}-${view.seatProgress.toFixed(3)}-${view.bedProgress.toFixed(3)}-${view.heldProductId}`;if(!force&&stamp===lastSprite)return;lastSprite=stamp;actor.dataset.avatar=state.avatarId;actor.dataset.outfitProductId=state.outfitId;actor.querySelector('svg').innerHTML=avatarSVG(state.avatarId,outfitArtKey(home,state),direction,frame,{...view,heldProductId:view.pose==='eat'?artKey(view.heldProductId):view.heldProductId,reduced});}
+ const frame=walking&&!reduced?Math.floor(walkClock*8)%4:0;const stamp=`${state.avatarId}-${direction}-${frame}-${state.outfitId}-${view.pose}-${view.progress.toFixed(3)}-${view.seatProgress.toFixed(3)}-${view.bedProgress.toFixed(3)}-${view.heldProductId}`;if(!force&&stamp===lastSprite)return;lastSprite=stamp;actor.dataset.avatar=state.avatarId;actor.dataset.outfitProductId=state.outfitId;actor.querySelector('svg').innerHTML=avatarSVG(state.avatarId,outfitArtKey(home,state),direction,frame,{...view,heldProductId:artKey(view.heldProductId)||view.heldProductId,reduced});}
 document.querySelectorAll('[data-room]').forEach(btn=>btn.addEventListener('click',()=>{objectTrigger=btn;requestIntent({type:'object',id:btn.dataset.target||categoryObject[btn.dataset.room],trigger:btn});}));
 document.querySelector('button.bed-target').addEventListener('click',e=>{objectTrigger=e.currentTarget;requestIntent({type:'object',id:'bed',trigger:e.currentTarget});});
 document.querySelector('button.window-target').addEventListener('click',e=>{objectTrigger=e.currentTarget;requestIntent({type:'object',id:'window',trigger:e.currentTarget});});

@@ -432,3 +432,11 @@
 /* Shared long-sleeve artwork includes its own hanger; keep it attached to the rail. */
 .sc-fashion .sc-wardrobe-owned{top:11.5%;height:68.5%;background:linear-gradient(90deg,#d0bfa4,#dcccb3 48%,#cdbb9f);border-bottom-color:#aa8557;box-shadow:inset 0 2px 2px #594b391c}
 .sc-fashion .sc-wardrobe-garment>img{height:91%;object-position:center top}
+
+/* Product identity belongs to the category collection; this layer only positions it. */
+.sc-living-art-repair{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}
+.sc-living-owned-product{display:contents}
+.sc-living-owned-art{position:absolute;z-index:2;object-fit:contain;pointer-events:none;filter:drop-shadow(0 2px 1px #60422322)}
+.sc-light-on .sc-living-owned-art--lamp{filter:drop-shadow(0 0 6px #ffc257)}
+.sc-room-pin.sc-living-owned-pin{z-index:5}
+.sc-living-owned-target{z-index:3;pointer-events:none}

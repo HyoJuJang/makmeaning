@@ -1,4 +1,4 @@
-import type { DemoHome } from './home.ts';
+import type { CategoryCollection, DemoHome } from './home.ts';
 
 export type CatalogCategory = 'food' | 'beauty';
 
@@ -42,6 +42,7 @@ export interface CartLine {
 
 export interface DemoCatalog {
   category: CatalogCategory;
+  collection: CategoryCollection;
   /** Same resolved user/purchases as the home API; confirmed personal state is overlaid client-side. */
   home: DemoHome;
   user: { id: string; name: string; avatarId: string };

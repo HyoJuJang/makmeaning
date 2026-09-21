@@ -1,5 +1,6 @@
-import type { DemoHome } from '../types/home.ts';
-import { demoDisclosure, demoPurchaseSeeds, demoUser } from './demo-purchases.ts';
+import type { Category, CategoryCollections, Purchase } from '../types/home.ts';
+import { demoCategoryPurchaseSeeds, demoUser } from './demo-purchases.ts';
+import { projectDemoHome } from '../lib/demo-home.ts';
 
 /**
  * Verified catalog snapshot for deterministic fixtures (public API checked 2026-09-21).
@@ -19,14 +20,14 @@ const catalogFixture: Record<string, { name: string; price: number }> = {
   '1088835047': { name: '아브카 [체험특가] 히알루론산 고수분 크림 200ml', price: 8900 },
 };
 
-export const demoHome: DemoHome = {
-  user: { ...demoUser },
-  demo: { ...demoDisclosure },
-  purchases: demoPurchaseSeeds.map(seed => ({
+export const demoCategoryCollections = Object.fromEntries((Object.keys(demoCategoryPurchaseSeeds) as Category[]).map(category => [category, {
+  category, user: { ...demoUser },
+  ownedProducts: demoCategoryPurchaseSeeds[category].map((seed): Purchase => ({
     ...seed,
     ...catalogFixture[seed.id],
     state: { ...seed.state },
-    imageUrl: `/products/${seed.illustrationKey}.svg`,
     catalogSource: 'shared-products', imageKind: 'illustration', priceKind: 'catalog-reference',
   })),
-};
+}])) as CategoryCollections;
+
+export const demoHome = projectDemoHome(demoCategoryCollections);

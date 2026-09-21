@@ -1,8 +1,8 @@
-// One generic garment image for the room, Fashion rail and owned-product cards.
-// The slot number identifies a demo possession, never an actual color or fitting.
+// Category identity/order drives both wardrobe views; Room slots are geometry only.
 const SOURCES=Object.freeze({knit:'/products/knit.svg',shirt:'/products/shirt.svg'});
-export function garmentPresentation(product){
- const source=SOURCES[product?.illustrationKey];
- const slot=/^wardrobe-([1-4])$/.exec(product?.roomSlot||'');
- return source&&slot?{source,number:Number(slot[1])}:null;
+export function garmentPresentation(value){
+ const product=value?.product||value;
+ const source=product?.imageUrl||SOURCES[product?.illustrationKey];
+ const number=value?.displayIndex??product?.displayOrder;
+ return SOURCES[product?.illustrationKey]&&source&&Number.isInteger(number)&&number>0?{source,number}:null;
 }

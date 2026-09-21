@@ -1,12 +1,12 @@
 import {garmentPresentation} from './garment-art.js';
+import {escapeAttribute,mirrorAttributes,mirrorImage,roomMirrorPlacement,roomMerchandiseRepairs} from './room-mirror.js';
 
 // Code-native object layers share the room's 400 × 600 world coordinates.
 // The original bitmap remains intact; clipped local texture covers its fixed open door.
 const clamp = n => Math.max(0, Math.min(1, Number(n) || 0));
 const mix = (a, b, p) => a + (b - a) * p;
 const points = ps => ps.map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
-const escapeAttribute = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const purchasedArt = (purchase, art) => purchase ? `<g data-product="${escapeAttribute(purchase.catalogProductId||purchase.id)}" data-room-slot="${escapeAttribute(purchase.roomSlot)}">${art}</g>` : '';
+const purchasedArt = (entry, art) => entry ? `<g ${mirrorAttributes(entry)}>${art}</g>` : '';
 
 function garment(product, x, sway = 0, scale = 1) {
   const visual = garmentPresentation(product);
@@ -36,25 +36,15 @@ function wardrobe(open, browse, purchases) {
   </g>`;
 }
 
-function foodIcon(id, x, y, selected) {
-  const highlight = selected ? `<rect x="${x - 2}" y="${y - 3}" width="17" height="24" rx="3" fill="#ecdfac" stroke="#5b795d" stroke-width="1.1"/>` : '';
-  const art = id === 'milk'
-    ? '<path d="m2 4 3-4h6l2 4v16H2Z" fill="#f2ecda" stroke="#c4c0ab" stroke-width=".7"/><path d="M2 5h11v6H2Z" fill="#8b9f88"/><path d="M5 15h5M5 17h5" stroke="#91a091" stroke-width=".8"/>'
-    : id === 'water'
-    ? '<rect x="5" y="0" width="6" height="3" rx="1" fill="#738fa3"/><path d="M5 3 3 6v12q0 2 2 2h6q2 0 2-2V6l-2-3Z" fill="#a7c9dc" stroke="#809eae" stroke-width=".7"/><path d="M4 10h8v5H4Z" fill="#e8efdf"/><path d="M6 5v4" stroke="#fff" opacity=".6"/>'
-    : '<rect x="3" y="2" width="10" height="4" rx="1" fill="#dbd3b8"/><rect x="2" y="6" width="12" height="15" rx="2" fill="#9f7951"/><path d="M3 10h10v7H3Z" fill="#f1e7cd"/><path d="M8 11v5M5 13.5h6" stroke="#7d9574"/>';
-  return `${highlight}<g transform="translate(${x} ${y})">${art}</g>`;
-}
-
-function fridge(open, quantity, selected, purchases) {
+function fridge(open, selected, entries) {
   // Reuse a clean neighbouring floor texture in the same SVG, without changing the bitmap.
   const door = [[286,98],[mix(232,310,open),mix(98,119,open)],[mix(232,310,open),mix(155,181,open)],[286,155]];
   const outerTop = door[1], outerBottom = door[2];
   const handX = mix(239,305,open), handY = mix(119,139,open);
-  const food = (id, slot, x, y) => {
-    const purchase = purchases.find(p=>p.illustrationKey===id&&p.category==='food'&&p.roomSlot===slot);
-    return quantity[id] > 0 ? purchasedArt(purchase, foodIcon(id,x,y,selected===id)) : '';
-  };
+  const foodEntries=entries.filter(entry=>entry.category==='food');
+  const food=entry=>{const placement=roomMirrorPlacement(entry,foodEntries);return purchasedArt(entry,`${selected===entry.productId&&entry.artVisible?`<rect x="${placement.x}" y="${placement.y}" width="${placement.w}" height="${placement.h}" rx="3" fill="#ecdfac" stroke="#5b795d"/>`:''}${mirrorImage(entry,placement)}`);};
+  const labels={milk:'우유',water:'물',vitamin:'영양제'};
+  const summary=foodEntries.map(entry=>`${labels[entry.illustrationKey]||entry.product.name.slice(0,5)} ${entry.remaining}`).join(' · ');
   return `<g data-object-art="fridge" data-open="${open.toFixed(3)}">
     <defs><clipPath id="fixed-fridge-door-repair"><path d="M282 94 314 119V186H282Z"/></clipPath></defs>
     <g clip-path="url(#fixed-fridge-door-repair)"><image href="/assets/gather-room.png" x="82" y="-41" width="400" height="600"/></g>
@@ -63,8 +53,7 @@ function fridge(open, quantity, selected, purchases) {
     <path d="M234 100h49v53h-49Z" fill="#d7e3df" stroke="#8c9a94"/>
     <path d="M238 103h41v47h-41Z" fill="#a5b9b4"/>
     <path d="M236 128h45M236 150h45" stroke="#f2f2de" stroke-width="2.2"/>
-    ${food('milk','fridge-1',241,106)}
-    ${food('water','fridge-2',263,106)}
+    ${foodEntries.filter(entry=>entry.presentationRole==='fridge').map(food).join('')}
     <path d="M241 133h34v13h-34Z" fill="#cad9cb" opacity=".7"/>
     <path d="M244 136h8M257 136h14M244 141h27" stroke="#f0eee0" opacity=".6"/>
     <polygon points="${points(door)}" fill="${open > .5 ? '#cdd9d4' : '#deddd3'}" stroke="#7f8980" stroke-width="1.8"/>
@@ -72,9 +61,9 @@ function fridge(open, quantity, selected, purchases) {
     <path d="M${handX} ${handY}v13" stroke="#737e77" stroke-width="2.1" stroke-linecap="round"/>
     ${open > .55 ? `<path d="M291 126 ${mix(295,305,open)} ${mix(128,139,open)}M291 145 ${mix(295,305,open)} ${mix(147,158,open)}" stroke="#9baba2" stroke-width="2"/>` : ''}
     <path d="M230 158h59" stroke="#777e72" stroke-width="2"/>
-    <g data-purchased-food="vitamin"><rect x="325" y="127" width="20" height="23" fill="#b39466"/>${food('vitamin','pantry-1',328,128) || '<path d="M326 148h18" stroke="#795f43"/>'}</g>
+    ${foodEntries.filter(entry=>entry.presentationRole!=='fridge').map(food).join('')}
     <rect x="215" y="203" width="96" height="15" rx="4" fill="#f8f4e9" fill-opacity=".95"/>
-    <text x="263" y="214" text-anchor="middle" font-size="8.4" font-weight="600" fill="#365947">우유 ${quantity.milk} · 물 ${quantity.water} · 영양제 ${quantity.vitamin}</text>
+    <text x="263" y="214" text-anchor="middle" font-size="8.4" font-weight="600" fill="#365947">${escapeAttribute(summary||'보유 식품 없음')}</text>
   </g>`;
 }
 
@@ -99,7 +88,6 @@ function windowArt(open) {
   </g>`;
 }
 
-export function objectArt({wardrobeOpen=0,fridgeOpen=0,windowOpen=0,browseProgress=null,foodQuantity={milk:3,water:3,vitamin:3},selectedFood=null,purchases=[],wardrobeProducts=purchases}={}) {
-  const quantities = Object.fromEntries(['milk','water','vitamin'].map(id=>[id,Math.max(0,Number(foodQuantity[id])||0)]));
-  return wardrobe(clamp(wardrobeOpen),browseProgress,wardrobeProducts) + fridge(clamp(fridgeOpen),quantities,selectedFood,purchases) + windowArt(clamp(windowOpen));
+export function objectArt({wardrobeOpen=0,fridgeOpen=0,windowOpen=0,browseProgress=null,selectedFood=null,mirrorProducts=[]}={}) {
+  return roomMerchandiseRepairs()+wardrobe(clamp(wardrobeOpen),browseProgress,mirrorProducts)+fridge(clamp(fridgeOpen),selectedFood,mirrorProducts)+windowArt(clamp(windowOpen));
 }

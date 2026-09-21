@@ -8,6 +8,8 @@ import * as interactions from '../interactions.js';
 import * as objects from '../object-art.js';
 import * as demoState from '../demo-state.js';
 import * as routes from '../category-routes.js';
+import * as categoryProducts from '../category-products.js';
+import * as roomMirror from '../room-mirror.js';
 import {EATING_DURATION,REDUCED_EATING_DURATION} from '../food-action.js';
 import {demoHome} from '../../src/data/demo-home.ts';
 
@@ -33,7 +35,7 @@ async function boot(saved,blockedStorage=false,{confirmed,reduced=false,blockedL
  const document={hidden:false,body:element('body'),activeElement:null,querySelector:element,querySelectorAll(){return[];},
   addEventListener(type,fn,capture){if(!events.has(type))events.set(type,[]);events.get(type).push(fn);if(capture===true)captureEvents.add(type);}};
  document.activeElement=element('.house-wrap');
- const context=vm.createContext({...movement,...avatars,...scenes,...interactions,...objects,...routes,...demoState,document,
+ const context=vm.createContext({...movement,...avatars,...scenes,...interactions,...objects,...routes,...demoState,...categoryProducts,...roomMirror,document,
   window:{location:{assign(url){navigations.push(url);}},innerHeight:844,scrollY:246,scrollTo({top}){scrolledTo=top;},addEventListener(type,fn){windowEvents.set(type,fn);}},
   sessionStorage:{getItem(key){if(blockedStorage)throw new Error('blocked');return storage.get(key)||null;},setItem(key,value){if(blockedStorage)throw new Error('blocked');storage.set(key,value);},removeItem(key){if(blockedStorage)throw new Error('blocked');storage.delete(key);}},
   localStorage:{getItem(key){if(blockedLocal)throw Error('blocked');return local.get(key)||null;},setItem(key,value){if(blockedLocal)throw Error('blocked');local.set(key,value);},removeItem(key){if(blockedLocal)throw Error('blocked');local.delete(key);}},

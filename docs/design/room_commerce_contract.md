@@ -6,10 +6,19 @@
 
 - `Purchase.id` = 공통 상품 DB의 `prd_id`. `/api/products/:id`, `/api/demo/home`, 구매 목록은 같은 ID/name/catalog reference price를 사용한다.
 - `purchaseId` = 가상 고객의 가상 구매 이벤트. 실상품 카탈로그와 가상 보유 여부를 구분한다.
-- `illustrationKey` / `roomSlot` = 기존 공간 그림·동작 연결. 그림은 실상품 사진, 정확한 외형, 가상 피팅이 아니다.
+- `illustrationKey` / `imageUrl` = 상품 ID와 별개인 공간용 그림·동작 표현. `presentationRole` / `displayOrder`는 category가 정의하는 대표 생활 뷰 배치 의미와 순서다. `roomSlot`은 이전 renderer와의 호환 메타데이터이며 상품 선택·보유 판단의 기준이 아니다. 그림은 실상품 사진, 정확한 외형, 가상 피팅이 아니다.
 - `/api/demo/home`는 지정한 10개 상품(Fashion 3, Food 3, Living 2, Beauty 2)만 DB에서 읽어 가상 구매 이벤트에 연결한다. 실패 시 명확한 오류를 내고 가짜 실상품으로 대체하지 않는다. DB에는 쓰지 않는다.
 - Food 잔량은 데모에서 남은 사용 횟수이며 실상품의 포장 수량·재고가 아니다. 가격은 카탈로그 참고가이며 가상 주문의 결제 금액을 뜻하지 않는다.
 - 기존 Scene 추천의 가상 예시 상품은 유지하고 실상품 구매 목록과 명시적으로 구분한다.
+
+## Category → hero → Room (2026-09-22)
+
+- `demoCategoryPurchaseSeeds`의 가상 구매 이벤트를 공통 DB의 `prd_id`로 join한 `CategoryCollection.ownedProducts`가 네 영역의 primary source다. `/api/demo/home.categories`와 Food/Beauty API의 `collection`이 이를 전달한다. 기존 `home.purchases`는 같은 category 데이터의 호환 projection이다.
+- `getCategoryProducts` → `getHeroProducts` → `getRoomMirrorProducts`를 네 화면과 Room이 공유한다. 구매 목록에는 모든 보유 상품을 남기고 대표 hero는 Fashion 4 / Food 6 / Living 4 / Beauty 4개까지 표시한다. 현재 데모는 각각 3 / 3 / 2 / 2개다.
+- Fashion은 확정 착장을 먼저, 나머지는 category의 displayOrder 순서로 표시한다. hero와 Room은 동일 ID·순서·번호·그림을 사용한다. cart/preview는 별도 UI이며 보유 selector 입력이 아니다.
+- Food 잔량과 consumed, Beauty 선택, Living 조명, Fashion 착장은 공통 확정 state의 상품 ID로 읽는다. 소진된 Food는 ID와 잔량 0을 유지하고 양쪽 공간의 상품 그림만 숨긴다.
+- Room geometry는 hero entry의 role/index를 좌표로 바꿀 뿐 ID 목록을 만들지 않는다. selector 반환값은 원본과 분리된 snapshot이므로 Room 표현의 수정이 category source를 바꾸지 않는다.
+- 배경 가구·식물·소품은 장식이며 구매 ID가 없다. 구매 상품으로 오인될 수 있던 고정 의류·식품·화장품·쿠션·조명 그림은 데이터로 렌더링하는 대표 상품으로 대체한다.
 
 ## Confirmed state / preview
 

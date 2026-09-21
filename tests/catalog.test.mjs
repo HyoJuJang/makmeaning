@@ -104,7 +104,8 @@ for (const [category, get] of [['food', getFood], ['beauty', getBeauty]]) {
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     const result = await response.json();
-    assert.deepEqual(Object.keys(result).sort(), ['category', 'home', 'initialCart', 'initialOutfitId', 'products', 'purchases', 'user']);
+    assert.deepEqual(Object.keys(result).sort(), ['category', 'collection', 'home', 'initialCart', 'initialOutfitId', 'products', 'purchases', 'user']);
+    assert.deepEqual(result.collection, result.home.categories[category]);
     assert.equal(result.category, category);
     assert.deepEqual(result.user, demoHome.user);
     assert.equal(result.initialOutfitId, demoHome.purchases.find(purchase => purchase.category === 'fashion' && purchase.state.wearing === true)?.illustrationKey);
@@ -266,7 +267,7 @@ test('category DB errors or missing purchased IDs return 503 without fixture fal
 });
 
 
-test('room placement follows canonical purchase slots even when API arrays reorder', () => {
+test('hero placement follows category roles and display order even when API arrays reorder', () => {
   const before=JSON.stringify(food),items=catalogRoomItems(food,null);
   assert.equal(items.length,3);
   const byArt=Object.fromEntries(items.map(item=>[item.purchase.illustrationKey,item]));
@@ -275,9 +276,9 @@ test('room placement follows canonical purchase slots even when API arrays reord
   assert.equal(byArt.vitamin.placement.zone,'pantry');
   assert.equal(byArt.milk.placement.approachX,byArt.water.placement.approachX);
   assert.notEqual(byArt.water.placement.approachX,byArt.vitamin.placement.approachX);
-  const reordered=structuredClone(food);reordered.purchases.reverse();reordered.products.reverse();reordered.home.purchases.reverse();
+  const reordered=structuredClone(food);reordered.purchases.reverse();reordered.products.reverse();reordered.home.purchases.reverse();reordered.collection.ownedProducts.reverse();
   assert.deepEqual(catalogRoomItems(reordered,null),items);
-  for(const item of items){assert.equal(item.product.id,item.purchase.id);assert.equal(item.product.imageUrl,item.purchase.imageUrl);assert.equal(catalogRoomPlacement(item.purchase),item.placement);}
+  for(const item of items){assert.equal(item.product.id,item.purchase.id);assert.equal(item.product.imageUrl,item.purchase.imageUrl);assert.deepEqual(catalogRoomPlacement(item.entry,items.map(item=>item.entry)),item.placement);}
   assert.equal(JSON.stringify(food),before);
 });
 
@@ -292,6 +293,24 @@ test('room objects use confirmed remaining/beauty state without inventing posses
   const bogus=structuredClone(food);bogus.purchases.push({productId:food.products.find(item=>item.catalogSource==='fictional-example').id,purchaseId:'fake',purchasedAt:'never'});
   assert.equal(catalogRoomItems(bogus,null).length,3,'Fictional catalog examples cannot appear as owned room objects');
   assert.equal(catalogRoomPlacement(undefined),null);
-  assert.equal(catalogRoomPlacement({category:'food',roomSlot:'vanity-1'}),null);
+  assert.equal(catalogRoomPlacement({category:'fashion',presentationRole:'wardrobe'}),null);
   assert.equal(JSON.stringify(food),before);
+});
+
+
+test('new category-owned goods receive hero artwork without a legacy Room slot', () => {
+  const expanded=structuredClone(food);
+  const base=expanded.collection.ownedProducts[0];
+  const added={...base,id:'new-category-product',purchaseId:'new-category-purchase',roomSlot:'not-a-room-slot',presentationRole:'shelf',displayOrder:4};
+  expanded.collection.ownedProducts.push(added);
+  expanded.products.push({...expanded.products.find(item=>item.id===base.id),id:added.id,prd_id:added.id});
+  const items=catalogRoomItems(expanded,null);
+  const item=items.find(item=>item.entry.id===added.id);
+  assert.ok(item,'Category-owned data is the source even before the Room projection contains the product');
+  assert.equal(item.entry.imageUrl,added.imageUrl);
+  assert.equal(item.placement.zone,'shelf');
+  assert.equal(item.placement.number,item.entry.displayIndex);
+  assert.notEqual(item.placement.art.x,items.find(other=>other.entry.illustrationKey==='vitamin').placement.art.x,'Items sharing a pantry surface cannot occupy the same coordinates');
+  assert.ok(item.placement.art.x>=0&&item.placement.art.x+item.placement.art.width<=450);
+  assert.ok(item.placement.art.y>=0&&item.placement.art.y+item.placement.art.height<=150);
 });

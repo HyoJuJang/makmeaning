@@ -1,9 +1,10 @@
+import { getHeroProducts } from '../../app/category-products.js';
 import type { DemoCatalog, CatalogCategory } from '../types/catalog.ts';
-import type { Purchase } from '../types/home.ts';
+import type { CategoryProductEntry } from '../types/home.ts';
 
 type Placement = {
   category: CatalogCategory;
-  zone: 'fridge' | 'pantry' | 'vanity';
+  zone: 'fridge' | 'pantry' | 'vanity' | 'shelf';
   label: string;
   number: number;
   approachX: number;
@@ -11,30 +12,54 @@ type Placement = {
   art: { x: number; y: number; width: number; height: number; viewBox: string };
 };
 
-// Coordinates belong to the existing 450×150 category illustrations. Ownership
-// and image URLs still come from the joined home API, never from this geometry.
-const PLACEMENTS: Readonly<Record<string, Placement>> = {
-  'fridge-1': { category: 'food', zone: 'fridge', label: '냉장고', number: 1, approachX: 22, pin: { x: 126, y: 30 }, art: { x: 77, y: 34, width: 21, height: 30, viewBox: '17 2 33 53' } },
-  'fridge-2': { category: 'food', zone: 'fridge', label: '냉장고', number: 2, approachX: 22, pin: { x: 126, y: 104 }, art: { x: 78, y: 74, width: 19, height: 30, viewBox: '17 3 29 52' } },
-  'pantry-1': { category: 'food', zone: 'pantry', label: '팬트리', number: 3, approachX: 77, pin: { x: 375, y: 43 }, art: { x: 325, y: 35, width: 15, height: 21, viewBox: '15 8 33 47' } },
-  'vanity-1': { category: 'beauty', zone: 'vanity', label: '화장대', number: 1, approachX: 55, pin: { x: 229, y: 44 }, art: { x: 242, y: 54, width: 14, height: 25, viewBox: '16 0 30 54' } },
-  'vanity-2': { category: 'beauty', zone: 'vanity', label: '화장대 옆 선반', number: 2, approachX: 76, pin: { x: 366, y: 51 }, art: { x: 335, y: 66, width: 20, height: 15, viewBox: '8 22 46 31' } },
+// Geometry only: item identity, visibility, source image and ordering are shared data.
+const CROP: Readonly<Record<string, string>> = {
+  milk: '17 2 33 53', water: '17 3 29 52', vitamin: '15 8 33 47',
+  serum: '16 0 30 54', cream: '8 22 46 31',
 };
 
-type Confirmed = { foodQuantity?: Record<string, number>; featuredBeautyId?: string | null } | null;
-export function catalogRoomItems(catalog: DemoCatalog, confirmed: Confirmed) {
-  return catalog.purchases.flatMap(event => {
-    const purchase = catalog.home.purchases.find(item => item.id === event.productId && item.category === catalog.category);
-    const product = catalog.products.find(item => item.id === event.productId);
-    const placement = purchase && PLACEMENTS[purchase.roomSlot];
-    if (!purchase || !product || product.catalogSource !== 'shared-products' || !placement || placement.category !== catalog.category) return [];
-    const remaining = purchase.category === 'food' ? confirmed?.foodQuantity?.[purchase.id] ?? purchase.state.quantity ?? 0 : null;
-    return [{ purchase, product, placement, remaining, visible: remaining === null || remaining > 0, featured: (confirmed?.featuredBeautyId ?? catalog.home.purchases.find(item => item.state.featured)?.id) === purchase.id }];
-  }).sort((a, b) => a.placement.number - b.placement.number);
+export function catalogRoomPlacement(entry: CategoryProductEntry | undefined, entries: CategoryProductEntry[] = entry ? [entry] : []): Placement | null {
+  if (!entry || (entry.category !== 'food' && entry.category !== 'beauty')) return null;
+  const sameSurface = (item: CategoryProductEntry) => entry.category === 'food'
+    ? (entry.presentationRole === 'fridge' ? item.presentationRole === 'fridge' : item.presentationRole !== 'fridge')
+    : (entry.presentationRole === 'vanity' ? item.presentationRole === 'vanity' : item.presentationRole !== 'vanity');
+  const peers = entries.filter(sameSurface);
+  const index = Math.max(0, peers.findIndex(item => item.id === entry.id));
+  const category = entry.category;
+  const base = { category, number: entry.displayIndex };
+  const viewBox = CROP[entry.illustrationKey] ?? '0 0 60 60';
+  if (category === 'food' && entry.presentationRole === 'fridge') {
+    const columns = peers.length > 2 ? 2 : 1;
+    const column = index % columns, row = Math.floor(index / columns);
+    const width = columns === 2 ? 13 : 21;
+    const x = columns === 2 ? 73 + column * 15 : 77;
+    const y = 34 + row * (peers.length > 4 ? 23 : 40);
+    const height = peers.length > 4 ? 21 : 30;
+    return { ...base, zone: 'fridge', label: '냉장고', approachX: 22,
+      pin: { x: 126 + column * 30, y: peers.length > 2 ? 26 + row * 35 : 30 + row * 74 }, art: { x, y, width, height, viewBox } };
+  }
+  if (category === 'food') {
+    const column = index % 3, row = Math.floor(index / 3);
+    return { ...base, zone: entry.presentationRole === 'pantry' ? 'pantry' : 'shelf', label: '팬트리', approachX: 77,
+      pin: { x: 374 + column * 22, y: 43 + row * 34 }, art: { x: 325 + column * 15, y: 35 + row * 29, width: 14, height: 21, viewBox } };
+  }
+  if (entry.presentationRole === 'vanity') {
+    return { ...base, zone: 'vanity', label: '화장대', approachX: 55,
+      pin: { x: 229 - index * 32, y: 44 }, art: { x: 242 - index * 26, y: 54, width: 14, height: 25, viewBox } };
+  }
+  const shelfWidth = peers.length > 2 ? 12 : peers.length === 2 ? 18 : 20;
+  const shelfX = peers.length === 1 ? 335 : 313 + index * (peers.length > 2 ? 14 : 25);
+  return { ...base, zone: 'shelf', label: '화장대 옆 선반', approachX: 76,
+    pin: { x: 366 + index * 22, y: 51 }, art: { x: shelfX, y: 66, width: shelfWidth, height: 15, viewBox } };
 }
 
-export function catalogRoomPlacement(purchase: Pick<Purchase, 'category' | 'roomSlot'> | undefined) {
-  if (!purchase) return null;
-  const placement = PLACEMENTS[purchase.roomSlot];
-  return placement?.category === purchase.category ? placement : null;
+type Confirmed = { userId?: string; foodQuantity?: Record<string, number>; featuredBeautyId?: string | null } | null;
+export function catalogRoomItems(catalog: DemoCatalog, confirmed: Confirmed) {
+  const entries = getHeroProducts(catalog.collection, confirmed);
+  return entries.flatMap(entry => {
+    const product = catalog.products.find(item => item.id === entry.id && item.catalogSource === 'shared-products');
+    const placement = catalogRoomPlacement(entry, entries);
+    if (!product || !placement) return [];
+    return [{ entry, purchase: entry.product, product, placement, remaining: entry.remaining, visible: entry.artVisible, featured: entry.featured }];
+  });
 }

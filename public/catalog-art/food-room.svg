@@ -84,10 +84,7 @@
   <path d="M328 98h6v3h-6ZM355 98h6v3h-6Z" fill="#775b37"/><path d="M329 99h4v1h-4ZM356 99h4v1h-4Z" fill="#cfb278"/>
   <path d="M315 111h5v5h-5ZM370 111h5v5h-5Z" fill="#735839"/>
   <path d="M320 27h50v83h-50Z" fill="url(#wood-grain)" opacity=".24"/>
-  <path d="M326 42h11v14h-11Z" fill="#d6ceb0"/><path d="M325 39h13v4h-13Z" fill="#879371"/><path d="M328 44h2v10h-2Z" fill="#e9e3c8"/>
-  <path d="M346 38h3v-3h12v3h3v18h-18Z" fill="#c4af88"/><path d="M348 34h14v4h-14Z" fill="#7c6c4f"/><path d="M349 40h2v13h-2Z" fill="#e3cea8"/>
-  <path d="M328 74h16v2h-2v7h-12v-7h-2Z" fill="#ece1c5"/><path d="M327 72h18v3h-18Z" fill="#f3e9d0"/><path d="M330 79h12v2h-12Z" fill="#c8bc9b"/>
-  <path d="M352 70h10v14h-10Z" fill="#8c9d77"/><path d="M362 73h4v7h-4" fill="none" stroke="#89996f" stroke-width="2"/><path d="M353 71h2v11h-2Z" fill="#b4c19a"/>
+  <!-- Pantry shelves are empty until owned-product data supplies artwork. -->
   <!-- One restrained plant and a small framed print anchor the far edges. -->
   <path d="M403 71h1v24h-1ZM401 80h3v2h-3ZM404 76h3v2h-3Z" fill="#647451"/>
   <path d="M401 80h-4v-2h-3v-6h4v2h3ZM405 76v-5h3v-3h5v5h-3v3Z" fill="#738a54"/>

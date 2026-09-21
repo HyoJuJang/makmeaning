@@ -15,7 +15,7 @@ test('room rendering adapter is one-way and leaves canonical product identity un
  const third=home.purchases.find(p=>p.roomSlot==='wardrobe-3'),s=storage();
  const confirmed=applyOwnedOutfit(home,initialDemoState(home),third.id),before=structuredClone(confirmed);
  const visual=toRoomVisualState(home,confirmed);assert.equal(visual.outfitId,'knit');
- visual.outfitId='shirt';visual.foodQuantity.water=0;visual.featuredBeautyId='cream';visual.lampOn=false;
+ visual.outfitId='shirt';visual.foodQuantity[id('water')]=0;visual.featuredBeautyId='cream';visual.lampOn=false;
  assert.deepEqual(confirmed,before);saveDemoState(home,confirmed,s);
  const restored=readDemoState(home,s);assert.equal(restored.outfitId,third.id);assert.equal(restored.foodQuantity[id('water')],3);
 });
@@ -40,13 +40,17 @@ test('three real owned garments keep distinct product identity even when sharing
  assert.equal(readDemoState(home,s).outfitId,sameArt[1].id);assert.equal(outfitArtKey(home,confirmed),'knit');
  const wardrobe=selectWardrobeProducts(home,confirmed);
  assert.deepEqual(wardrobe.map(p=>p.id),[sameArt[1].id,sameArt[0].id,id('shirt')]);
- assert.ok(wardrobe.every(p=>fashion.includes(p)),'No fabricated wardrobe garments');
+ for(const {displayIndex,...product} of wardrobe){
+  assert.deepEqual(product,fashion.find(owned=>owned.id===product.id),'Compatibility metadata must preserve the exact category-owned product');
+  assert.ok(displayIndex>=1&&displayIndex<=4);
+ }
  assert.equal(selectWardrobeProducts(home,confirmed,1)[0].id,sameArt[1].id);
  assert.deepEqual(selectWardrobeProducts(home,confirmed,0),[]);
 });
 test('wardrobe limits representative garments to four and remains stable without a confirmed outfit',()=>{
  const expanded=structuredClone(home),knit=expanded.purchases.find(p=>p.category==='fashion');
- for(let index=0;index<3;index++)expanded.purchases.push({...knit,id:`owned-extra-${index}`,purchasedAt:`2026.09.0${index+1}`});
+ for(let index=0;index<3;index++)expanded.categories.fashion.ownedProducts.push({...knit,id:`owned-extra-${index}`,purchaseId:`extra-purchase-${index}`,displayOrder:4+index,purchasedAt:`2026.09.0${index+1}`});
+ expanded.purchases=Object.values(expanded.categories).flatMap(collection=>collection.ownedProducts);
  const before=JSON.stringify(expanded),state={...initialDemoState(expanded),outfitId:'base'};
  assert.equal(selectWardrobeProducts(expanded,state,20).length,4);
  assert.deepEqual(selectWardrobeProducts(expanded,state).map(p=>p.id),selectWardrobeProducts(expanded,state).map(p=>p.id));

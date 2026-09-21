@@ -10,6 +10,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
+import { getCategoryProducts, getHeroProducts, getRoomMirrorProducts } from '../app/category-products.js';
 
 const base = new URL(process.env.SMOKE_BASE_URL || 'http://127.0.0.1:3001');
 const catalogBase = new URL(process.env.SMOKE_CATALOG_BASE_URL || base);
@@ -59,8 +60,17 @@ if (!options.catalogOnly) {
   assert.equal(new Set(home.purchases.map(p => p.id)).size, 10);
   assert.equal(new Set(home.purchases.map(p => p.purchaseId)).size, 10);
   assert.equal(new Set(home.purchases.map(p => p.roomSlot)).size, 10);
+  assert.deepEqual(Object.keys(home.categories).sort(), ['beauty', 'fashion', 'food', 'living']);
+  assert.deepEqual(home.purchases, Object.values(home.categories).flatMap(collection => collection.ownedProducts), 'Home purchases only project category sources');
   for (const category of ['fashion', 'food', 'living', 'beauty']) {
     assert.ok(home.purchases.filter(p => p.category === category).length >= 2, `${category}: multiple purchases`);
+    const collection = home.categories[category];
+    assert.equal(collection.category, category);
+    assert.deepEqual(collection.user, home.user);
+    const owned = getCategoryProducts(collection);
+    assert.equal(owned.length, collection.ownedProducts.length, `${category}: no geometry-based ownership loss`);
+    assert.deepEqual(getRoomMirrorProducts(collection), getHeroProducts(collection), `${category}: room mirrors category hero identity and confirmed defaults`);
+    assert.ok(owned.every(entry => entry.productId === entry.product.id && entry.imageUrl === entry.product.imageUrl && entry.presentationRole));
   }
   await eachBatch(home.purchases, async purchase => {
     const { product } = await json(`/api/products/${encodeURIComponent(purchase.id)}`);
@@ -76,12 +86,14 @@ if (!options.catalogOnly) {
     addImage(purchase.imageUrl);
   });
   console.log('PASS: home 10 purchases match shared product ID/name/price/domain; demo/artwork boundaries explicit');
+  console.log('PASS: four category sources project home purchases and share hero/mirror identity, order, images and default state');
 
   for (const category of ['food', 'beauty']) {
     const catalog = await json(`/api/demo/${category}`);
     assert.equal(catalog.category, category);
     assert.deepEqual(catalog.user, home.user);
     assert.deepEqual(catalog.home, home, `${category}: same complete home contract`);
+    assert.deepEqual(catalog.collection, home.categories[category], `${category}: primary category collection`);
     assert.equal(catalog.initialOutfitId, home.purchases.find(p => p.state.wearing)?.illustrationKey);
     const owned = home.purchases.filter(p => p.category === category);
     assert.deepEqual(catalog.purchases, owned.map(p => ({ productId: p.id, purchaseId: p.purchaseId, purchasedAt: p.purchasedAt })));
@@ -134,7 +146,7 @@ if (!options.catalogOnly) {
         for (const category of ['fashion', 'food', 'living', 'beauty']) assert.ok(html.includes(`data-room="${category}"`));
       }
     }
-    for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'vanity-frames.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js', 'category-routes.js', 'demo-state.js']) {
+    for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'vanity-frames.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js', 'category-routes.js', 'demo-state.js', 'category-products.js', 'room-mirror.js', 'garment-art.js']) {
       assets.set(`/prototype/${file}`, /javascript/);
     }
     addImage('/assets/gather-room.png');

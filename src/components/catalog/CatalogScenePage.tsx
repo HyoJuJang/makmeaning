@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode } from 'react';
 import type { CatalogCategory, CartLine, DemoCatalog, DisplayProduct } from '../../types/catalog';
 import { addToCart, cartTotal, normalizeCart, restoreCatalogState } from '../../lib/catalog';
-import { catalogRoomItems, catalogRoomPlacement } from '../../lib/catalog-room';
+import { getCategoryProducts } from '../../../app/category-products.js';
+import { catalogRoomItems } from '../../lib/catalog-room';
 import { roomArtworkIsVisible, repeatedEatingPointer, type EatingPointer } from '../../lib/catalog-eating-input';
 import {readDemoState,consumeOwnedFood,updateDemoState, type DemoState} from '../../../app/demo-state.js';
 import RoomAvatar from '../scene/RoomAvatar';
@@ -89,7 +90,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
       .then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); })
       .then((catalog: DemoCatalog) => {
         if (!mounted) return;
-        if (catalog.category !== category || !Array.isArray(catalog.products) || !Array.isArray(catalog.purchases) || !catalog.user?.id) throw new Error('Invalid catalog');
+        if (catalog.category !== category || !Array.isArray(catalog.products) || !Array.isArray(catalog.purchases) || !catalog.user?.id || !catalog.collection || getCategoryProducts(catalog.collection).some(entry => !catalog.products.some(product => product.id === entry.id && product.catalogSource === 'shared-products'))) throw new Error('Invalid catalog');
         let stored: unknown = null, legacy: unknown = null;
         try {
           stored = localStorage.getItem(storageKey);
@@ -173,7 +174,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
     eatingPointer.current=(panel||needsReveal)&&event.detail>0?{clientX:event.clientX,clientY:event.clientY,timeStamp:event.timeStamp,detail:event.detail}:null;
     setConfirmed(latest);eatingLock.current=id;
     if(panel){returnFocusRef.current=roomRef.current;closePanel();}
-    moveTo(catalogRoomPlacement(product)?.approachX ?? config.homeX);
+    moveTo(roomItems.find(item => item.entry.id === id)?.placement.approachX ?? config.homeX);
     setEating({id,progress:0,reduced:matchMedia('(prefers-reduced-motion: reduce)').matches});
     if(needsReveal)roomRef.current?.scrollIntoView({block:'start',behavior:'instant'});
   }
@@ -193,7 +194,11 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   }
 
   const roomItems = data ? catalogRoomItems(data, confirmed) : [];
-  const purchases = roomItems.map(item => item.product);
+  const ownedEntries = getCategoryProducts(data?.collection, confirmed);
+  const purchases = ownedEntries.flatMap(entry => {
+    const product = data?.products.find(item => item.id === entry.id && item.catalogSource === 'shared-products');
+    return product ? [product] : [];
+  });
   const cartProducts = state.cart.flatMap(line => {
     const product = data?.products.find(item => item.id === line.productId);
     return product ? [product] : [];
@@ -218,7 +223,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
     cancelEating();
     setTab(source); setSelectedId(product.id);
     const item = roomItems.find(item => item.product.id === product.id);
-    // The canonical room slot, not list order, connects the object and approach.
+    // The shared product entry connects the artwork, card and category approach.
     moveTo(source === 'owned' && item ? item.placement.approachX : config.homeX);
     if (panel) { returnFocusRef.current = roomRef.current; closePanel(); }
   }
@@ -245,7 +250,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
       <div className="sc-heading"><div><span className="sc-category-mark" aria-hidden="true"><CategoryIcon category={category} /></span><h1>{config.title}</h1></div><span className="sc-person">{data.user.name}의 작은 취향 공간</span></div>
       <section ref={roomRef} tabIndex={-1} className="sc-collection" aria-label={`${config.title}의 구매 상품`}>
         <div className="sc-room-hud"><span><i />{config.english}</span><div className="sc-room-controls"><button onClick={clearSelection} aria-label="캐릭터 제자리로">↶ 제자리로</button></div></div>
-        <div className="sc-room catalog-room" style={{ '--catalog-avatar-x': interaction.x, '--catalog-avatar-bottom': 4 } as CSSProperties}>
+        <div className="sc-room catalog-room" data-hero-category={category} data-hero-source="category-collection" style={{ '--catalog-avatar-x': interaction.x, '--catalog-avatar-bottom': 4 } as CSSProperties}>
           <img className="sc-room-art" src={config.room} alt={config.roomAlt} width="900" height="300" />
           <svg className="catalog-owned-layer" viewBox="0 0 450 150" aria-hidden="true">
             {category === 'food' ? <g className="catalog-storage-interior">
@@ -254,24 +259,21 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
               <path d="M72 33h30v31H72ZM72 70h30v33H72Z" fill="#aebfa8" />
               <path d="M69 65h37v3H69ZM69 105h37v3H69Z" fill="#e9edda" />
               <path d="M103 31v73" stroke="#899d83" strokeWidth="2" />
-              <path d="M323 34h19v22h-19Z" fill="#a7824e" />
-            </g> : <g>
-              <path d="M242 54h14v24h-14ZM335 69h19v11h-19Z" fill="#e7dac3" />
-            </g>}
-            {roomItems.map(({purchase, product, placement, visible, remaining, featured}) => <g key={purchase.id} data-room-product-id={purchase.id} data-room-slot={purchase.roomSlot} data-room-zone={placement.zone} data-remaining={remaining ?? undefined} data-featured={category === 'beauty' ? featured : undefined}>
+            </g> : null}
+            {roomItems.map(({entry, product, placement, visible, remaining, featured}) => <g key={entry.id} data-room-product-id={entry.id} data-hero-product-id={entry.id} data-hero-status={entry.status} data-hero-role={entry.presentationRole} data-hero-source-image={entry.imageUrl} data-hero-remaining={remaining ?? undefined} data-room-zone={placement.zone} data-remaining={remaining ?? undefined} data-featured={category === 'beauty' ? featured : undefined}>
               {visible && <>
                 <ellipse cx={placement.art.x + placement.art.width / 2} cy={placement.art.y + placement.art.height} rx={placement.art.width * .43} ry={1.4} fill={category === 'beauty' && featured ? '#526c4c' : '#536047'} opacity={category === 'beauty' && featured ? .4 : .2} />
-                <svg x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} viewBox={placement.art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={purchase.imageUrl} width="60" height="60" data-product-image={purchase.id} /></svg>
+                <svg x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} viewBox={placement.art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={entry.imageUrl} width="60" height="60" data-product-image={entry.id} /></svg>
               </>}
               {!eating && <path d={`M${placement.art.x + placement.art.width / 2} ${placement.art.y + placement.art.height / 2}L${placement.pin.x} ${placement.pin.y}`} fill="none" stroke="#708467" strokeWidth=".8" opacity={selectedId === product.id ? .75 : .3} />}
             </g>)}
           </svg>
           {eating&&confirmed?<EatingAvatar home={data.home} confirmed={confirmed} productId={eating.id} progress={eating.progress} x={interaction.x} reduced={eating.reduced}/>:<RoomAvatar home={data.home} confirmedState={confirmed ?? undefined} fallbackAvatarId={data.user.avatarId} fallbackOutfitId={data.initialOutfitId} category="living" seated={false} interactionKey={interaction.key} />}
-          {!eating&&roomItems.map(({product, purchase, placement}) => <button key={product.id} className="sc-room-pin catalog-owned-pin" data-room-product-id={product.id} data-room-slot={purchase.roomSlot} style={{ left: `${placement.pin.x / 4.5}%`, top: `${placement.pin.y / 1.5}%` }} aria-label={`${product.name} · ${placement.label}에서 살펴보기`} aria-pressed={selectedId === product.id && tab === 'owned'} onClick={() => choose(product, 'owned')}><span>{placement.number}</span></button>)}
+          {!eating&&roomItems.map(({entry, product, placement}) => <button key={product.id} className="sc-room-pin catalog-owned-pin" data-room-product-id={entry.id} data-hero-control-product-id={entry.id} data-hero-role={entry.presentationRole} style={{ left: `${placement.pin.x / 4.5}%`, top: `${placement.pin.y / 1.5}%` }} aria-label={`${product.name} · ${placement.label}에서 살펴보기`} aria-pressed={selectedId === product.id && tab === 'owned'} onClick={() => choose(product, 'owned')}><span>{entry.displayIndex}</span></button>)}
           <span className="sc-room-footnote">{eating?'맛있게 먹는 중 · 완료 후 잔량이 줄어요':'구매 상품을 눌러 살펴보세요'}</span>
         </div>
         <div className="sc-inventory-head"><div className="sc-tabs" role="group" aria-label="내 상품 목록"><button aria-pressed={tab === 'owned'} onClick={() => changeTab('owned')}>구매한 상품 <span>{purchases.length}</span></button><button aria-pressed={tab === 'cart'} onClick={() => changeTab('cart')}>장바구니 <span>{cartProducts.length}</span></button></div><button className="sc-text-button" onClick={() => openPanel(tab)}>전체 보기 ↗</button></div>
-        <div className="sc-inventory-rail">{rail.map((product, index) => <button key={product.id} className="sc-owned-item" title={product.name} aria-pressed={selectedId === product.id} onClick={() => choose(product, tab)}><span className="sc-owned-photo"><ProductVisual product={product} />{tab === 'owned' && <span className="sc-item-index">{index + 1}</span>}{selectedId === product.id && <span className="sc-selected-check"><Icon name="check" size={12} /></span>}</span><span className="sc-owned-name">{product.name}</span>{tab === 'owned' && <small className="catalog-owned-status">{ownedStatus(product.id)}</small>}</button>)}<button className="sc-owned-item sc-new-item" aria-pressed={!anchor} onClick={clearSelection}><span className="sc-owned-photo"><span>＋</span></span><span>새롭게 둘러보기</span></button></div>
+        <div className="sc-inventory-rail">{rail.map((product, index) => <button key={product.id} className="sc-owned-item" data-owned-product-id={tab === 'owned' ? product.id : undefined} title={product.name} aria-pressed={selectedId === product.id} onClick={() => choose(product, tab)}><span className="sc-owned-photo"><ProductVisual product={product} />{tab === 'owned' && <span className="sc-item-index">{ownedEntries.find(entry => entry.id === product.id)?.displayIndex ?? index + 1}</span>}{selectedId === product.id && <span className="sc-selected-check"><Icon name="check" size={12} /></span>}</span><span className="sc-owned-name">{product.name}</span>{tab === 'owned' && <small className="catalog-owned-status">{ownedStatus(product.id)}</small>}</button>)}<button className="sc-owned-item sc-new-item" aria-pressed={!anchor} onClick={clearSelection}><span className="sc-owned-photo"><span>＋</span></span><span>새롭게 둘러보기</span></button></div>
         <div className="sc-anchor-caption" aria-live="polite"><span className="sc-small-star" aria-hidden="true">＋</span>{anchor ? <p><b>{anchor.name}</b><small>{tab === 'owned' ? `가상 보유 · ${ownedStatus(anchor.id)}` : '장바구니 상품 · 아직 구매 전이에요'}</small></p> : <p>{rail.length ? '상품을 골라 자세히 살펴보세요.' : tab === 'owned' ? '구매 기록이 없어도 상품을 둘러볼 수 있어요.' : '아직 장바구니에 담긴 상품이 없어요.'}</p>}{anchor&&tab==='owned'&&eatButton(anchor.id)}{anchor && <button className="sc-text-button" onClick={() => openPanel('product', anchor.id)}>상품 보기 ↗</button>}</div>
         {eating&&<div className="catalog-eating-status" role="status"><span>잠깐의 식사 시간 · 이동하면 취소돼요</span><button className="sc-text-button" data-eating-cancel onClick={cancelEating}>먹기 취소</button></div>}
       </section>

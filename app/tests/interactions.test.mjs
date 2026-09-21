@@ -4,6 +4,15 @@ import {APPROACHES,START,isWalkable} from '../movement.js';
 import {EATING_DURATION,REDUCED_EATING_DURATION} from '../food-action.js';
 import {CATEGORY_ROUTES,readyObjectCategory} from '../category-routes.js';
 const checks=[];
+{
+ const c=new InteractionController();engaged(c,'vanity');
+ c.dispatch({type:'ACTION',productId:'1088835047',artKey:'cream',current:'16052422'});
+ c.tick(250);
+ assert.equal(c.view().heldProductId,'1088835047','Motion retains exact product identity rather than an artwork alias');
+ const effects=c.tick(250);
+ assert.equal(effects.filter(e=>e.type==='commit'&&e.productId==='1088835047').length,1);
+ checks.push('canonical Beauty ID survives held motion and commits once; artwork key never becomes ownership identity');
+}
 function arrive(c,id){const request=c.dispatch({type:'REQUEST',intent:{type:'object',id},position:START});assert.equal(request[0].type,'navigate');const epoch=c.epoch;const position=APPROACHES[OBJECTS[id].target];c.dispatch({type:'ARRIVED',id,epoch,pathEmpty:true,position});assert.equal(c.phase,'entering');return position;}
 function engaged(c,id){arrive(c,id);c.tick(id==='wardrobe'?830:id==='fridge'?650:id==='window'?400:id==='bed'?420:320);assert.equal(c.phase,'engaged');}
 function invariant(c){const v=c.view();assert(['eating','idle','lying_bed','walking','interacting','sitting_sofa','sitting_vanity','changing_clothes','rummaging_wardrobe','using_cosmetic'].includes(c.primary));assert(!(c.objects.sofa.stable==='occupied'&&c.objects.vanity.stable==='occupied'));if(c.owner==='movement'){assert.deepEqual(v.renderOffset,{x:0,y:0});assert.equal(v.heldProductId,null);}if(c.primary==='changing_clothes'||c.primary==='rummaging_wardrobe'){assert.equal(c.objects.wardrobe.stable,'open');assert.equal(c.objects.wardrobe.transition,null);}if(c.primary==='using_cosmetic')assert.equal(c.objects.vanity.stable,'occupied');}

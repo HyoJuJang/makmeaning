@@ -1,18 +1,15 @@
 import { demoHome } from './demo-home.ts';
-import type { DemoHome } from '../types/home.ts';
+import type { CategoryCollection, DemoHome } from '../types/home.ts';
 import { adaptCatalogProducts } from '../lib/catalog.ts';
 import type { CatalogCategory, CatalogProduct, DemoCatalog, ProductPresentation } from '../types/catalog.ts';
 
-const homeCategories: Record<string, [string, string]> = {
-  milk: ['유제품', '우유'], water: ['음료', '생수'], vitamin: ['건강식품', '멀티비타민'],
-  serum: ['스킨케어', '세럼'], cream: ['스킨케어', '크림'],
-};
-
-function homeRows(category: CatalogCategory, home: DemoHome): CatalogProduct[] {
-  return home.purchases.filter(purchase => purchase.category === category).map(purchase => ({
+function categoryRows(collection: CategoryCollection): CatalogProduct[] {
+  return collection.ownedProducts.map(purchase => ({
     prd_id: purchase.id, view_name: purchase.name, price: purchase.price,
-    cate1_nm: category === 'food' ? '식품' : '뷰티', cate2_nm: homeCategories[purchase.illustrationKey][0],
-    cate3_nm: homeCategories[purchase.illustrationKey][1], cate4_m: '', brd_mn: '', domain: category === 'food' ? '푸드' : '뷰티',
+    cate1_nm: purchase.catalogDetails?.cate1_nm ?? (collection.category === 'food' ? '식품' : '뷰티'),
+    cate2_nm: purchase.catalogDetails?.cate2_nm ?? '', cate3_nm: purchase.catalogDetails?.cate3_nm ?? '',
+    cate4_m: purchase.catalogDetails?.cate4_nm ?? '', brd_mn: purchase.catalogDetails?.brand_name ?? '',
+    domain: collection.category === 'food' ? '푸드' : '뷰티',
   }));
 }
 
@@ -49,9 +46,11 @@ const presentation: Record<string, ProductPresentation> = {
   sunscreen: { shortName: '선크림', imageUrl: '/products/cream.svg' },
 };
 
-/** Pure presentation join. Runtime callers must provide a home resolved from the shared product DB. */
-export function buildDemoCatalog(category: CatalogCategory, home: DemoHome): DemoCatalog {
-  const purchased = home.purchases.filter(purchase => purchase.category === category);
+/** Category collection is primary; home is included only for shared-avatar compatibility. */
+export function buildDemoCatalog(collection: CategoryCollection, home: DemoHome): DemoCatalog {
+  if (collection.category !== 'food' && collection.category !== 'beauty') throw new Error('Unsupported catalog category');
+  const category = collection.category;
+  const purchased = collection.ownedProducts;
   const ownedPresentation = Object.fromEntries(purchased.map(purchase => [purchase.id, {
     ...presentation[purchase.illustrationKey],
     illustrationKey: purchase.illustrationKey,
@@ -63,10 +62,11 @@ export function buildDemoCatalog(category: CatalogCategory, home: DemoHome): Dem
   }]));
   return {
     category,
+    collection: structuredClone(collection),
     home: structuredClone(home),
     user: { ...home.user },
-    initialOutfitId: home.purchases.find(purchase => purchase.category === 'fashion' && purchase.state.wearing === true)?.illustrationKey,
-    products: adaptCatalogProducts([...homeRows(category, home), ...fictionalRows[category]], { ...examplePresentation, ...ownedPresentation }),
+    initialOutfitId: home.categories.fashion.ownedProducts.find(purchase => purchase.state.wearing === true)?.illustrationKey,
+    products: adaptCatalogProducts([...categoryRows(collection), ...fictionalRows[category]], { ...examplePresentation, ...ownedPresentation }),
     purchases: purchased.map(purchase => ({ productId: purchase.id, purchaseId: purchase.purchaseId, purchasedAt: purchase.purchasedAt })),
     initialCart: [],
   };
@@ -74,10 +74,10 @@ export function buildDemoCatalog(category: CatalogCategory, home: DemoHome): Dem
 
 /** Deterministic fixtures only. Routes resolve live shared products before calling buildDemoCatalog. */
 export const demoCatalogRows: Record<CatalogCategory, CatalogProduct[]> = {
-  food: [...homeRows('food', demoHome), ...fictionalRows.food],
-  beauty: [...homeRows('beauty', demoHome), ...fictionalRows.beauty],
+  food: [...categoryRows(demoHome.categories.food), ...fictionalRows.food],
+  beauty: [...categoryRows(demoHome.categories.beauty), ...fictionalRows.beauty],
 };
 export const demoCatalogs: Record<CatalogCategory, DemoCatalog> = {
-  food: buildDemoCatalog('food', demoHome),
-  beauty: buildDemoCatalog('beauty', demoHome),
+  food: buildDemoCatalog(demoHome.categories.food, demoHome),
+  beauty: buildDemoCatalog(demoHome.categories.beauty, demoHome),
 };
