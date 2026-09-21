@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="140" viewBox="0 0 120 140" role="img" aria-label="egg illustration"><title>egg illustration</title><defs>
+<linearGradient id="paper" x1="0" x2="1"><stop stop-color="#e8ddbf"/><stop offset=".35" stop-color="#fff8e3"/><stop offset="1" stop-color="#e8dfc7"/></linearGradient>
+<linearGradient id="glass" x1="0" x2="1"><stop stop-color="#425c38"/><stop offset=".35" stop-color="#7d8c45"/><stop offset=".72" stop-color="#566934"/><stop offset="1" stop-color="#354c2f"/></linearGradient>
+<linearGradient id="tomato" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#ee7653"/><stop offset="1" stop-color="#c94f3d"/></linearGradient>
+<linearGradient id="mushroom" x1="0" x2="0" y1="0" y2="1"><stop stop-color="#d4baa0"/><stop offset="1" stop-color="#aa876d"/></linearGradient>
+</defs><ellipse cx="61" cy="127" rx="35" ry="6" fill="#344e3f" opacity=".1"/><path d="M17 84q4-11 13-11h62q11 0 13 11l-4 32q-43 17-79 0Z" fill="#bcb997"/><path d="M20 82h81l-7 31H28Z" fill="#dcdbb6"/><path d="M31 95C12 94 27 54 38 54s25 38 4 41Z" fill="#e7d3ae"/><path d="M54 96C32 96 45 48 59 48s28 45 8 48Z" fill="#f2e5c7"/><path d="M79 97C58 96 71 59 84 58s27 39 7 39Z" fill="#e5cda5"/>
+<path d="M26 98q35 9 72-1l-3 22q-34 12-66-1Z" fill="#c9cba6"/><path d="m44 102 2 19m28-19-1 20" stroke="#aaaF88" stroke-width="2"/><path d="M50 105h22v20H50Z" fill="#f4f0d9"/><path d="M57 113q4-8 8 0 4 9-4 9t-4-9" fill="#859576"/><path d="M33 61q-5 3-6 11m27-16-3 9m29-1-3 7" stroke="#fff3d9" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>

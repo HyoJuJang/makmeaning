@@ -45,3 +45,41 @@ for (const room of ['wardrobe-room.png', 'living-room.png']) {
 }
 console.log(`Release smoke PASS: homepage, API, ${data.purchases.length} purchase assets, room and interaction modules (${base})`);
 console.log('Release smoke PASS: fashion/living pages, category entries, scene APIs and artwork');
+
+for (const category of ['food', 'beauty']) {
+  const page = await fetch(`${base}/${category}`);
+  assert.equal(page.status, 200, `${category} page must load`);
+  assert.match(page.headers.get('content-type'), /text\/html/);
+  const pageHtml = await page.text();
+  assert.match(pageHtml, /나의 공간을 준비하고 있어요/);
+  assert.match(pageHtml, /role="status"/, 'Loading status is accessible');
+  const response = await fetch(`${base}/api/demo/${category}`);
+  assert.equal(response.status, 200, `${category} API must load`);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  const catalog = await response.json();
+  assert.equal(catalog.category, category);
+  assert.equal(catalog.user.id, data.user.id);
+  assert.equal(catalog.user.avatarId, data.user.avatarId);
+  assert.ok(catalog.products.length > 0);
+  for (const field of ['scenarios', 'recipes', 'profiles', 'intents']) {
+    assert.equal(field in catalog, false, `Obsolete ${field} is absent`);
+  }
+  for (const product of catalog.products) {
+    for (const field of ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain']) {
+      assert.ok(field in product, `${product.id} preserves ${field}`);
+    }
+    for (const field of ['packSize', 'unit', 'optionLabel', 'available', 'servings']) {
+      assert.equal(field in product, false, `${product.id} must not require ${field}`);
+    }
+  }
+  assert.deepEqual(catalog.purchases.map(p => p.productId), data.purchases.filter(p => p.category === category).map(p => p.id));
+  const artwork = new Set([...catalog.products.map(p => p.imageUrl), `/catalog-art/${category}-room.svg`]);
+  for (const path of artwork) {
+    assert.match(path, /^\/.*\.svg$/);
+    const asset = await fetch(new URL(path, base));
+    assert.equal(asset.status, 200, `${path} artwork must load`);
+    assert.match(asset.headers.get('content-type'), /image\/svg\+xml/);
+    assert.match(await asset.text(), /<svg\b/);
+  }
+  console.log(`${category} release smoke PASS: page, catalog API, source columns, home purchases, ${artwork.size} artwork assets (${base})`);
+}

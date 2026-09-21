@@ -1,0 +1,91 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="300" viewBox="0 0 450 150" shape-rendering="crispEdges" role="img" aria-label="거울과 작은 화장품이 놓인 픽셀 화장대 공간">
+  <title>크림색 벽과 나무 화장대가 있는 아늑한 뷰티 공간</title>
+  <defs>
+    <pattern id="wall-pixels" width="59" height="43" patternUnits="userSpaceOnUse"><path d="M7 9h3v1H7ZM10 10h2v2h-2ZM39 28h4v1h-4ZM36 29h3v2h-3Z" fill="#c7b59a" opacity=".14"/><path d="M25 4h2v2h-2ZM47 36h4v1h-4Z" fill="#f8eedc" opacity=".4"/></pattern>
+    <pattern id="floor-grain" width="87" height="17" patternUnits="userSpaceOnUse"><path d="M4 6h29v1H4ZM42 12h23v1H42ZM66 4h13v1H66ZM11 14h7v1H11Z" fill="#bd8e55" opacity=".24"/><path d="M12 4h23v1H12ZM37 14h13v1H37ZM72 10h12v1H72Z" fill="#f1d4a2" opacity=".5"/></pattern>
+    <pattern id="wood-grain" width="31" height="23" patternUnits="userSpaceOnUse"><path d="M4 3h12v1H4ZM18 16h9v1h-9ZM7 19h5v1H7Z" fill="#976b3e" opacity=".38"/><path d="M10 5h17v1H10ZM3 14h8v1H3Z" fill="#e6bd7f" opacity=".45"/></pattern>
+    <pattern id="woven" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 0h3v2H0ZM2 3h3v2H2Z" fill="#d0bc95"/><path d="M0 3h2v2H0ZM3 0h2v2H3Z" fill="#b09a74"/></pattern>
+  </defs>
+  <!-- Same perspective and open foreground as the kitchen, with no baked-in figure. -->
+  <rect width="450" height="150" fill="#e4d5bd"/>
+  <path d="M0 0h27v108L0 124Z" fill="#cbbb9f"/>
+  <path d="M0 0h9v117l-9 7Z" fill="#b6a68c"/>
+  <path d="M24 0h3v110h-3Z" fill="#f0e4ce"/>
+  <rect x="28" width="422" height="111" fill="#e7dac3"/>
+  <rect x="28" width="422" height="111" fill="url(#wall-pixels)"/>
+  <path d="M29 106h421v6H29Z" fill="#bba17e"/><path d="M29 106h421v2H29Z" fill="#f2e4cb"/>
+  <path d="M29 112h421v38H0v-26h7v-3h7v-4h8v-3h7Z" fill="#d7ae76"/>
+  <path d="M29 114h421v3H22v4H10v3H0v3h450v2H0v18h450v3H0v-26h7v-4h8v-4h8v-2Z" fill="#ba8b53" opacity=".48"/>
+  <path d="M0 139h450v2H0Z" fill="#b78952" opacity=".58"/>
+  <path d="M0 136h450v2H0ZM25 115h425v1H25Z" fill="#ebc58e"/>
+  <path d="M107 113h2v5h-2v9h-2v11h-2v12h-2v-14h2v-10h2v-8h2ZM225 113h2v25h-2ZM224 141h2v9h-2ZM340 113h2v6h2v9h2v11h2v11h-2v-11h-2v-11h-2v-9h-2ZM45 128h2v10h-2ZM165 141h2v9h-2ZM282 128h2v11h-2ZM405 140h2v10h-2Z" fill="#b48a56" opacity=".6"/>
+  <path d="M0 114h450v36H0Z" fill="url(#floor-grain)"/>
+  <!-- A small window sets the same warm daylight as the companion rooms. -->
+  <path d="M41 23h45v52H41Z" fill="#987c58"/><path d="M43 25h41v48H43Z" fill="#d7c29b"/>
+  <path d="M45 27h37v44H45Z" fill="#f0e5cc"/><path d="M48 30h31v38H48Z" fill="#bdd3d0"/>
+  <path d="M48 52h8v-6h10v22H48ZM69 48h10v20H69Z" fill="#9ab3b2"/>
+  <path d="M52 50h3v3h-3ZM72 52h3v3h-3Z" fill="#e3dfbd"/>
+  <path d="M53 36h4v-3h5v3h4v3H53Z" fill="#edf0dc"/>
+  <path d="M62 28h3v42h-3ZM46 48h35v3H46Z" fill="#eee0c3"/>
+  <path d="M39 73h49v3H39Z" fill="#bba078"/><path d="M39 72h49v1H39Z" fill="#f2e5cb"/>
+  <path d="M81 29h3v44h-4v-6h-1v-9h-1v-8h1v-9h1Z" fill="#e5dcc4"/>
+  <path d="M43 28h3v14h1v10h1v10h-1v10h-4Z" fill="#f5ecd6"/>
+  <!-- Broad step-framed mirror sits just left of center; reflections are abstract. -->
+  <path d="M141 21h4v-4h87v4h4v61h-95Z" fill="#8b6a45"/>
+  <path d="M142 20h4v-4h85v4h4v61h-93Z" fill="#a87e4b"/>
+  <path d="M144 22h4v-4h81v4h4v57h-89Z" fill="#d1a56d"/>
+  <path d="M148 24h4v-3h73v3h4v51h-81Z" fill="#f1d3a0"/>
+  <path d="M151 27h4v-3h66v3h5v46h-75Z" fill="#8b9682"/>
+  <path d="M153 28h4v-2h62v2h5v43h-71Z" fill="#c7d5ca"/>
+  <path d="M153 29h34v4h-5v4h-5v4h-5v4h-5v4h-5v4h-5v4h-4Z" fill="#e9eee0"/>
+  <path d="M208 27h11v2h4v4h-5v5h-5v4h-5v4h-5v4h-5v4h-5v4h-5v5h-5v4h-5v4h-13v-4h5v-5h5v-4h5v-4h5v-4h5v-4h5v-5h5v-4h5v-4h3Z" fill="#e3e9da" opacity=".8"/>
+  <path d="M213 58h11v13h-36v-3h6v-3h7v-4h12Z" fill="#b7c7b5"/>
+  <path d="M143 25h2v53h-2ZM149 18h77v1h-77ZM231 25h2v52h-2Z" fill="#e7bf84"/>
+  <path d="M146 78h85v2h-85Z" fill="#6e573d"/><path d="M173 80h4v4h-4ZM207 80h4v4h-4Z" fill="#8a6b43"/>
+  <!-- Main wood vanity leaves a clear walking lane in front. -->
+  <path d="M117 113h168v4H117Z" fill="#89724f" opacity=".27"/>
+  <path d="M114 82h172v7H114Z" fill="#755736"/>
+  <path d="M116 81h168v3H116Z" fill="#dcaf73"/><path d="M119 80h162v2H119Z" fill="#edc993"/>
+  <path d="M119 89h160v24h-160Z" fill="#a37847"/>
+  <path d="M122 91h46v17h-46ZM171 91h57v17h-57ZM231 91h45v17h-45Z" fill="#d0a068" stroke="#86613a" stroke-width="1"/>
+  <path d="M124 92h42v1h-42ZM173 92h53v1h-53ZM233 92h41v1h-41Z" fill="#ebc088"/>
+  <path d="M139 96h11v4h-11ZM194 96h11v4h-11ZM247 96h11v4h-11Z" fill="#785a37"/>
+  <path d="M141 97h7v1h-7ZM196 97h7v1h-7ZM249 97h7v1h-7Z" fill="#d7b776"/>
+  <path d="M119 89h160v23h-160Z" fill="url(#wood-grain)" opacity=".22"/>
+  <path d="M120 111h5v6h-5ZM273 111h5v6h-5Z" fill="#775735"/>
+  <!-- Unbranded cosmetics and a low tray on the right of the vanity. -->
+  <path d="M238 81h37v2h-37Z" fill="#8b7452"/><path d="M237 79h38v2h-38Z" fill="#e5d2b0"/>
+  <path d="M244 62h9v16h-9Z" fill="#b7a4a0"/><path d="M245 63h2v13h-2Z" fill="#e0d0c4"/>
+  <path d="M243 58h11v4h-11Z" fill="#756d67"/><path d="M246 55h5v4h-5Z" fill="#c4b6a4"/>
+  <path d="M258 72h13v6h-13Z" fill="#e1d8bb"/><path d="M257 69h15v4h-15Z" fill="#8d9b7d"/>
+  <path d="M259 70h11v1h-11Z" fill="#bac6a4"/>
+  <path d="M270 73h1v5h-13v-1h12Z" fill="#ad9f7f"/><path d="M259 74h1v2h-1Z" fill="#f8ecd4"/>
+  <path d="M126 72h11v8h-11Z" fill="#cab898"/><path d="M128 63h2v11h-2ZM134 65h2v9h-2Z" fill="#6f6956"/>
+  <path d="M127 61h4v5h-4ZM133 62h4v5h-4Z" fill="#95826c"/>
+  <!-- Side cabinet and the second cosmetic grouping near the right three quarters. -->
+  <path d="M309 114h61v4h-61Z" fill="#89724f" opacity=".25"/>
+  <path d="M308 83h60v31h-60Z" fill="#755735"/><path d="M307 82h62v5h-62Z" fill="#ac804c"/>
+  <path d="M309 81h58v2h-58Z" fill="#dfb77e"/>
+  <path d="M312 89h51v9h-51ZM312 101h51v10h-51Z" fill="#c69a61" stroke="#8c673d"/>
+  <path d="M314 90h47v1h-47ZM314 102h47v1h-47Z" fill="#e5b77c"/>
+  <path d="M333 92h9v3h-9ZM333 104h9v3h-9Z" fill="#775735"/>
+  <path d="M335 93h5v1h-5ZM335 105h5v1h-5Z" fill="#d7b477"/>
+  <path d="M311 88h53v24h-53Z" fill="url(#wood-grain)" opacity=".23"/>
+  <path d="M310 113h4v4h-4ZM362 113h4v4h-4Z" fill="#755735"/>
+  <path d="M320 64h10v16h-10Z" fill="#9eae88"/><path d="M322 66h2v11h-2Z" fill="#d2d9b6"/>
+  <path d="M321 60h8v4h-8ZM324 55h2v7h-2ZM324 55h10v2h-10Z" fill="#596e58"/>
+  <path d="M337 73h15v7h-15Z" fill="#d5c5a9"/><path d="M336 70h17v4h-17Z" fill="#9d8c76"/>
+  <path d="M339 75h11v2h-11Z" fill="#f0e2c7"/>
+  <path d="M351 74h1v6h-15v-1h14Z" fill="#ac9777"/><path d="M338 74h1v4h-1Z" fill="#e9dcc0"/>
+  <!-- A compact basket beside the vanity, away from the central walking area. -->
+  <path d="M76 93h23v18H76Z" fill="#8c7754"/><path d="M78 94h19v15H78Z" fill="url(#woven)"/>
+  <path d="M76 92h23v3H76Z" fill="#d5c2a0"/><path d="M79 88h17v5H79Z" fill="#e8dcc2"/>
+  <path d="M81 87h12v2H81ZM80 90h14v1H80Z" fill="#f5ead3"/>
+  <!-- Minimal greenery and framed decoration tie back to the shared apartment. -->
+  <path d="M392 23h22v34h-22Z" fill="#8c704d"/><path d="M394 25h18v30h-18Z" fill="#d0b48c"/><path d="M397 28h12v24h-12Z" fill="#f1e4c8"/>
+  <path d="M402 33h1v15h-1ZM398 36h4v3h-4ZM403 38h4v3h-4ZM399 43h3v3h-3Z" fill="#7c8c65"/>
+  <path d="M405 93v-15h2v15ZM406 84h-4v-2h4ZM407 80h3v-2h-3Z" fill="#67794f"/>
+  <path d="M402 83h-5v-2h-3v-6h5v3h3ZM409 80v-5h3v-3h5v6h-4v2Z" fill="#879b63"/>
+  <path d="M396 76h2v3h-2ZM413 73h2v3h-2Z" fill="#adba7e"/>
+  <path d="M398 93h17v3h-2v13h-12V96h-3Z" fill="#9f835b"/><path d="M401 96h11v10h-11Z" fill="#cfb890"/><path d="M402 97h2v8h-2Z" fill="#e3d0aa"/>
+</svg>

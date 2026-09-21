@@ -1,8 +1,9 @@
-# G:Scene Main Screen prototype
+# G:Scene Main Screen · Food · Beauty prototype
 
 가상 고객 민서가 구매한 물건으로 채워지는 연결된 2D 원룸 mobile web prototype입니다. 확정 방향은 `docs/ideas/doc03_final_ideation.md`, 구현 명세는 `docs/design/main_screen_spec.md`입니다.
 
 **상품 탭·데이터 작업을 시작하는 팀원은 [공통 상품 DB·API 사용 가이드](docs/design/backend/README.md)를 먼저 확인하세요.** 공개 조회, 로컬 연결, `opt1~opt4` 수정, JSON 등록 예제를 제공합니다.
+식품·뷰티의 현재 구현 범위는 `docs/food/implementation.md`, 검증 결과는 `docs/food/review.md`, 추후 브랜치 통합 안내는 `docs/catalog/merge-preparation.md`입니다. `/food` 내 주방과 `/beauty` 내 화장대에서 같은 구매 상품·장바구니 경험을 제공합니다.
 
 ## 실행
 
@@ -42,6 +43,21 @@ node tests/release-smoke.mjs
 
 ## 데이터와 구성
 
+### 식품·뷰티 페이지
+
+홈 냉장고·팬트리와 화장대는 첫 탭에 기존 생활 동작을 수행하고, 준비된 상태에서 다시 누르면 각각 `/food`, `/beauty`로 이동합니다. 홈 복귀 시 기존 메인의 안전 위치·방향·창문 상태 복원을 사용합니다.
+
+- 최신 메인의 공통 스타일·캐릭터·이동 로직·네 카테고리 SVG 내비게이션을 재사용합니다. 구매 상품을 선택하면 캐릭터가 해당 공간으로 걸어갑니다.
+- 구매 상품/장바구니 탭, 선택 체크, 전체 보기, 상품 상세, 상품 찜, 장바구니 수량 변경·삭제·합계를 제공합니다.
+- 식품 시나리오·레시피·장면 저장·로컬 추천 규칙을 제거했습니다. 추천 영역은 준비 안내만 표시하며 일반 상품 목록과 구분합니다.
+- 상품 원천은 `prd_id`, `view_name`, `price`, `cate1_nm`, `cate2_nm`, `cate3_nm`, `cate4_m`, `brd_mn`, `domain` 9개 컬럼입니다. 용량·사이즈·판매 옵션은 요구하지 않습니다.
+- `GET /api/demo/food`, `GET /api/demo/beauty`는 같은 홈 사용자·구매 기록을 사용합니다. 구매 기록을 현재 재고로 간주하지 않습니다.
+- 장바구니·찜은 `gscene-catalog-food-v1`, `gscene-catalog-beauty-v1`에 각각 저장합니다. 이전 식품 데이터에서는 홈 장바구니만 복구하며 장면 저장은 상품 찜으로 변환하지 않습니다.
+
+`src/components/catalog/`는 두 화면의 공통 UI, `src/lib/catalog.ts`는 상품·장바구니·저장 복구, `src/data/demo-catalog.ts`는 9컬럼 데모 데이터입니다. `public/catalog-art/`는 두 공간 배경이며 상품 그림은 별도 로컬 표시 자산입니다. 병합 기준과 검증은 `docs/design/food_beauty_merge_review.md`를 참고하세요.
+
+### 기존 홈
+
 - `src/types/home.ts`: 사용자·구매·카테고리·roomSlot의 API contract.
 - `src/data/demo-home.ts`: 가상 고객 1명과 Fashion 2 / Food 3 / Living 2 / Beauty 2개의 구매 데이터.
 - `app/api/demo/home/route.ts`: `GET /api/demo/home`. 별도 환경변수나 외부 서비스가 필요 없습니다.
@@ -56,7 +72,7 @@ node tests/release-smoke.mjs
 
 ## 검증
 
-`npm test`는 경로/충돌, 실제 입력 handler, 동작 controller, 상품 그림, API contract를 검증합니다. `node tests/release-smoke.mjs`는 실행 중인 production 서버의 페이지/API/9개 상품 이미지/필수 runtime module을 검증합니다. 배포 주소에서는 `SMOKE_BASE_URL=https://배포주소 node tests/release-smoke.mjs`로 같은 검사를 실행할 수 있습니다.
+`npm test`는 경로/충돌, 실제 입력 handler, 동작 controller, 상품 그림, 홈·식품·뷰티 API contract, 장바구니 수량·금액·저장 복구, 캐릭터 이동, 홈 복귀를 검증합니다. `node tests/release-smoke.mjs`는 실행 중인 production 서버의 홈·식품·뷰티 페이지, API, 상품·공간 이미지, 필수 runtime module을 검증합니다. 배포 주소에서는 `SMOKE_BASE_URL=https://배포주소 node tests/release-smoke.mjs`로 같은 검사를 실행할 수 있습니다.
 
 실제 모바일 화면과 interaction, review → fix → rerun 증거는 `docs/design/main_screen_review.md`에 기록합니다. 자동 검사를 모바일 화면 QA 대신 사용하지 않습니다.
 
