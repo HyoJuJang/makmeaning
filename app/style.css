@@ -82,3 +82,13 @@
 .thumb img{width:49px;height:51px;object-fit:contain}.tray-products .thumb img{width:36px;height:40px}.product-price{font-size:9px;color:#92988c}.product-name,.food-select{overflow-wrap:anywhere}
 @media(max-width:350px){.tray-products .thumb img{width:30px}.product-meta{overflow-wrap:anywhere}}
 @media(prefers-reduced-motion:reduce){.loading-orbit{animation:none}}
+
+/* The kitchen is reachable directly and from either Food object. */
+.kitchen-entry{display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;border-radius:12px;color:#244f3d;font-size:12px;font-weight:600;text-decoration:none}
+.kitchen-entry-home{width:fit-content;margin:8px auto 0;padding:8px 17px;border:1px solid #d9e1cf;background:#edf0e3}
+.kitchen-entry:hover{background:#dfe9d7}
+.kitchen-entry-sheet{flex-shrink:0;justify-content:space-between;background:#e9efdf;padding:14px 16px;margin:-7px 0 19px}
+.kitchen-entry-sheet strong{font-size:14px}.kitchen-entry-sheet small{display:block;color:#6e7e62;font-size:11px;font-weight:400;line-height:1.6;margin-top:5px}
+.kitchen-entry-tray{flex-shrink:0;background:#244f3d;color:#fff;padding:8px 10px;font-size:11px;white-space:nowrap}
+.kitchen-entry-tray:hover{background:#32634b}
+@media(max-width:350px){.kitchen-entry-tray{font-size:10px;padding:8px;gap:5px}.kitchen-entry-sheet{padding:12px}}

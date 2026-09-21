@@ -1,6 +1,8 @@
-# G:Scene Main Screen prototype
+# G:Scene Main Screen & Food prototype
 
 가상 고객 민서가 구매한 물건으로 채워지는 연결된 2D 원룸 mobile web prototype입니다. 확정 방향은 `docs/ideas/doc03_final_ideation.md`, 구현 명세는 `docs/design/main_screen_spec.md`입니다.
+
+식품 확장 명세와 구현 선택은 `docs/food/implementation.md`, 검증 결과는 `docs/food/review.md`입니다. 기존 홈과 `/api/demo/home` 계약을 유지하면서 `/food`에 내 주방 경험을 추가했습니다.
 
 ## 실행
 
@@ -40,6 +42,29 @@ node tests/release-smoke.mjs
 
 ## 데이터와 구성
 
+### 식품 페이지
+
+홈 아래 또는 냉장고 트레이·팬트리 패널의 **내 주방으로**를 눌러 `/food`에 들어갑니다. 전체 문서 이동을 사용해 기존 방의 이벤트와 새 React 화면을 분리하며, 홈 복귀 시 캐릭터 위치·방향·스크롤을 복원합니다.
+
+- 구매·장바구니 선반의 상품 선택, 해제, 전체 보기.
+- 메뉴 3종과 조건별 탐색, 좌우 드래그/스와이프, 관심 저장·해제·되돌리기와 저장 목록.
+- 1~4인분, 모든 재료의 명시적 보유 확인, 필요량과 판매 단위, 선택 재료 및 구매 수량.
+- 기존 장바구니 수량을 제외한 부족분 계산, 합계, 담기 완료, 장바구니 수량 수정·삭제.
+- 과거 구매 상품의 현재 예시 옵션 확인과 재구매, 새로 살 상품이 없는 경우 조리 순서 또는 장바구니 확인.
+- 하단 **다른 사용자 상태로 체험하기**에서 홈과 연결 / 첫 방문 / 파스타 구매 / 장바구니 상태를 전환합니다. 홈 프로필은 기존 홈 구매내역을 그대로 사용하고, 나머지는 별도의 시연 데이터입니다.
+
+`GET /api/demo/food`가 예시 상품·메뉴·프로필을 제공합니다. 구매 기록과 홈의 사용하기 수량을 실제 보유 재고로 해석하지 않습니다. 보유 확인은 현재 메뉴의 필요량에 대한 확인이며 인분 변경·메뉴 재진입·새로고침 시 초기화합니다. 메뉴별 재료 화면은 해시에 메뉴 ID를 포함해 브라우저 뒤로가기가 다른 메뉴의 보유 확인을 재사용하지 않게 합니다.
+
+장바구니·관심 메뉴·탐색 상태는 `gscene-food-v1`에 프로필별로 저장됩니다. 실제 주문·GS SHOP 연동·추천 모델은 없으며 로컬 데모 추천 규칙만 사용합니다. 배송비는 예시 상품금액에서 제외합니다. 홈의 **데모 초기화**는 식품 상태도 초기화합니다. API 조회가 실패하면 재시도 화면을 제공합니다.
+
+- `app/food/`: React 식품 UI와 범위가 한정된 CSS module.
+- `src/types/food.ts`, `src/data/demo-food.ts`: 식품 API 계약과 홈에서 파생한 시연 데이터.
+- `src/lib/food.ts`: 추천, 재료·포장 수량, 장바구니와 합계의 순수 계산.
+- `public/food/`: 외부 네트워크에 의존하지 않는 상품·메뉴 SVG.
+- `tests/food.test.mjs`, `app/tests/home-food.test.mjs`: 수량·가격·상태 분리·중복 방지와 홈 연결 회귀 검사.
+
+### 기존 홈
+
 - `src/types/home.ts`: 사용자·구매·카테고리·roomSlot의 API contract.
 - `src/data/demo-home.ts`: 가상 고객 1명과 Fashion 2 / Food 3 / Living 2 / Beauty 2개의 구매 데이터.
 - `app/api/demo/home/route.ts`: `GET /api/demo/home`. 별도 환경변수나 외부 서비스가 필요 없습니다.
@@ -54,7 +79,7 @@ node tests/release-smoke.mjs
 
 ## 검증
 
-`npm test`는 경로/충돌, 실제 입력 handler, 동작 controller, 상품 그림, API contract를 검증합니다. `node tests/release-smoke.mjs`는 실행 중인 production 서버의 페이지/API/9개 상품 이미지/필수 runtime module을 검증합니다. 배포 주소에서는 `SMOKE_BASE_URL=https://배포주소 node tests/release-smoke.mjs`로 같은 검사를 실행할 수 있습니다.
+`npm test`는 경로/충돌, 실제 입력 handler, 동작 controller, 상품 그림, 홈·식품 API contract, 식품 수량·금액, 홈 복귀를 검증합니다. `node tests/release-smoke.mjs`는 실행 중인 production 서버의 홈·식품 페이지, API, 상품·메뉴 이미지, 필수 runtime module을 검증합니다. 배포 주소에서는 `SMOKE_BASE_URL=https://배포주소 node tests/release-smoke.mjs`로 같은 검사를 실행할 수 있습니다.
 
 실제 모바일 화면과 interaction, review → fix → rerun 증거는 `docs/design/main_screen_review.md`에 기록합니다. 자동 검사를 모바일 화면 QA 대신 사용하지 않습니다.
 
