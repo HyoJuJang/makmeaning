@@ -5,6 +5,7 @@ import type { DemoHome, Purchase } from '../../types/home';
 import type { DemoScene, SceneCategory, SceneProduct } from '../../types/scene';
 import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
+import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
 import './scene.css';
 
 const CONFIG = {
@@ -96,6 +97,15 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
   const [detailId, setDetailId] = useState<string | null>(null);
   const [notice, setNotice] = useState('');
   const [storageReady, setStorageReady] = useState(false);
+  const [outfitPreview, setOutfitPreview] = useState<'knit' | 'shirt' | null>(null);
+  const [interactionKey, setInteractionKey] = useState(0);
+  const [seated, setSeated] = useState(false);
+  const [lampLit, setLampLit] = useState(false);
+  const [placedId, setPlacedId] = useState<string | null>(null);
+  const [lookIds, setLookIds] = useState<Record<string, string>>({});
+  const [previewSequence, setPreviewSequence] = useState(0);
+  const collectionRef = useRef<HTMLElement>(null);
+  const previewFocus = useRef(false);
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const returnToFilters = useRef(false);
   const storeKey = `gscene-scene-${category}-v1`;
@@ -147,6 +157,12 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
   const recommendations = recommend(catalog?.products || [], filters, anchor);
   const detail = catalog?.products.find(product => product.id === detailId);
   const detailMatch = recommendations.find(match => match.product.id === detailId);
+  const placedProduct = catalog?.products.find(product => product.id === placedId);
+  const lookProducts = catalog?.products.filter(product => Object.values(lookIds).includes(product.id)) || [];
+  const anchorKind = anchor && ('kind' in anchor ? anchor.kind : '상의');
+  const lookKinds = ['상의', '하의', '신발', ...(lookIds['아우터'] || anchorKind === '아우터' ? ['아우터'] : [])];
+  const canPreview = (product: SceneProduct) => category === 'fashion' || canPlaceInRoom(product.id);
+  const isPreviewed = (product: SceneProduct) => category === 'fashion' ? lookIds[product.kind] === product.id : placedId === product.id;
   const dirty = JSON.stringify(draft) !== JSON.stringify(filters);
   const draftCount = recommend(catalog?.products || [], draft, anchor).length;
   const filterSummary = [filters.situation, filters.tastes.join(' · ') || '모든 취향', budgetLabel(filters.budget), ...(filters.kind === '전체' ? [] : [filters.kind])].join(' · ');
@@ -158,6 +174,34 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
     return () => cancelAnimationFrame(frame);
   }, [panel]);
 
+  useEffect(() => {
+    if (panel || !previewFocus.current) return;
+    previewFocus.current = false;
+    const frame = requestAnimationFrame(() => {
+      collectionRef.current?.focus({ preventScroll: true });
+      collectionRef.current?.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth', block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [previewSequence, panel]);
+
+  function previewProduct(product: SceneProduct) {
+    if (!canPreview(product)) return;
+    if (category === 'fashion') setLookIds(previous => ({ ...previous, [product.kind]: product.id }));
+    else { setPlacedId(product.id); setSeated(false); }
+    setPanel(null);
+    previewFocus.current = true;
+    setPreviewSequence(value => value + 1);
+    setNotice(category === 'fashion' ? '코디 보드에 추가했어요.' : '공간에 미리 놓아봤어요.');
+  }
+  function clearPreview() {
+    setLookIds({}); setPlacedId(null);
+    requestAnimationFrame(() => collectionRef.current?.focus({ preventScroll: true }));
+  }
+  function restoreOutfit() {
+    setOutfitPreview(null); setInteractionKey(value => value + 1);
+    requestAnimationFrame(() => collectionRef.current?.focus({ preventScroll: true }));
+  }
+
   function openFilters() {
     setDraft({ ...filters, tastes: [...filters.tastes] });
     setCustomBudget([0, 30000, 50000, 100000].includes(filters.budget) ? '' : String(filters.budget));
@@ -166,7 +210,12 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
     setPanel('filters');
   }
 
-  function choose(item: Item, source: 'owned' | 'cart') { setSelectedId(item.id); setTab(source); }
+  function choose(item: Item, source: 'owned' | 'cart') {
+    setSelectedId(item.id); setTab(source);
+    if (category === 'fashion' && source === 'owned' && (item.id === 'knit' || item.id === 'shirt')) {
+      setOutfitPreview(item.id); setInteractionKey(value => value + 1);
+    }
+  }
   function changeTab(next: 'owned' | 'cart') { setTab(next); setSelectedId((next === 'owned' ? purchases : cart)[0]?.id || null); }
   function addCart(id: string) {
     if (cartIds.includes(id)) { setPanel('cart'); return; }
@@ -202,16 +251,19 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
       <div className="sc-heading"><div><span className="sc-room-number">{category === 'fashion' ? '01' : '02'}</span><h1>{config.title}</h1></div><span className="sc-person">{home.user.name}의 작은 취향 공간</span></div>
       <div className="sc-layout">
         <div className="sc-context">
-          <section className="sc-collection" aria-label={`구매한 상품이 있는 ${config.title}`}>
-            <div className="sc-room-hud"><span><i />{config.english}</span><span>MY ITEMS <b>{String(purchases.length).padStart(2, '0')}</b></span></div>
-            <div className="sc-room">
+          <section ref={collectionRef} tabIndex={-1} id="sc-room-preview" className="sc-collection" aria-label={`구매한 상품이 있는 ${config.title}`}>
+            <div className="sc-room-hud"><span><i />{config.english}</span>{category === 'living' ? <div className="sc-room-controls"><button aria-pressed={lampLit} onClick={() => setLampLit(value => !value)}>{lampLit ? '☀ 조명 끄기' : '☼ 조명 켜기'}</button><button aria-pressed={seated} onClick={() => setSeated(value => !value)}>{seated ? '↟ 일어나기' : '⌑ 소파 앉기'}</button></div> : outfitPreview ? <button className="sc-outfit-reset" onClick={restoreOutfit}>↶ 착장 되돌리기</button> : <span>MY ITEMS <b>{String(purchases.length).padStart(2, '0')}</b></span>}</div>
+            <div className={`sc-room ${lampLit ? 'sc-light-on' : ''}`} data-preview-product={placedId || undefined}>
               <img className="sc-room-art" src={`/scene-art/${config.room}`} alt={category === 'fashion' ? '메인 공간과 이어지는 아늑한 픽셀 옷장' : '소파와 우드 가구가 있는 아늑한 픽셀 거실'} />
-              <RoomAvatar fallbackAvatarId={home.user.avatarId} />
-              {anchor && tab === 'owned' && <span key={anchor.id} className={`sc-room-target sc-target-${anchor.id}`} aria-hidden="true" /> }
-              {purchases.map((product, index) => <button key={product.id} className={`sc-room-pin sc-pin-${product.id}`} aria-label={`${product.name} 기준으로 추천받기`} aria-pressed={selectedId === product.id} onClick={() => choose(product, 'owned')}><span>{index + 1}</span><span className="sc-pin-name">{product.name}</span></button>)}
+              {category === 'living' && <span className="sc-room-light" aria-hidden="true" />}
+              {placedProduct && <RoomPlacement key={`${placedProduct.id}-${previewSequence}`} productId={placedProduct.id} lit={lampLit} />}
+              <RoomAvatar fallbackAvatarId={home.user.avatarId} category={category} outfitPreview={outfitPreview} seated={seated} interactionKey={interactionKey} />
+              {anchor && tab === 'owned' && <span key={`${anchor.id}-${interactionKey}`} className={`sc-room-target sc-target-${anchor.id}`} aria-hidden="true" /> }
+              {purchases.map((product, index) => <button key={product.id} className={`sc-room-pin sc-pin-${product.id}`} aria-label={`${product.name} 기준으로 추천받기`} aria-pressed={selectedId === product.id} onClick={() => choose(product, 'owned')}><span>{index + 1}</span></button>)}
               {category === 'living' && <><img className="sc-room-cushion" src="/products/cushion.svg" alt="" aria-hidden="true" /><img className="sc-room-lamp" src="/products/lamp.svg" alt="" aria-hidden="true" /></>}
-              <span className="sc-room-footnote">번호를 눌러 조합해보세요</span>
+              <span className="sc-room-footnote">{placedProduct ? '공간 미리보기' : category === 'fashion' ? outfitPreview ? '캐릭터 착장 미리보기' : '옷을 눌러 입어보세요' : '번호를 눌러 조합해보세요'}</span>
             </div>
+            {placedProduct && <div className="sc-placement-caption" aria-live="polite"><span><b>미리보기</b> {placedProduct.name}</span><button onClick={clearPreview}>↶ 되돌리기</button><small>색감과 분위기를 보는 예시예요.</small></div>}
             <div className="sc-inventory-head"><div className="sc-tabs" role="group" aria-label="추천 기준 상품 목록"><button aria-pressed={tab === 'owned'} onClick={() => changeTab('owned')}>구매한 상품 <span>{purchases.length}</span></button><button aria-pressed={tab === 'cart'} onClick={() => changeTab('cart')}>장바구니 <span>{cart.length}</span></button></div><button className="sc-text-button" onClick={() => setPanel(tab)}>전체 보기 ↗</button></div>
             <div className="sc-inventory-rail">
               {rail.map((product, index) => <button key={product.id} className="sc-owned-item" aria-pressed={selectedId === product.id} onClick={() => choose(product, tab)}><span className="sc-owned-photo"><ProductVisual item={product} />{tab === 'owned' && <span className="sc-item-index">{index + 1}</span>}{selectedId === product.id && <span className="sc-selected-check"><Icon name="check" size={12} /></span>}</span><span>{product.name}</span></button>)}
@@ -219,6 +271,11 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
             </div>
             <div className="sc-anchor-caption" aria-live="polite"><span className="sc-small-star" aria-hidden="true">＋</span>{anchor ? <p><b>{anchor.name}</b>{withParticle(anchor.name)} {category === 'fashion' ? '함께 입기' : '함께 놓기'}</p> : <p>내 물건과 상관없이 <b>새로운 취향 찾기</b></p>}<span className="sc-anchor-arrow" aria-hidden="true">↓</span></div>
           </section>
+          {category === 'fashion' && lookProducts.length > 0 && <section className="sc-look-board" aria-label="코디 보드 미리보기"><div className="sc-look-head"><h2>나의 코디 보드 <small>미리보기</small></h2><button onClick={clearPreview}>↶ 코디 비우기</button></div><div className="sc-look-slots">{lookKinds.map(kind => {
+            const added = lookProducts.find(product => product.kind === kind);
+            const item = added || (anchorKind === kind ? anchor : null);
+            return <div className={`sc-look-slot ${added ? 'sc-look-added' : ''}`} key={kind}><span>{kind}</span>{item ? <div key={item.id}><ProductVisual item={item} /><p>{item.name}</p><small>{added ? '미리보기' : 'purchasedAt' in item ? '내 옷' : '기준 상품'}</small></div> : <div className="sc-look-empty">＋<small>골라보세요</small></div>}</div>;
+          })}</div><p className="sc-look-note">같은 종류를 고르면 교체돼요. 마음에 들면 상품 카드에서 장바구니에 담아보세요.</p></section>}
         </div>
 
         <section className="sc-results" aria-labelledby="sc-results-title">
@@ -226,7 +283,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
           <div className="sc-results-heading"><h2 id="sc-results-title"><span className="sc-pixel-spark" aria-hidden="true">✦</span>{anchor ? config.anchorTitle : '새로운 취향 발견'} <span className="sc-result-count" aria-live="polite">{recommendations.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={filters.sort} onChange={event => { const sort = event.target.value as SceneFilters['sort']; setFilters(previous => ({ ...previous, sort })); setDraft(previous => ({ ...previous, sort })); }}><option value="recommended">추천순</option><option value="price-low">낮은 가격순</option></select></label></div>
           {recommendations.length === 0 ? <div className="sc-empty"><span>◌</span><h3>이 조건에는 아직 상품이 없어요</h3><p>예산을 조금 넓히거나, 상품 종류를 바꿔보세요.</p><button className="sc-outline" onClick={resetFilters}>조건 초기화</button></div> : <div className="sc-product-grid">{recommendations.map(({ product, reason, matches }, index) => <article className="sc-card" key={product.id}>
             <div className="sc-card-image"><button className="sc-card-open" aria-label={`${product.name} 상세 보기`} onClick={() => { setDetailId(product.id); setPanel('product'); }}><ProductVisual item={product} /></button><button className="sc-heart" aria-label={`${product.name} 찜`} aria-pressed={savedIds.includes(product.id)} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button>{index === 0 && filters.sort === 'recommended' && <span className="sc-top-pick">먼저 만나볼 아이템</span>}</div>
-            <div className="sc-card-copy"><span className="sc-product-kind">{product.kind}</span><button className="sc-card-name" onClick={() => { setDetailId(product.id); setPanel('product'); }}>{product.name}</button><strong className="sc-price">{money(product.price)}<small>원</small></strong><p className="sc-reason"><span>↳</span>{reason}</p>{matches.length > 0 && <div className="sc-match-tags">{matches.slice(0, 2).map(match => <span key={match}>{match}</span>)}</div>}<button className={`sc-cart-button ${cartIds.includes(product.id) ? 'is-added' : ''}`} onClick={() => addCart(product.id)}>{cartIds.includes(product.id) ? <><Icon name="check" size={15} />담은 상품 보기</> : <><Icon name="bag" size={15} />장바구니에 담기</>}</button></div>
+            <div className="sc-card-copy"><span className="sc-product-kind">{product.kind}</span><button className="sc-card-name" onClick={() => { setDetailId(product.id); setPanel('product'); }}>{product.name}</button><strong className="sc-price">{money(product.price)}<small>원</small></strong>{canPreview(product) && <button className={`sc-preview-button ${isPreviewed(product) ? 'is-previewed' : ''}`} aria-label={`${product.name} ${category === 'fashion' ? '코디에 더하기' : '내 공간에 놓아보기'}`} aria-controls="sc-room-preview" onClick={() => previewProduct(product)}><span aria-hidden="true">{isPreviewed(product) ? '✓' : '＋'}</span>{category === 'fashion' ? isPreviewed(product) ? '코디 보드 보기' : '코디에 더하기' : isPreviewed(product) ? '놓아둔 공간 보기' : '내 공간에 놓아보기'}</button>}<p className="sc-reason"><span>↳</span>{reason}</p>{matches.length > 0 && <div className="sc-match-tags">{matches.slice(0, 2).map(match => <span key={match}>{match}</span>)}</div>}<button className={`sc-cart-button ${cartIds.includes(product.id) ? 'is-added' : ''}`} onClick={() => addCart(product.id)}>{cartIds.includes(product.id) ? <><Icon name="check" size={15} />담은 상품 보기</> : <><Icon name="bag" size={15} />장바구니에 담기</>}</button></div>
           </article>)}</div>}
           <p className="sc-demo-note">가상 고객 · 예시 상품과 가격으로 구성된 데모예요.<br />상황과 취향은 추천 순서에, 예산과 상품 종류는 표시할 상품에 반영돼요.</p>
         </section>
@@ -246,7 +303,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
             <button className="sc-primary" onClick={applyFilters} disabled={!!budgetError}><span>{draftCount ? `${draftCount}개 상품 추천받기` : '이 조건으로 확인하기'}</span><Icon name="arrow" size={18} /></button>
             {dirty && <p className="sc-pending" role="status">선택한 조건을 적용하면 추천이 바뀌어요.</p>}
           </section>
-      ) : panel === 'product' && detail ? <><div className="sc-detail-image"><ProductVisual item={detail} /></div><div className="sc-detail-copy"><span className="sc-kicker">{detail.kind} / SCENE SAMPLE</span><h3>{detail.name}</h3><strong className="sc-detail-price">{money(detail.price)}원</strong><p>{detail.description}</p><div className="sc-detail-reason"><span>이 상품을 발견한 이유</span><p>{detailMatch?.reason || detail.description}</p></div><p className="sc-demo-note">실제 판매 상품이 아닌 예시예요. 결제는 진행되지 않아요.</p><button className="sc-primary" onClick={() => addCart(detail.id)}>{cartIds.includes(detail.id) ? '장바구니에서 보기' : '장바구니에 담기'}<Icon name="bag" size={18} /></button></div></> : <>
+      ) : panel === 'product' && detail ? <><div className="sc-detail-image"><ProductVisual item={detail} /></div><div className="sc-detail-copy"><span className="sc-kicker">{detail.kind} / SCENE SAMPLE</span><h3>{detail.name}</h3><strong className="sc-detail-price">{money(detail.price)}원</strong><p>{detail.description}</p><div className="sc-detail-reason"><span>이 상품을 발견한 이유</span><p>{detailMatch?.reason || detail.description}</p></div><p className="sc-demo-note">실제 판매 상품이 아닌 예시예요. 결제는 진행되지 않아요.</p>{canPreview(detail) && <button className="sc-preview-button" onClick={() => previewProduct(detail)}>＋ {category === 'fashion' ? '코디에 더하기' : '내 공간에 놓아보기'}</button>}<button className="sc-primary" onClick={() => addCart(detail.id)}>{cartIds.includes(detail.id) ? '장바구니에서 보기' : '장바구니에 담기'}<Icon name="bag" size={18} /></button></div></> : <>
         <p className="sc-dialog-description">{panel === 'owned' ? '구매한 물건을 골라 새로운 조합을 찾아보세요.' : panel === 'cart' ? '아직 구매하지 않은 물건이에요. 함께 어울릴 상품도 찾아보세요.' : '마음에 든 상품을 모아뒀어요.'}</p>
         {(panel === 'owned' ? purchases : panel === 'cart' ? cart : saved).length === 0 && <div className="sc-empty"><Icon name={panel === 'saved' ? 'heart' : 'bag'} size={32} /><h3>{panel === 'saved' ? '마음에 드는 상품을 찜해보세요' : '아직 담아둔 상품이 없어요'}</h3><button className="sc-outline" onClick={() => setPanel(null)}>상품 둘러보기</button></div>}
         <div className="sc-dialog-list">{(panel === 'owned' ? purchases : panel === 'cart' ? cart : saved).map(product => <div className="sc-dialog-item" key={product.id}><div className="sc-dialog-thumb"><ProductVisual item={product} /></div><div><h3>{product.name}</h3><p>{'purchasedAt' in product ? `${product.purchasedAt} 구매` : `예시 가격 ${money(product.price)}원`}</p><button className="sc-text-button" onClick={() => { if (panel === 'saved') { setDetailId(product.id); setPanel('product'); } else { choose(product, panel === 'owned' ? 'owned' : 'cart'); setPanel(null); } }}>{panel === 'saved' ? '상품 자세히 보기 ↗' : '이 상품과 조합하기 ↗'}</button></div>{panel !== 'owned' && <button className="sc-icon-button" aria-label={`${product.name} ${panel === 'cart' ? '장바구니에서 삭제' : '찜 해제'}`} onClick={() => removeDialogItem(product.id)}><Icon name="close" size={16} /></button>}</div>)}</div>

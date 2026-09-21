@@ -53,3 +53,20 @@ Verification:
 - Invalid 100 KRW shows an error and disables Apply, even with the extra options folded.
 - Room marker selection synchronizes the owned slot, caption, selection corners and recommendation reason. New discovery clears the owned selection.
 - Product detail → cart → add/remove and keyboard focus checked in the actual browser. Main saved character is carried into both category rooms.
+
+## Reversible interaction revision · 2026-09-21
+
+Implemented and exercised in the local production build:
+- Purchase pin/slot → wardrobe walk → change-clothes pose → return wearing the temporary knit/shirt. Deliberate repeats replay; rapid knit/shirt input ends with the latest shirt selection. Initial load and reset use the main room's saved appearance.
+- Recommended fashion item → optional outfit board. Adding denim after charcoal trousers replaces the bottoms slot. Clearing the board removes it. Preview actions do not add cart items.
+- Living light on/off and sofa sit/stand reuse the existing character artwork. The seated pose fits the sofa. Product placement supports blue cushion, cream check rug and two table lamps; other product cards retain normal detail/cart actions.
+- Placement returns focus/scroll to the room, labels the result as a preview and exposes undo. Rug layers restore the original table/sofa foreground. Changing rug → lamp → cushion replaces the old preview. Cart remains at its original count.
+
+Review → fix → rerun:
+1. A seated avatar hid the new blue cushion. Moved the cushion beside the owned cushion and make placement requests stand the avatar up. Rebuilt and reran sit → cushion preview: the cushion is visible and avatar returns to idle. Undo removes the placement.
+2. Hovering a selected room control made its dark text hard to read. Kept a light selected-hover background. Removed the purchase pin tooltip that overlapped the next pin in the narrow scene.
+3. The outfit reset removes its own focused button. Return keyboard focus to the room after reset. Rebuilt and executed reset with Enter; activeElement is sc-room-preview.
+
+Verification: production build/TypeScript PASS; full test suite PASS including eight new deterministic animation tests (rapid switch, mid-change reset, sit/stand reversal, repeated selection, reduced motion and stale callback cancellation). Release smoke PASS. Browser inspected at 390 × 844 and 1280 × 720; mobile first-row product images/prices remain visible in the initial state. Preview details grow the page only after the user opens them. No browser error/warning logs in final QA.
+
+Preview state is intentionally temporary. Main-room clothing and purchase data are unchanged. Catalog and pixel representations remain explicit demo data; placements illustrate color/mood rather than actual dimensions.

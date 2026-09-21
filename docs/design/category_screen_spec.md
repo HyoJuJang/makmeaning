@@ -19,3 +19,12 @@ Reuse the main room's cream, warm wood, muted forest green and neutral typograph
 /api/demo/home remains source of purchased items. /api/demo/scenes provides explicit fictional samples and one starter cart item per category. The room image is a decorative scene; only numbered/selected products and the purchase rail imply ownership. Product photos are generated sample illustrations, not verified GS SHOP listings.
 Rule-based prototype matching, no AI/model claims. Price and product kind are hard constraints. Selected situation/tastes and anchor compatibility determine ranking and honest matching explanations. Unknown filter combinations show an empty state, never ignore budget silently.
 Cart and favorites persist locally; cart is not a purchase. Main demo reset also clears category cart/favorites.
+
+
+## Reversible room interactions
+
+Fashion: deliberately selecting a purchased knit/shirt walks the existing avatar to the garment, plays the existing change-clothes pose, and returns wearing a temporary preview. A reset restores the main room's saved outfit. Initial page load preserves that outfit. Recommended products go into an optional outfit board, one item per kind; the board appears only after a preview action.
+
+Living: local light and sofa controls warm the room or move the avatar into the existing sofa pose. Supported recommended decor items can be previewed one at a time using hand-authored pixel illustrations in the room. Preview labels and undo distinguish them from purchased items. These are color/mood illustrations, not measurements or virtual fit guarantees. Unsupported product types keep their normal product detail/cart flow until an appropriate placement illustration is supplied.
+
+All preview state is page-local. It never writes purchases, the main appearance, or the cart. Product previews return focus and scroll to the room; cart actions remain explicit. Latest interactions cancel previous animation callbacks. Reduced motion skips character travel and suppresses placement/slot animation.

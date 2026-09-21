@@ -1,11 +1,35 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { avatarSVG, type AvatarId, type AvatarOutfit } from '../../../app/avatar.js';
+import { createAvatarMotionRunner, restingAvatar, type AvatarPositions } from '../../lib/scene/avatar-motion';
 
 const STORAGE_KEY = 'gscene-main-v1';
 
 type Appearance = { avatarId: AvatarId; outfitId: AvatarOutfit };
+export type RoomAvatarProps = {
+  fallbackAvatarId?: string;
+  category?: 'fashion' | 'living';
+  outfitPreview?: 'knit' | 'shirt' | null;
+  seated?: boolean;
+  interactionKey?: number;
+};
+
+function positionsFor(category: 'fashion' | 'living', element?: HTMLElement | null): AvatarPositions {
+  const css = element ? getComputedStyle(element) : null;
+  const value = (name: string, fallback: number) => {
+    const raw = css?.getPropertyValue(`--sc-avatar-${name}`).trim();
+    if (!raw || !/^-?\d+(?:\.\d+)?%?$/.test(raw)) return fallback;
+    const parsed = Number.parseFloat(raw);
+    return Number.isFinite(parsed) && parsed >= 0 && parsed <= 100 ? parsed : fallback;
+  };
+  return {
+    home: { x: value('home-x', category === 'fashion' ? 87 : 73), bottom: value('home-bottom', category === 'fashion' ? 3 : 1) },
+    knit: { x: value('knit-x', 28), bottom: value('wardrobe-bottom', 3) },
+    shirt: { x: value('shirt-x', 46), bottom: value('wardrobe-bottom', 3) },
+    sofa: { x: value('sofa-x', 53), bottom: value('sofa-bottom', 32) },
+  };
+}
 
 function canonicalAvatar(value: unknown): AvatarId | null {
   switch (value) {
@@ -31,13 +55,21 @@ function readAppearance(fallback: AvatarId): Appearance {
   return appearance;
 }
 
-export default function RoomAvatar({ fallbackAvatarId }: { fallbackAvatarId?: string }) {
+export default function RoomAvatar({ fallbackAvatarId, category = 'fashion', outfitPreview = null, seated = false, interactionKey = 0 }: RoomAvatarProps) {
   const fallback = canonicalAvatar(fallbackAvatarId) ?? 'm01';
   // The initial render is identical on server and client; storage is read after hydration.
   const [appearance, setAppearance] = useState<Appearance>({ avatarId: fallback, outfitId: 'base' });
+  const [ready, setReady] = useState(false);
+  const [reduced, setReduced] = useState(true);
+  const [visual, setVisual] = useState(() => restingAvatar(positionsFor(category).home, 'base'));
+  const visualRef = useRef(visual);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
+  const initialCommand = useRef({ category, outfitPreview, seated, interactionKey });
+  const hasPreviewInteraction = useRef(interactionKey !== 0);
 
   useEffect(() => {
-    const restore = () => setAppearance(readAppearance(fallback));
+    const restore = () => { setAppearance(readAppearance(fallback)); setReady(true); };
     const onStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY || event.key === null) restore();
     };
@@ -50,13 +82,48 @@ export default function RoomAvatar({ fallbackAvatarId }: { fallbackAvatarId?: st
     };
   }, [fallback]);
 
+  useEffect(() => {
+    const media = matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => setReduced(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+    const positions = positionsFor(category, elementRef.current);
+    if (!initialized.current) {
+      visualRef.current = restingAvatar(positions.home, appearance.outfitId);
+      initialized.current = true;
+    }
+    if (initialCommand.current.outfitPreview !== outfitPreview || initialCommand.current.interactionKey !== interactionKey) {
+      hasPreviewInteraction.current = true;
+    }
+    const preview = hasPreviewInteraction.current && (outfitPreview === 'knit' || outfitPreview === 'shirt') ? outfitPreview : null;
+    const runner = createAvatarMotionRunner({
+      now: () => performance.now(),
+      request: callback => requestAnimationFrame(callback),
+      cancel: id => cancelAnimationFrame(id),
+    }, next => { visualRef.current = next; setVisual(next); });
+    runner.run(visualRef.current, { category, outfit: appearance.outfitId, preview, seated, reduced, positions });
+    return () => runner.cancel();
+  }, [ready, category, outfitPreview, seated, interactionKey, appearance.outfitId, reduced]);
+
   const markup = useMemo(
     // Only allowlisted IDs reach the repository's trusted SVG renderer.
-    () => avatarSVG(appearance.avatarId, appearance.outfitId, 'down', 0, { pose: 'idle', reduced: true }),
-    [appearance.avatarId, appearance.outfitId],
+    () => avatarSVG(appearance.avatarId, visual.outfit, visual.direction, visual.frame, {
+      pose: visual.pose, progress: visual.progress, seatProgress: visual.seatProgress, objectId: 'sofa', reduced,
+    }),
+    [appearance.avatarId, visual.outfit, visual.direction, visual.frame, visual.pose, visual.progress, visual.seatProgress, reduced],
   );
 
-  return <div className="sc-room-avatar" role="img" aria-label="내 공간의 캐릭터" data-avatar={appearance.avatarId} data-outfit={appearance.outfitId}>
+  const style = {
+    '--sc-avatar-x': `${visual.x}%`, '--sc-avatar-bottom': `${visual.bottom}%`,
+    left: 'var(--sc-avatar-x)', bottom: 'var(--sc-avatar-bottom)', right: 'auto', transform: 'translateX(-50%)',
+  } as CSSProperties;
+
+  return <div ref={elementRef} className="sc-room-avatar" style={style} role="img" aria-label="내 공간의 캐릭터" data-avatar={appearance.avatarId} data-outfit={visual.outfit} data-motion={visual.motion}>
     <svg viewBox="0 0 40 64" aria-hidden="true" focusable="false" dangerouslySetInnerHTML={{ __html: markup }} />
   </div>;
 }

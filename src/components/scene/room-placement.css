@@ -1,0 +1,98 @@
+/* The parent room and its artwork must both use the original 3:1 frame. */
+.sc-placement {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: block;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+}
+
+.sc-placement__art,
+.sc-placement__restore {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  margin: 0;
+  pointer-events: none;
+  image-rendering: pixelated;
+}
+
+.sc-placement__art {
+  z-index: 0;
+  overflow: visible;
+}
+
+.sc-placement__item {
+  transform-origin: 50% 100%;
+  animation: sc-placement-arrive 420ms steps(4, end) both;
+}
+
+.sc-placement__rug {
+  animation: sc-placement-unfold 360ms steps(4, end) both;
+}
+
+.sc-placement__restore {
+  z-index: 1;
+  object-fit: fill;
+  /* Keep the full original image in place; clipping reveals foreground only. */
+  aspect-ratio: 3;
+}
+
+.sc-placement__restore--sofa {
+  clip-path: polygon(24.6% 53%, 62.5% 53%, 62.5% 60%, 61.7% 60%, 61.7% 63%, 59.5% 63%, 59.5% 65%, 57.6% 65%, 57.6% 73.5%, 56.2% 73.5%, 56.2% 66.8%, 54% 66.8%, 54% 65%, 51% 65%, 51% 63.8%, 46.5% 63.8%, 46.5% 62%, 39% 62%, 39% 60.5%, 34% 60.5%, 34% 59.5%, 28% 59.5%, 28% 66%, 26.9% 66%, 26.9% 59.5%, 24.6% 59.5%);
+}
+
+.sc-placement__restore--table {
+  clip-path: polygon(28% 51%, 44% 51%, 44% 60%, 45.5% 60%, 45.5% 61.5%, 47% 61.5%, 47% 63%, 48.2% 63%, 48.2% 65%, 49.2% 65%, 49.2% 68%, 49.8% 68%, 49.8% 72%, 49% 72%, 49% 74%, 47.6% 74%, 47.6% 82.8%, 46.8% 82.8%, 46.8% 76.6%, 45.1% 76.6%, 45.1% 91.4%, 44.4% 91.4%, 44.4% 78%, 32% 78%, 32% 82%, 31.5% 82%, 31.5% 77.2%, 30.6% 77.2%, 30.6% 85.6%, 29.9% 85.6%, 29.9% 74.6%, 29% 74.6%, 29% 72.5%, 28.2% 72.5%, 28.2% 69%, 27.8% 69%, 27.8% 63%, 28% 63%);
+}
+
+.sc-placement__restore--pouf {
+  clip-path: polygon(61.6% 68.4%, 66.8% 68.4%, 66.8% 70.4%, 68.3% 70.4%, 68.3% 73%, 69.5% 73%, 69.5% 76%, 70.1% 76%, 70.1% 81%, 70.4% 81%, 70.4% 86%, 69.6% 86%, 69.6% 89.3%, 68.2% 89.3%, 68.2% 91.2%, 65.5% 91.2%, 65.5% 92%, 62.4% 92%, 62.4% 91%, 60.9% 91%, 60.9% 89%, 59.6% 89%, 59.6% 86%, 59.4% 86%, 59.4% 77%, 60.1% 77%, 60.1% 73%, 61.6% 73%);
+}
+
+.sc-placement__glow {
+  opacity: 0;
+  transition: opacity 180ms steps(3, end);
+}
+
+.sc-placement--lit .sc-placement__glow {
+  opacity: 1;
+}
+
+.sc-placement--lit .sc-placement__shade {
+  fill: #f5dfb1;
+}
+
+.sc-placement--lit .sc-placement__glass {
+  fill: #fff0cd;
+}
+
+@keyframes sc-placement-arrive {
+  0% { opacity: 0; transform: translateY(-4%); }
+  40% { opacity: 1; transform: translateY(-1.6%); }
+  65% { transform: translateY(.7%); }
+  82% { transform: translateY(-.4%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes sc-placement-unfold {
+  0% { opacity: 0; transform: translateY(-1%); }
+  60% { opacity: 1; transform: translateY(.35%); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sc-placement__item,
+  .sc-placement__rug {
+    animation: none;
+  }
+
+  .sc-placement__glow {
+    transition: none;
+  }
+}
