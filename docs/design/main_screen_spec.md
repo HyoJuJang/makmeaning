@@ -146,3 +146,8 @@ Scene 값은 별도 state(`sceneSituation`, `sceneBudget`, `sceneStep`)로 관�
 기존 dialog의 제목 연결, focus trap, Escape, backdrop, focus 복귀를 재사용한다. 상황/예산은 native radio + fieldset/legend 권장(기존 방식과 맞추려면 button + aria-pressed도 가능). 선택 변경 preview는 aria-live=polite, disabled CTA는 실제 disabled 속성. 확인 단계 전환 시 새 heading에 focus를 두고, 다시 고르기는 선택 그룹으로 focus를 옮긴다. sheet 밖의 WASD/방향키 이동 handler는 멈추며 radio 키보드 탐색을 방해하지 않는다. 320px 폭에서도 선택지가 줄바꿈되고 sheet 내용만 scroll되며 닫기와 CTA에 도달 가능해야 한다.
 
 QA는 (1) 메인 입구→무선택/상황만/예산만에서 CTA 비활성, (2) 상황·예산 조합 변경에 preview/확인 값 정확히 반영, (3) 다시 선택·닫기·재진입 및 원래 캐릭터 위치 유지, (4) keyboard와 작은 mobile sheet의 focus/scroll, (5) 기존 캐릭터 선택·이동·네 object 구매 interaction regression을 실제 화면에서 확인한다. 영향도가 가장 큰 문제 최대 3개만 기록하고 Builder 수정→다시 실행까지 완료한다.
+
+
+## 4종 승인 캐릭터 및 공간 디테일 — 2026-09-21
+
+사용자 승인 4종 PNG를 runtime sprite로 적용한다. 2×2 외형 선택, 기존 착장 보존, 중앙 소파 좌석, 아래쪽 화장대 접근, 중앙 창틀 내부 세로 개폐, 네 category만의 공간 라벨을 사용한다. 상세 좌표·상태·검증은 main_interactions.md §11을 기준으로 한다.

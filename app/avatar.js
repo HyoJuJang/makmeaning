@@ -46,7 +46,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
  }else if(pose==='browse'||pose==='reach'){
   const amount=pose==='browse'?1:Math.sin(p*Math.PI);
   // Use the supplied raised-arm art, preserving its actual rear-three-quarter silhouette.
-  body=amount>.4?source(7,{transform:!reduced&&pose==='browse'?`rotate(${fmt(Math.sin(p*Math.PI*6)*1.2)} 20 60)`:''}):standing();
+  body=amount>.4?source(7,{transform:`${facing==='left'?'translate(40 0) scale(-1 1) ':''}${!reduced&&pose==='browse'?`rotate(${fmt(Math.sin(p*Math.PI*6)*1.2)} 20 60)`:''}`}):standing();
  }else if(pose==='change-clothes'){
   const turn=p>.2&&p<.7?1:index;
   body=source(turn,{transform:reduced?'':`translate(20 40) scale(${fmt(1-Math.sin(p*Math.PI)*.12)} 1) translate(-20 -40)`});

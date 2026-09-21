@@ -266,3 +266,44 @@ Main이 production 재빌드 후 같은 320×568 viewport에서 직접 조작하
 - Pantry 직접 진입 시 Food 상품 3개가 보이며, 앞서 소진한 물 0개가 유지되고 사용 버튼은 비활성이다.
 
 이번 review에서 선정한 스탠드 터치 크기 문제는 실제 production 재실행으로 해결을 확인했다. controller 최신 목적지 문제는 앞서 명시한 자동 회귀 PASS 범위다. 별도 작업에서 진행 중인 avatar 4종·세로 창문·좌석·label 변경은 이 확인으로 검증 완료 처리하지 않는다. 해당 변경본의 최종 build/모바일/interaction 통합 검증과 Git/Vercel release 확인은 계속 대기 상태다.
+
+
+## 4종 아바타 교체 — QA review
+
+2026-09-21 · Reviewer: pose_builder
+
+## 검증 방식
+
+Main이 `http://127.0.0.1:4173/` 실제 앱을 390×844, 320×568 viewport에서 직접 조작했다. 이 QA sub-agent는 Main이 저장한 실제 screenshot과 전달한 DOM/state 관찰을 검토했다. sub-agent의 CUA browser provider는 사용 불가였으므로, reviewer가 직접 브라우저를 조작했다고 주장하지 않는다. 앱 코드·asset·원본 docs review는 수정하지 않았다.
+
+증거는 같은 폴더의 `picker-390.png`, `sofa-f02-390.png`, `vanity-f02-390.png`, `window-open-390.png`, `picker-320.png`, `m01-knit-320.png`, `m02-knit-walk-320.png`다. 비교 기준으로 docs/design/avatar-options의 원본 M01/M02/F01/F02 PNG와 README를 직접 확인했다.
+
+## 확인한 결과
+
+- 4종 선택 카드가 2×2로 보이고 각 카드에 캐릭터 한 명만 표시된다. M01의 검정 헝클머리/네이비, M02의 갈색 가르마/세이지, F01의 검정 단발/오트, F02의 갈색 긴 풀어내린 머리/슬레이트가 원본의 구분을 유지한다. F02는 묶은 머리나 단발로 바뀌지 않았다.
+- 390과 320에서 네 카드, 선택 표시, 닫기, 적용 CTA가 보인다. 320의 document scrollWidth=320이며 가로 넘침은 없다. 320에서는 보조 착장 안내가 콘텐츠 스크롤 아래쪽에 있을 수 있으나 네 선택지와 적용 CTA 사용을 막지 않는다.
+- F02 적용 후 기존 shirt 착장 상태가 유지됐다. 선택 프리뷰는 캐릭터별 원본 기본 옷으로 표시된다. M01은 옷장까지 걸어간 뒤 changing_clothes를 거쳐 knit이 반영됐고, M02로 변경해도 knit을 유지했다. M01/M02의 실제 모바일 캡처에서 머리/바지의 외형 구분이 유지된다.
+- F02 소파 화면에서 굽힌 다리와 앉은 실루엣이 실제 좌석 위에 보인다. Main의 실제 상태는 안전 anchor=(124,389), offset=(-34,+8), sitting_sofa였다. 캐릭터가 소파 뒤나 바닥으로 잘못 붙어 보이지 않는다.
+- F02 화장대 화면에서 캐릭터가 거울을 향해 의자에 앉아 있다. Main의 실제 상태는 anchor=(340,329), offset=(0,-18), direction=up, sitting_vanity였다. 화장품 사용 중 using_cosmetic/held=true가 확인됐다. 캐릭터·물체·접힌 tray가 함께 보인다.
+- 창문 열린 실제 화면을 확인했다. Main은 sash translate(0,-22), open=1에서 명시적 닫기로 open=0을 확인했다. 창문 trigger의 시각 텍스트는 비어 있고, room-targets의 보이는 category text는 Fashion/Food/Living/Beauty 네 개다.
+- M02 floor-tap 후 walking과 방향키 이동이 Main 실제 조작에서 확인됐다. 화면의 새 캐릭터가 기존 movement/controller 동작에 연결돼 있다.
+
+## 가장 영향도가 큰 문제 — 1개, 수정 완료
+
+### [P1] 선택 카드/캐릭터 내부 atlas의 다른 cell까지 중복 표시됨 → PASS
+
+- 최초 Main 관찰: 새 renderer가 중첩 SVG로 sprite frame을 잘라 보여주는데, 기존 광범위한 SVG sizing rule이 내부 SVG까지 덮어써 atlas의 다른 cell이 같이 나타났다.
+- 영향: 한 캐릭터를 고르는 화면에 다른 pose가 중복 보이거나 잘못된 크기로 노출돼 선택 경험을 훼손한다.
+- 수정: 전체 frame 크기 규칙을 직접 자식 SVG에만 적용해 내부 atlas crop 크기·overflow를 보존했다. 이 수정은 Main이 수행했다.
+- 재검증: 수정 후 390/320 선택 화면 모두 카드당 한 캐릭터만 보인다. 소파/화장대/창문/걷기 실제 화면에도 인접 cell·시트 글자·시트 배경이 노출되지 않는다. **해결 PASS.**
+
+제공된 실제 증거에서 이외의 추가 actionable 문제는 발견하지 않았다. 외형의 모든 pose×방향×착장 조합을 실제 UI에서 전수 검증했다는 뜻은 아니다.
+
+## 판정
+
+승인 원본 외형의 네 선택지, 기존 구매 착장 유지/변경, 실제 공간에서의 착석·물체 interaction·이동 연결이 확인됐다. 선정한 atlas 중복 문제를 수정한 뒤 390/320 실제 화면에서 해결을 확인하여 이번 review→fix 검토를 완료한다.
+
+
+### Main 최종 재검증
+
+최종 옷장 뒤적임은 왼쪽 물체 방향으로 sprite를 반전해 실제 손이 물체를 향하도록 확인했다. 독립 브라우저 탭에서도 M02의 소파 접근→중앙 착석 및 offset을 확인했고 console warning/error는 0건이다. root npm test 전체 통과: 156개 경로, 무작위 목적지100, 충돌3,000 step, 입력·controller·구매slot·API 검증. localhost4173의 local server는 기존 API GET을 재사용하고 public/products 이미지도 제공하며 root Next/API 원본은 바꾸지 않는다.
