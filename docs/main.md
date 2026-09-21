@@ -8,7 +8,7 @@
 - 기능 구현 기준 커밋: `a3bd1d7`
 - 구현 화면: 패션 `/fashion`, 리빙 `/living`
 
-이 문서는 기존 미니룸 프로젝트를 바탕으로 이번 브랜치에서 진행한 **패션·리빙 화면 확장 작업**을 정리한다. 기존 메인룸, 캐릭터 이동, 옷 고르기·입어보기 등은 원래 프로젝트의 구현을 재사용했다. 전체 제품 방향은 [최종 기획](docs/ideas/doc03_final_ideation.md), 세부 설계와 검증 기록은 [카테고리 화면 설계](docs/design/category_screen_spec.md), [화면 리뷰](docs/design/category_screen_review.md)를 참고한다.
+이 문서는 기존 미니룸 프로젝트를 바탕으로 이번 브랜치에서 진행한 **패션·리빙 화면 확장 작업**을 정리한다. 기존 메인룸, 캐릭터 이동, 옷 고르기·입어보기 등은 원래 프로젝트의 구현을 재사용했다. 전체 제품 방향은 [최종 기획](ideas/doc03_final_ideation.md), 세부 설계와 검증 기록은 [카테고리 화면 설계](design/category_screen_spec.md), [화면 리뷰](design/category_screen_review.md)를 참고한다.
 
 ## 1. 해결하려는 고객 문제
 
@@ -148,16 +148,16 @@ Scene API는 `category`, `cartIds`, `products`를 반환한다. 지원하지 않
 
 | 파일 | 역할 |
 | --- | --- |
-| [app/fashion/page.tsx](app/fashion/page.tsx), [app/living/page.tsx](app/living/page.tsx) | 카테고리 진입 페이지 |
-| [ScenePage.tsx](src/components/scene/ScenePage.tsx) | 공간·구매 목록·조건·추천·상세·찜·장바구니 공통 UI |
-| [scene.css](src/components/scene/scene.css) | 픽셀 프레임, 반응형 레이아웃, 대화상자 스타일 |
-| [RoomAvatar.tsx](src/components/scene/RoomAvatar.tsx), [avatar-motion.ts](src/lib/scene/avatar-motion.ts) | 기존 캐릭터 연결과 취소 가능한 이동·착장·앉기 상태 |
-| [RoomPlacement.tsx](src/components/scene/RoomPlacement.tsx), [room-placement.css](src/components/scene/room-placement.css) | 리빙 배치 그림 및 가구 겹침 처리 |
-| [recommend.ts](src/lib/scene/recommend.ts) | 추천 조건, 점수, 정렬, 이유 생성 |
-| [scene.ts](src/types/scene.ts), [demo-scenes.ts](src/data/demo-scenes.ts) | Scene 데이터 타입과 예시 카탈로그 |
-| [Scene API](app/api/demo/scenes/route.ts) | 카테고리별 예시 상품 응답 |
-| [app/app.js](app/app.js), [app/index.html](app/index.html), [app/style.css](app/style.css) | 기존 메인과 추천 화면 연결 |
-| [scene-art 안내](public/scene-art/README.md) | 옷장·거실·상품 데모 이미지 구성 |
+| [app/fashion/page.tsx](../app/fashion/page.tsx), [app/living/page.tsx](../app/living/page.tsx) | 카테고리 진입 페이지 |
+| [ScenePage.tsx](../src/components/scene/ScenePage.tsx) | 공간·구매 목록·조건·추천·상세·찜·장바구니 공통 UI |
+| [scene.css](../src/components/scene/scene.css) | 픽셀 프레임, 반응형 레이아웃, 대화상자 스타일 |
+| [RoomAvatar.tsx](../src/components/scene/RoomAvatar.tsx), [avatar-motion.ts](../src/lib/scene/avatar-motion.ts) | 기존 캐릭터 연결과 취소 가능한 이동·착장·앉기 상태 |
+| [RoomPlacement.tsx](../src/components/scene/RoomPlacement.tsx), [room-placement.css](../src/components/scene/room-placement.css) | 리빙 배치 그림 및 가구 겹침 처리 |
+| [recommend.ts](../src/lib/scene/recommend.ts) | 추천 조건, 점수, 정렬, 이유 생성 |
+| [scene.ts](../src/types/scene.ts), [demo-scenes.ts](../src/data/demo-scenes.ts) | Scene 데이터 타입과 예시 카탈로그 |
+| [Scene API](../app/api/demo/scenes/route.ts) | 카테고리별 예시 상품 응답 |
+| [app/app.js](../app/app.js), [app/index.html](../app/index.html), [app/style.css](../app/style.css) | 기존 메인과 추천 화면 연결 |
+| [scene-art 안내](../public/scene-art/README.md) | 옷장·거실·상품 데모 이미지 구성 |
 
 ## 7. 검증 기록
 
@@ -165,14 +165,14 @@ Scene API는 `category`, `cartIds`, `products`를 반환한다. 지원하지 않
 
 - 인터랙션 구현 단계: 전체 테스트, TypeScript 검사, 프로덕션 빌드, 실행 서버 스모크 검사 통과.
 - 조건 없는 기본 추천 변경 단계: 추천 테스트 9개, 프로덕션 빌드·TypeScript 검사, 브라우저 시나리오 확인 통과.
-- 신규 테스트: [Scene API](tests/scenes-api.test.mjs), [추천 규칙](tests/scene-recommend.test.mjs), [캐릭터 상태 전환](tests/avatar-motion.test.mjs). 기존 메인 동작과 구매 API 테스트도 유지.
+- 신규 테스트: [Scene API](../tests/scenes-api.test.mjs), [추천 규칙](../tests/scene-recommend.test.mjs), [캐릭터 상태 전환](../tests/avatar-motion.test.mjs). 기존 메인 동작과 구매 API 테스트도 유지.
 - 모바일 390×844, 작은 화면 320×740, 데스크톱 1280px에서 확인. 초기 상태에서 공간과 첫 추천 행의 이미지·이름·가격이 보이고 가로 넘침이 없도록 조정.
 - 조건 적용·취소·초기화, 복수 취향, 직접 입력 예산, 잘못된 예산, 빈 결과 확인.
 - 찜·장바구니 새로고침 복원, 기준 상품 해제, 상세 화면과 키보드 포커스 확인.
 - 옷 갈아입기·빠른 연속 선택·되돌리기, 코디 교체, 조명·앉기·배치·취소 확인.
 - 최종 기본 상태: 패션 8개 / 리빙 6개. 패션에 출근·3만원 조건 적용 시 19,000원과 29,000원 상품 2개, 초기화 적용 시 8개 복원.
 
-상세한 발견 문제와 수정 후 재확인은 [카테고리 화면 리뷰](docs/design/category_screen_review.md)에 기록했다.
+상세한 발견 문제와 수정 후 재확인은 [카테고리 화면 리뷰](design/category_screen_review.md)에 기록했다.
 
 ## 8. 로컬 실행과 시연
 
