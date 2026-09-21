@@ -1,11 +1,12 @@
 import assert from 'node:assert/strict';
 import {InteractionController,OBJECTS} from '../interactions.js';
 import {APPROACHES,START,isWalkable} from '../movement.js';
+import {EATING_DURATION,REDUCED_EATING_DURATION} from '../food-action.js';
 import {CATEGORY_ROUTES,readyObjectCategory} from '../category-routes.js';
 const checks=[];
 function arrive(c,id){const request=c.dispatch({type:'REQUEST',intent:{type:'object',id},position:START});assert.equal(request[0].type,'navigate');const epoch=c.epoch;const position=APPROACHES[OBJECTS[id].target];c.dispatch({type:'ARRIVED',id,epoch,pathEmpty:true,position});assert.equal(c.phase,'entering');return position;}
 function engaged(c,id){arrive(c,id);c.tick(id==='wardrobe'?830:id==='fridge'?650:id==='window'?400:id==='bed'?420:320);assert.equal(c.phase,'engaged');}
-function invariant(c){const v=c.view();assert(['idle','lying_bed','walking','interacting','sitting_sofa','sitting_vanity','changing_clothes','rummaging_wardrobe','using_cosmetic'].includes(c.primary));assert(!(c.objects.sofa.stable==='occupied'&&c.objects.vanity.stable==='occupied'));if(c.owner==='movement'){assert.deepEqual(v.renderOffset,{x:0,y:0});assert.equal(v.heldProductId,null);}if(c.primary==='changing_clothes'||c.primary==='rummaging_wardrobe'){assert.equal(c.objects.wardrobe.stable,'open');assert.equal(c.objects.wardrobe.transition,null);}if(c.primary==='using_cosmetic')assert.equal(c.objects.vanity.stable,'occupied');}
+function invariant(c){const v=c.view();assert(['eating','idle','lying_bed','walking','interacting','sitting_sofa','sitting_vanity','changing_clothes','rummaging_wardrobe','using_cosmetic'].includes(c.primary));assert(!(c.objects.sofa.stable==='occupied'&&c.objects.vanity.stable==='occupied'));if(c.owner==='movement'){assert.deepEqual(v.renderOffset,{x:0,y:0});assert.equal(v.heldProductId,null);}if(c.primary==='changing_clothes'||c.primary==='rummaging_wardrobe'){assert.equal(c.objects.wardrobe.stable,'open');assert.equal(c.objects.wardrobe.transition,null);}if(c.primary==='using_cosmetic')assert.equal(c.objects.vanity.stable,'occupied');}
 {
  const c=new InteractionController();c.dispatch({type:'REQUEST',intent:{type:'object',id:'wardrobe'},position:START});const epoch=c.epoch;
  for(const e of [{position:START,pathEmpty:true,epoch},{position:APPROACHES.fashion,pathEmpty:false,epoch},{position:APPROACHES.fashion,pathEmpty:true,epoch:epoch-1}]){assert.deepEqual(c.dispatch({type:'ARRIVED',id:'wardrobe',...e}),[]);assert.equal(c.owner,'movement');}
@@ -36,8 +37,19 @@ for(const [id,product,current,threshold,duration,kind]of[['wardrobe','shirt','kn
 {
  const c=new InteractionController();engaged(c,'window');assert.equal(c.objects.window.stable,'open');c.dispatch({type:'CANCEL'});c.tick(200);assert.equal(c.objects.window.stable,'open');arrive(c,'window');c.tick(220);assert(c.value('window')<1);c.dispatch({type:'CANCEL'});c.tick(200);assert.equal(c.value('window'),1);engaged(c,'window');assert.equal(c.objects.window.stable,'closed');c.dispatch({type:'REQUEST',intent:{type:'object',id:'window'},position:APPROACHES.window});const epoch=c.epoch;c.dispatch({type:'REQUEST',intent:{type:'object',id:'window'},position:APPROACHES.window});assert.equal(c.epoch,epoch);c.tick(300);assert.equal(c.objects.window.stable,'open');c.dispatch({type:'WINDOW_TOGGLE'});c.tick(250);assert.equal(c.objects.window.stable,'closed');checks.push('window raw reapproach closes, engaged raw tap toggles once, busy repeat ignored, cancelled close restores stable');
 }
-{
- const c=new InteractionController();engaged(c,'fridge');c.dispatch({type:'SELECT_FOOD',productId:'milk'});assert.equal(c.selectedFood,'milk');assert(!c.tick(500).some(e=>e.type==='commit'));const e={type:'IMMEDIATE',kind:'food',productId:'milk',quantity:3,actionId:1};assert.equal(c.dispatch(e).filter(e=>e.type==='commit').length,1);assert.equal(c.dispatch(e).length,0);assert.equal(c.dispatch({...e,actionId:2,quantity:0}).length,0);checks.push('food inspect no consumption, one activation one commit, zero guard');
+for(const object of ['fridge','pantry'])for(const reduced of [false,true]){
+ const c=new InteractionController({reduced});arrive(c,object);c.tick(1000);const duration=reduced?REDUCED_EATING_DURATION:EATING_DURATION;
+ c.dispatch({type:'SELECT_FOOD',productId:'owned-food'});assert.equal(c.selectedFood,'owned-food');assert(!c.tick(500).some(e=>e.type==='commit'));
+ assert.deepEqual(c.dispatch({type:'EAT',productId:'other',quantity:3}),[]);
+ assert.deepEqual(c.dispatch({type:'EAT',productId:'owned-food',quantity:0}),[]);
+ c.dispatch({type:'EAT',productId:'owned-food',quantity:3});assert.equal(c.view().pose,'eat');invariant(c);
+ assert.deepEqual(c.dispatch({type:'EAT',productId:'owned-food',quantity:3}),[]);
+ assert(!c.tick(duration-1).some(e=>e.type==='commit'),'No consumption before final motion frame');
+ const effects=c.tick(1);assert.equal(effects.filter(e=>e.type==='commit'&&e.productId==='owned-food').length,1);assert.equal(c.phase,'engaged');assert(!c.tick(10000).some(e=>e.type==='commit'));
+ for(const interruption of ['CANCEL','HIDE','BLUR','RESET']){
+  const interrupted=new InteractionController({reduced});arrive(interrupted,object);interrupted.tick(1000);interrupted.dispatch({type:'SELECT_FOOD',productId:'owned-food'});interrupted.dispatch({type:'EAT',productId:'owned-food',quantity:3});interrupted.tick(duration-1);interrupted.dispatch({type:interruption});assert(!interrupted.tick(10000).some(e=>e.type==='commit'));
+ }
+ checks.push(`${object} ${reduced?'reduced':'normal'} eating: selection/empty/duplicate guards, completion-only commit, cancellation/hide/reset no consumption`);
 }
 {
  const c=new InteractionController();engaged(c,'window');c.dispatch({type:'CANCEL'});c.tick(200);engaged(c,'vanity');c.dispatch({type:'ACTION',productId:'cream',current:'serum'});c.tick(170);c.dispatch({type:'HIDE'});assert.equal(c.owner,'none');assert.equal(c.objects.window.stable,'open');assert.equal(c.objects.vanity.stable,'unoccupied');assert.equal(c.view().heldProductId,null);assert(!c.tick(1000).some(e=>e.type==='commit'));c.dispatch({type:'RESET'});assert.equal(c.objects.window.stable,'closed');checks.push('hidden emergency cleanup cancels uncommitted action and preserves stable window; reset closes window');
@@ -60,7 +72,7 @@ for(const [id,category,total] of [['wardrobe','fashion',830],['fridge','food',65
  c.dispatch({type:'ARRIVED',id,epoch:c.epoch,pathEmpty:true,position});
  for(let ms=0;ms<total-1;ms++){c.tick(1);assert.equal(readyObjectCategory(c,id),null);assert.deepEqual(c.dispatch({type:'REQUEST',intent:{type:'object',id},position}),[]);}
  c.tick(1);assert.equal(c.phase,'engaged');assert.equal(readyObjectCategory(c,id),category);
- if(id==='pantry'){assert.equal(c.trayExpanded,true);assert.equal(c.dispatch({type:'IMMEDIATE',kind:'food',productId:'vitamin',quantity:3,actionId:101}).filter(e=>e.type==='commit').length,1);}
+ if(id==='pantry'){assert.equal(c.trayExpanded,true);assert.equal(c.dispatch({type:'IMMEDIATE',kind:'food',productId:'vitamin',quantity:3,actionId:101}).filter(e=>e.type==='commit').length,0,'Legacy immediate consumption disabled');}
  const effects=c.dispatch({type:'REQUEST',intent:{type:'object',id},position});
  assert(!effects.some(e=>e.type==='intent'),'Navigation waits for existing object exit animation');
  assert.equal(c.phase,'exiting');assert.equal(c.categoryNavigation,category);

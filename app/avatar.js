@@ -1,6 +1,7 @@
 // Approved A / Slouch raster artwork. Motion remains owned by InteractionController.
 import {FRAMES} from './avatar-frames.js';
 import {VANITY_FRAMES} from './vanity-frames.js';
+import {EATING_FRAMES} from './eating-frames.js';
 export const AVATARS=[
  {id:'m01',name:'M01 · 네이비',note:'헝클머리 · 남성',pants:'#353b43'},
  {id:'m02',name:'M02 · 세이지',note:'가르마 · 남성',pants:'#303944'},
@@ -28,6 +29,21 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
  };
  const clip=(name,shape,content)=>`<defs><clipPath id="${key}-${name}">${shape}</clipPath></defs><g clip-path="url(#${key}-${name})">${content}</g>`;
  const standing=(i=index)=>source(i);
+ const eating=()=>{
+  // Each state is an intact generated pose. Only a uniform artwork scale is
+  // applied; no body part is stretched, detached, or re-positioned in code.
+  const eatingFacing=facing==='left'?'left':'right';
+  const state=reduced?'sip':p<.08||p>=.94?'idle':p<.34?'hold':p<.73?'sip':'satisfied';
+  if(state==='idle')return source(eatingFacing==='left'?2:3);
+  const i={hold:0,sip:1,satisfied:2}[state];
+  const data=EATING_FRAMES[a.id][i], [bx,by,bw,bh]=data.box;
+  const height=FRAMES[a.id][3].box[3]*scale;
+  const eatingScale=height/bh;
+  const px=20-data.anchorX*eatingScale,py=61-height;
+  const href=`/assets/avatars/${a.id}-eating-states.png`,uid=key+'-eat-'+i;
+  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*eatingScale)}" height="${fmt(height)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href)}</svg>`;
+  return `<g data-eating-state="${state}" data-held-food="${['milk','water','vitamin'].includes(options.heldProductId)?options.heldProductId:'food'}" transform="${eatingFacing==='left'?'translate(40 0) scale(-1 1)':''}">${picture}</g>`;
+ };
  const sofaSeat=()=>source(6);
  const vanitySeat=()=>{
   // Reuse the approved strict-rear seated raster. Separate silhouette clips
@@ -86,9 +102,11 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const amount=pose==='browse'?1:Math.sin(p*Math.PI);
   // Use the supplied raised-arm art, preserving its actual rear-three-quarter silhouette.
   body=amount>.4?source(7,{transform:`${facing==='left'?'translate(40 0) scale(-1 1) ':''}${!reduced&&pose==='browse'?`rotate(${fmt(Math.sin(p*Math.PI*6)*1.2)} 20 60)`:''}`}):standing();
+ }else if(pose==='eat'){
+  body=eating();
  }else if(pose==='change-clothes'){
   const turn=p>.2&&p<.7?1:index;
-  body=source(turn,{transform:reduced?'':`translate(20 40) scale(${fmt(1-Math.sin(p*Math.PI)*.12)} 1) translate(-20 -40)`});
+  body=source(turn);
   if(!reduced)body+=`<path d="M5 37q-5 8 3 12M34 34q6 8 1 12" stroke="#d3c39b" fill="none" stroke-width="1.2" opacity="${fmt(Math.sin(p*Math.PI))}"/>`;
  }else if(frame&&!reduced){
   if(facing==='down')body=source(frame===1?4:frame===3?5:0);

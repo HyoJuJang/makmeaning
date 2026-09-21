@@ -24,7 +24,7 @@ for (const category of ['fashion', 'food', 'living', 'beauty']) {
     assert.match(asset.headers.get('content-type'), /image\//);
   }
 }
-for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js']) {
+for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'eating-frames.js', 'food-action.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js']) {
   assert.equal((await fetch(`${base}/prototype/${file}`)).status, 200, `${file} must load`);
 }
 assert.equal((await fetch(`${base}/assets/gather-room.png`)).status, 200);
@@ -32,6 +32,7 @@ for (const id of ['m01', 'm02', 'f01', 'f02']) {
   const atlas = await fetch(`${base}/assets/avatars/${id}-states.png`);
   assert.equal(atlas.status, 200, `${id} avatar atlas must load`);
   assert.match(atlas.headers.get('content-type'), /image\/png/);
+  assert.equal((await fetch(`${base}/assets/avatars/${id}-eating-states.png`)).status,200,`${id} eating states must load`);
 }
 for (const category of ['fashion', 'living']) {
   assert.match(html, new RegExp(`data-room="${category}"`), 'The room needs an interactive category object');

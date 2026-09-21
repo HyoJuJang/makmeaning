@@ -6,10 +6,10 @@ const points = ps => ps.map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
 const escapeAttribute = value => String(value).replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 const purchasedArt = (purchase, art) => purchase ? `<g data-product="${escapeAttribute(purchase.catalogProductId||purchase.id)}" data-room-slot="${escapeAttribute(purchase.roomSlot)}">${art}</g>` : '';
 
-function garment(x, blue, sway = 0) {
+function garment(x, blue, sway = 0, scale = 1) {
   const cloth = blue ? '#8daac0' : '#eee3c9';
   const edge = blue ? '#5c7486' : '#b9ac92';
-  return `<g transform="translate(${x + sway} 66)"><path d="M-10 0 0-5 10 0" fill="none" stroke="#997853" stroke-width="1.8"/><path d="M0-5v-4q4-4 5 0" fill="none" stroke="#726650" stroke-width="1.2"/><path d="M-9 1-18 7-19 33-11 35-8 17-8 48H9V17l3 18 8-2-2-26-9-6-9 5Z" fill="${cloth}" stroke="${edge}" stroke-width="1.3"/><path d="M-7 41H8M-7 44H8" stroke="${edge}" opacity=".35"/>${blue ? '<path d="M0 7v38M3 13h5v6H3" stroke="#5c788c" fill="none" stroke-width="1"/>' : '<path d="M-6 3q6 8 12 0" fill="none" stroke="#b9ad94" stroke-width="2"/>'}</g>`;
+  return `<g transform="translate(${x + sway} ${53+9*scale}) scale(${scale})"><path d="M-10 0 0-5 10 0" fill="none" stroke="#997853" stroke-width="1.8"/><path d="M0-5v-4q4-4 5 0" fill="none" stroke="#726650" stroke-width="1.2"/><path d="M-9 1-18 7-19 33-11 35-8 17-8 48H9V17l3 18 8-2-2-26-9-6-9 5Z" fill="${cloth}" stroke="${edge}" stroke-width="1.3"/><path d="M-7 41H8M-7 44H8" stroke="${edge}" opacity=".35"/>${blue ? '<path d="M0 7v38M3 13h5v6H3" stroke="#5c788c" fill="none" stroke-width="1"/>' : '<path d="M-6 3q6 8 12 0" fill="none" stroke="#b9ad94" stroke-width="2"/>'}</g>`;
 }
 
 function wardrobe(open, browse, purchases) {
@@ -20,7 +20,8 @@ function wardrobe(open, browse, purchases) {
     <path d="M44 47h96v104H44Z" fill="#6b5b44"/>
     <path d="M48 51h88v73H48Z" fill="#514c3e"/>
     <path d="M47 53h91" stroke="#d3c4a7" stroke-width="2"/>
-    ${purchases.filter(p=>p.category==='fashion'&&['wardrobe-1','wardrobe-2'].includes(p.roomSlot)).map(p=>purchasedArt(p,garment(p.roomSlot==='wardrobe-1'?70:111,p.illustrationKey==='shirt',p.roomSlot==='wardrobe-1'?sway:-sway))).join('')}
+    <defs><clipPath id="wardrobe-owned-interior"><path d="M48 52H136V123H48Z"/></clipPath></defs>
+    <g clip-path="url(#wardrobe-owned-interior)">${purchases.filter(p=>p.category==='fashion').slice(0,4).map((p,i,items)=>purchasedArt(p,garment(48+88/items.length*(i+.5),p.illustrationKey==='shirt',i%2?-sway:sway,Math.min(1,2.2/items.length)))).join('')}</g>
     <path d="M47 124h91v24H47Z" fill="#aa9070" stroke="#665944"/>
     <path d="M49 127h42v18H49Zm46 0h41v18H95Z" fill="#87745a"/>
     <path d="M63 135h14M109 135h14" stroke="#d2c8af" stroke-width="2.6"/>
@@ -96,7 +97,7 @@ function windowArt(open) {
   </g>`;
 }
 
-export function objectArt({wardrobeOpen=0,fridgeOpen=0,windowOpen=0,browseProgress=null,foodQuantity={milk:3,water:3,vitamin:3},selectedFood=null,purchases=[]}={}) {
+export function objectArt({wardrobeOpen=0,fridgeOpen=0,windowOpen=0,browseProgress=null,foodQuantity={milk:3,water:3,vitamin:3},selectedFood=null,purchases=[],wardrobeProducts=purchases}={}) {
   const quantities = Object.fromEntries(['milk','water','vitamin'].map(id=>[id,Math.max(0,Number(foodQuantity[id])||0)]));
-  return wardrobe(clamp(wardrobeOpen),browseProgress,purchases) + fridge(clamp(fridgeOpen),quantities,selectedFood,purchases) + windowArt(clamp(windowOpen));
+  return wardrobe(clamp(wardrobeOpen),browseProgress,wardrobeProducts) + fridge(clamp(fridgeOpen),quantities,selectedFood,purchases) + windowArt(clamp(windowOpen));
 }

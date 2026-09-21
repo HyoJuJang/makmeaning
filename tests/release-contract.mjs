@@ -52,13 +52,13 @@ const addImage = path => assets.set(path.split('#')[0], /image\//);
 if (!options.catalogOnly) {
   const home = await json('/api/demo/home');
   assert.equal(home.user.id, 'demo-user');
-  assert.equal(home.purchases.length, 9);
+  assert.equal(home.purchases.length, 10);
   assert.equal(home.demo.isDemo, true);
   assert.equal(home.demo.ownership, 'fictional');
   assert.equal(home.demo.illustrations, 'not-product-appearance-or-fitting');
-  assert.equal(new Set(home.purchases.map(p => p.id)).size, 9);
-  assert.equal(new Set(home.purchases.map(p => p.purchaseId)).size, 9);
-  assert.equal(new Set(home.purchases.map(p => p.roomSlot)).size, 9);
+  assert.equal(new Set(home.purchases.map(p => p.id)).size, 10);
+  assert.equal(new Set(home.purchases.map(p => p.purchaseId)).size, 10);
+  assert.equal(new Set(home.purchases.map(p => p.roomSlot)).size, 10);
   for (const category of ['fashion', 'food', 'living', 'beauty']) {
     assert.ok(home.purchases.filter(p => p.category === category).length >= 2, `${category}: multiple purchases`);
   }
@@ -75,7 +75,7 @@ if (!options.catalogOnly) {
     assert.equal(purchase.imageUrl, `/products/${purchase.illustrationKey}.svg`);
     addImage(purchase.imageUrl);
   });
-  console.log('PASS: home 9 purchases match shared product ID/name/price/domain; demo/artwork boundaries explicit');
+  console.log('PASS: home 10 purchases match shared product ID/name/price/domain; demo/artwork boundaries explicit');
 
   for (const category of ['food', 'beauty']) {
     const catalog = await json(`/api/demo/${category}`);

@@ -20,8 +20,8 @@ test('home joins one fictional user to real catalog IDs in all four room areas',
   assert.equal(response.headers.get('cache-control'), 'no-store');
   const { user, purchases, demo } = await response.json();
   assert.deepEqual(user, { id: 'demo-user', name: '민서', avatarId: 'short' });
-  assert.equal(purchases.length, 9);
-  for (const key of ['id', 'purchaseId', 'roomSlot', 'illustrationKey']) {
+  assert.equal(purchases.length, 10);
+  for (const key of ['id', 'purchaseId', 'roomSlot']) {
     assert.equal(new Set(purchases.map(item => item[key])).size, purchases.length, key);
   }
   assert.equal(demo.isDemo, true);
@@ -42,9 +42,9 @@ test('home joins one fictional user to real catalog IDs in all four room areas',
     assert.equal(purchase.name, item.view_name);
     assert.equal(purchase.price, item.discprice);
     assert.equal(purchase.category, item.domain);
-    assert.equal(purchase.purchaseId, `demo-purchase-${purchase.illustrationKey}`);
+    assert.equal(purchase.purchaseId, demoPurchaseSeeds.find(seed => seed.id === purchase.id).purchaseId);
     assert.notEqual(purchase.id, purchase.illustrationKey);
-    assert.deepEqual([purchase.category, purchase.roomSlot], expectedSlots[purchase.illustrationKey]);
+    assert.deepEqual([purchase.category, purchase.roomSlot], purchase.id === '1065577366' ? ['fashion', 'wardrobe-3'] : expectedSlots[purchase.illustrationKey]);
     assert.equal(purchase.imageUrl, `/products/${purchase.illustrationKey}.svg`);
     assert.equal(purchase.catalogSource, 'shared-products');
     assert.equal(purchase.imageKind, 'illustration');
@@ -56,6 +56,7 @@ test('home joins one fictional user to real catalog IDs in all four room areas',
     assert.ok(purchases.filter(item => item.category === category).length >= 2);
   }
   assert.equal(purchases.filter(item => item.state.wearing).length, 1);
+  assert.equal(purchases.filter(item => item.category === 'fashion').length, 3);
   assert.equal(purchases.filter(item => item.state.featured).length, 1);
   assert.equal(purchases.find(item => item.illustrationKey === 'lamp').state.on, true);
 });
