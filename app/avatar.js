@@ -22,7 +22,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const px=20-(data.anchorX??bw/2)*scale+x,py=61-bh*scale+y;
   const uid=key+'-'+i+'-'+part;
   const href=`/assets/avatars/${a.id}-states.png`;
-  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*scale)}" height="${fmt(bh*scale)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href)}</svg>`;
+  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*scale)}" height="${fmt(bh*scale)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href)}</svg>`;
   return `<g opacity="${fmt(opacity)}" transform="${transform}" data-sprite-frame="${i}">${picture}</g>`;
  };
  const clip=(name,shape,content)=>`<defs><clipPath id="${key}-${name}">${shape}</clipPath></defs><g clip-path="url(#${key}-${name})">${content}</g>`;
@@ -67,6 +67,6 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const [bx,by,bw,bh]=data.box;
   const color=outfit==='shirt'?[.56,.69,.77]:[.91,.875,.79];
   const bias=color.map(c=>fmt(c-data.luma*.65));
-  return `<defs><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs><g clip-path="url(#${uid}-cloth)"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated" filter="url(#${uid}-tint)"/></svg></g>`;
+  return `<defs><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs><g clip-path="url(#${uid}-cloth)"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated" filter="url(#${uid}-tint)"/></svg></g>`;
  }
 }
