@@ -18,15 +18,25 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      # Includes successful DB-join/identity/state tests with injected read-only repositories.
       - run: npm test
       - run: npm run build
-      - name: Verify production HTTP and assets
+      - run: npm run typecheck
+      # CI has no shared Neon credentials. Check the honest unavailable-DB contract;
+      # successful live DB joins are verified separately by release-contract.mjs on the release URL.
+      - name: Verify production pages, assets, Scene APIs and missing-DB contract
+        env:
+          DATABASE_URL: ''
+          POSTGRES_URL: ''
+          SMOKE_BASE_URL: http://127.0.0.1:3000
         run: |
-          npm start > /tmp/gscene-server.log 2>&1 &
+          node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000 > /tmp/gscene-server.log 2>&1 &
           server_pid=$!
-          trap 'kill "$server_pid"' EXIT
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
           for attempt in $(seq 1 30); do
-            if curl --fail --silent http://127.0.0.1:3000/api/demo/home > /dev/null; then break; fi
+            if curl --fail --silent http://127.0.0.1:3000/ > /dev/null; then ready=1; break; fi
             sleep 1
           done
-          node tests/release-smoke.mjs
+          if [ "$ready" -ne 1 ]; then cat /tmp/gscene-server.log; exit 1; fi
+          node tests/ci-http-contract.mjs
