@@ -28,7 +28,7 @@ for (const file of ['app.js', 'avatar.js', 'interactions.js', 'movement.js', 'ob
 }
 assert.equal((await fetch(`${base}/assets/gather-room.png`)).status, 200);
 for (const category of ['fashion', 'living']) {
-  assert.match(html, new RegExp(`href="/${category}"`), 'The room needs a category entry');
+  assert.match(html, new RegExp(`data-room="${category}"`), 'The room needs an interactive category object');
   assert.equal((await fetch(`${base}/${category}`)).status, 200, `${category} page must load`);
   const sceneResponse = await fetch(`${base}/api/demo/scenes?category=${category}`);
   assert.equal(sceneResponse.status, 200);
