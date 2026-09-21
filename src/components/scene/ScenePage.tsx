@@ -8,6 +8,7 @@ import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
 import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
 import CategoryNav from '../navigation/CategoryNav';
+import RecommendationPanel from '../recommendation/RecommendationPanel';
 import './scene.css';
 
 const CONFIG = {
@@ -325,18 +326,22 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
           })}</div><p className="sc-look-note">같은 종류를 고르면 교체돼요. 마음에 들면 상품 카드에서 장바구니에 담아보세요.</p></section>}
         </div>
 
+        <div>
+        <RecommendationPanel domain={category} userId={home.user.id} anchorProductId={anchor?.id} purchasedProductIds={purchases.map(product => product.id)} cartProductIds={cartIds} />
         <section className="sc-results" aria-labelledby="sc-results-title">
           <button ref={filterButtonRef} className="sc-filter-summary" onClick={openFilters} aria-haspopup="dialog" aria-label={`추천 조건 변경: ${filterSummary}`}><Icon name="sliders" size={17} /><span>{filterSummary}</span><b>{filterParts.length ? '조건 수정' : '조건 추가'}</b><span aria-hidden="true">＋</span></button>
-          <div className="sc-results-heading"><h2 id="sc-results-title"><span className="sc-pixel-spark" aria-hidden="true">✦</span>{anchor ? config.anchorTitle : '새로운 취향 발견'} <span className="sc-result-count" aria-live="polite">{recommendations.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={filters.sort} onChange={event => { const sort = event.target.value as SceneFilters['sort']; setFilters(previous => ({ ...previous, sort })); setDraft(previous => ({ ...previous, sort })); }}><option value="recommended">추천순</option><option value="price-low">낮은 가격순</option></select></label></div>
+          <div className="sc-results-heading"><h2 id="sc-results-title"><span className="sc-pixel-spark" aria-hidden="true">✦</span>{'공간 미리보기 예시 상품'} <span className="sc-result-count" aria-live="polite">{recommendations.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={filters.sort} onChange={event => { const sort = event.target.value as SceneFilters['sort']; setFilters(previous => ({ ...previous, sort })); setDraft(previous => ({ ...previous, sort })); }}><option value="recommended">추천순</option><option value="price-low">낮은 가격순</option></select></label></div>
           <p className="sc-sample-note">가상 예시 상품으로 살펴보는 Scene 추천</p>
           {recommendations.length === 0 ? <div className="sc-empty"><span>◌</span><h3>이 조건에는 아직 상품이 없어요</h3><p>예산을 조금 넓히거나, 상품 종류를 바꿔보세요.</p><button className="sc-outline" onClick={resetFilters}>조건 초기화</button></div> : <div className="sc-product-grid">{recommendations.map(({ product, reason, matches }, index) => <article className="sc-card" key={product.id}>
             <div className="sc-card-image"><button className="sc-card-open" aria-label={`${product.name} 상세 보기`} onClick={() => { setDetailId(product.id); setPanel('product'); }}><ProductVisual item={product} /></button><button className="sc-heart" aria-label={`${product.name} 찜`} aria-pressed={savedIds.includes(product.id)} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button>{index === 0 && filters.sort === 'recommended' && <span className="sc-top-pick">먼저 만나볼 아이템</span>}</div>
             <div className="sc-card-copy"><span className="sc-product-kind">{product.kind}</span><button className="sc-card-name" onClick={() => { setDetailId(product.id); setPanel('product'); }}>{product.name}</button><strong className="sc-price">{money(product.price)}<small>원</small></strong>{canPreview(product) && <button className={`sc-preview-button ${isPreviewed(product) ? 'is-previewed' : ''}`} aria-label={`${product.name} ${category === 'fashion' ? '코디에 더하기' : '내 공간에 놓아보기'}`} aria-controls="sc-room-preview" onClick={() => previewProduct(product)}><span aria-hidden="true">{isPreviewed(product) ? '✓' : '＋'}</span>{category === 'fashion' ? isPreviewed(product) ? '코디 보드 보기' : '코디에 더하기' : isPreviewed(product) ? '놓아둔 공간 보기' : '내 공간에 놓아보기'}</button>}<p className="sc-reason"><span>↳</span>{reason}</p>{matches.length > 0 && <div className="sc-match-tags">{matches.slice(0, 2).map(match => <span key={match}>{match}</span>)}</div>}<button className={`sc-cart-button ${cartIds.includes(product.id) ? 'is-added' : ''}`} onClick={() => addCart(product.id)}>{cartIds.includes(product.id) ? <><Icon name="check" size={15} />담은 상품 보기</> : <><Icon name="bag" size={15} />장바구니에 담기</>}</button></div>
           </article>)}</div>}
-          <p className="sc-demo-note">추천 목록의 상품·가격은 가상 예시이며, 구매 목록의 실상품 카탈로그와 구분돼요.<br />상황과 취향은 추천 순서에, 예산과 상품 종류는 표시할 상품에 반영돼요.</p>
+          <p className="sc-demo-note">이 공간 미리보기 목록의 상품·가격은 가상 예시예요. 위의 실상품 추천과 구분돼요.<br />상황과 취향은 추천 순서에, 예산과 상품 종류는 표시할 상품에 반영돼요.</p>
         </section>
+        </div>
       </div>
     </>}
+    {(!home || !catalog) && error && <RecommendationPanel domain={category} userId={home?.user.id} />}
     <CategoryNav activeCategory={category} />
     {notice && <div className="sc-toast" role="status">{notice}</div>}
     {panel && <Dialog viewKey={`${panel}:${panel === 'product' ? detailId : ''}`} title={panel === 'filters' ? '나만의 Scene 설정' : panel === 'product' ? '내 장면에 더하기' : panel === 'owned' ? `나의 구매 상품 ${purchases.length}` : panel === 'saved' ? `찜한 상품 ${saved.length}` : `장바구니 ${cart.length}`} onClose={() => setPanel(null)}>
