@@ -1,0 +1,8 @@
+.git
+.DS_Store
+docs
+app/tests
+tests
+node_modules
+.next
+.env*

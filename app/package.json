@@ -1,0 +1,11 @@
+{
+  "name": "g-scene-main",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node server.mjs",
+    "start": "node server.mjs",
+    "test": "node tests/movement.test.mjs && node tests/input.test.mjs && node tests/interactions.test.mjs"
+  },
+  "type": "module"
+}

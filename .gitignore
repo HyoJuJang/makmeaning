@@ -1,0 +1,21 @@
+node_modules/
+.next/
+out/
+.vercel/
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store
+
+# Generated from the preserved prototype by prepare-assets.mjs.
+src/generated/
+public/prototype/
+public/assets/
+
+# Local credentials must never be committed.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+.vercel
+.env*
