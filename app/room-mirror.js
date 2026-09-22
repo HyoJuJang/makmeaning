@@ -22,7 +22,7 @@ export function roomMirrorPlacement(entry,entries){
 export function mirrorImage(entry,placement){
  if(!entry.artVisible)return '';
  const {x,y,w,h}=placement;
- const crop=entry.category==='food'?{milk:'17 2 33 53',water:'17 3 29 52',vitamin:'15 8 33 47'}[entry.illustrationKey]:null;
+ const crop=entry.category==='food'&&entry.product.imageKind!=='product-photo'?{milk:'17 2 33 53',water:'17 3 29 52',vitamin:'15 8 33 47'}[entry.illustrationKey]:null;
  const image=`<image href="${escapeAttribute(entry.imageUrl)}" data-product-image="${escapeAttribute(entry.productId)}" x="${crop?0:x}" y="${crop?0:y}" width="${crop?60:w}" height="${crop?60:h}" preserveAspectRatio="xMidYMax meet"/>`;
  return crop?`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${crop}" overflow="hidden">${image}</svg>`:image;
 }

@@ -4,5 +4,5 @@ export function garmentPresentation(value){
  const product=value?.product||value;
  const source=product?.imageUrl||SOURCES[product?.illustrationKey];
  const number=value?.displayIndex??product?.displayOrder;
- return SOURCES[product?.illustrationKey]&&source&&Number.isInteger(number)&&number>0?{source,number}:null;
+ return (SOURCES[product?.illustrationKey]||product?.imageKind==='product-photo')&&source&&Number.isInteger(number)&&number>0?{source,number}:null;
 }
