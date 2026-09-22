@@ -23,9 +23,10 @@ public/assets/
 # Keep only the credential-free setup template.
 !.env.example
 
-# Local recommendation dumps and generated user indexes.
+# Keep raw dumps and user indexes local; share the aggregate catalog snapshot.
 /data/*.csv
-/.recommendation/
+/.recommendation/*
+!/.recommendation/catalog.json
 /.recommendation-*/
 __pycache__/
 *.pyc
