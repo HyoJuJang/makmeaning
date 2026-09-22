@@ -49,29 +49,20 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
  };
  const sofaSeat=()=>source(6);
  const vanitySeat=()=>{
-  // Reuse the approved strict-rear seated raster. Separate silhouette clips
-  // exclude its ivory background and reference stool, revealing the room stool.
+  // Match each rear standing silhouette's width; furniture never determines scale.
   const data=VANITY_FRAMES[a.id],href=`/assets/avatars/${a.id}-vanity-seated-back.png`;
-  // The rear pelvis contacts the front half of the visible seat at world
-  // y=298. Its hem must nearly meet the lip, not float above the seat center.
-  // Shins stay below the front rim rather than moving up with the pelvis.
-  const px=20-data.hipX*data.scale,py=39-data.hipY*data.scale;
-  const legY=40-data.hipY*data.scale;
+  const seatedScale=FRAMES[a.id][1].box[2]*scale/data.headWidth;
+  // World contact y=293: the pelvis rests inside the native cushion, not its lip.
+  const hipY=34,px=20-data.hipX*seatedScale,py=hipY-data.hipY*seatedScale;
+  const [bx,by,bw,bh]=data.bounds,uid=key+'-vanity';
   const image=`<image href="${href}" width="${data.width}" height="${data.height}" image-rendering="pixelated"/>`;
-  const uid=key+'-vanity';
-  const defs=`<defs><clipPath id="${uid}-body"><path d="${data.bodyMask}"/></clipPath><clipPath id="${uid}-legs"><path d="${data.legMask}"/></clipPath></defs>`;
   const garment=outfit==='base'?'':tinted({...data,box:[0,0,data.width,data.height]},uid,href,'up','vanity');
-  const upper=`<g transform="translate(${fmt(px)} ${fmt(py)}) scale(${data.scale})"><g clip-path="url(#${uid}-body)">${image}${garment}</g></g>`;
-  const legs=`<g transform="translate(${fmt(px)} ${fmt(legY+data.legOffsetY)}) scale(${data.scale})" clip-path="url(#${uid}-legs)">${image}</g>`;
-  // The native arms already bend forward. A tiny hip-pivoted motion preserves
-  // their connected silhouette. Draw the small held bottle over the sleeve
-  // edge so the native forward arm cannot completely occlude the action.
+  const upper=clip('vanity-body',`<rect x="${bx}" y="${by}" width="${bw}" height="${bh}"/>`,image+garment);
+  // Bent thighs/feet face the vanity and are hidden on the far side of the stool.
+  // The transparent sprite ends at the pelvis; the real stool stays fully intact.
   const reach=pose==='use-cosmetic'&&!reduced?Math.sin(p*Math.PI):0;
-  const product=pose==='use-cosmetic'&&options.heldProductId&&p>.22&&p<.84?`<g class="avatar-held-product" transform="translate(${fmt(31.5+reach*.5)} ${fmt(28-reach*2)})"><rect x="-1.7" y="-5" width="3.4" height="5.2" rx=".4" fill="${options.heldProductId==='cream'?'#eee5cf':'#c6aa60'}" stroke="#64705a" stroke-width=".4"/><rect x="-1.7" y="-6" width="3.4" height="1.3" fill="#4c6958"/><path d="M-1.8-.8H.8L1.4.1 .5 1H-1.8Z" fill="#e7b493" stroke="#9b7158" stroke-width=".35"/></g>`:'';
-  // Restore only the existing chair's front lip over the upper shins. It
-  // connects the naturally separated rear-pose legs to the room's real stool.
-  const rim=clip('vanity-seat-front','<path d="M2 36Q20 43 38 36L36 45Q20 53 4 45Z"/>','<image href="/assets/gather-room.png" x="-320" y="-259" width="400" height="600"/>');
-  return `${defs}<g transform="translate(0 ${fmt(6*(1-seat))})">${legs}</g><g transform="translate(0 ${fmt(-6*(1-seat))})">${rim}</g><g data-vanity-source="seated-back" transform="translate(0 ${fmt(6*(1-seat))}) rotate(${fmt(-1.2*reach)} 20 39)">${upper}${product}</g>`;
+  const product=pose==='use-cosmetic'&&options.heldProductId&&p>.22&&p<.84?`<g class="avatar-held-product" transform="translate(${fmt(30.5+reach*.5)} ${fmt(24-reach*2)})"><rect x="-1.7" y="-5" width="3.4" height="5.2" rx=".4" fill="${options.heldProductId==='cream'?'#eee5cf':'#c6aa60'}" stroke="#64705a" stroke-width=".4"/><rect x="-1.7" y="-6" width="3.4" height="1.3" fill="#4c6958"/><path d="M-1.8-.8H.8L1.4.1 .5 1H-1.8Z" fill="#e7b493" stroke="#9b7158" stroke-width=".35"/></g>`:'';
+  return `<g data-vanity-source="compact-seated-back" data-vanity-head-width="${fmt(data.headWidth*seatedScale)}" transform="translate(0 ${fmt(6*(1-seat))})"><ellipse cx="20" cy="34" rx="9" ry="1.3" fill="#796b55" opacity=".20"/><g transform="rotate(${fmt(-1.2*reach)} 20 ${hipY})"><g transform="translate(${fmt(px)} ${fmt(py)}) scale(${seatedScale})">${upper}</g>${product}</g></g>`;
  };
  let body='';
  const bed=unit(options.bedProgress),isBed=['lie-down','lying-idle','get-up'].includes(pose);
@@ -190,14 +181,15 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   };
   const filter=(name,values)=>`<filter id="${uid}-${name}" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values="${values}"/></filter>`;
   const picture=name=>`<svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="${kind==='vanity'?data.width:1536}" height="${kind==='vanity'?data.height:1024}" image-rendering="pixelated" filter="url(#${uid}-${name})"/></svg>`;
-  const exposed=part==='torso-strip'?'':forearms(bw,bh,view,kind,frameIndex);
+  const garmentMap=content=>content&&kind==='vanity'&&data.garmentTransform?`<g transform="${data.garmentTransform}">${content}</g>`:content;
+  const exposed=part==='torso-strip'?'':garmentMap(forearms(bw,bh,view,kind,frameIndex));
   const skin=exposed?`<clipPath id="${uid}-forearms">${exposed}</clipPath>${filter('skin',matrix([.97,.76,.61],.25))}`:'';
   // Older walking masks also contain disconnected highlights in hair/trousers.
   // Intersect with the pose's clothing envelope before any color operation.
   const box=(x,y,w,h)=>`<rect x="${x*bw}" y="${y*bh}" width="${w*bw}" height="${h*bh}"/>`;
   const polygon=points=>`<polygon points="${points.map(([x,y])=>`${x*bw},${y*bh}`).join(' ')}"/>`;
-  const envelope=kind==='vanity'?box(.32,.385,.36,.28):kind==='meal'?box(0,.36,1,.40):kind==='eating'?box(.12,.37,.88,.35):frameIndex===6?polygon([[.26,.46],[.62,.46],[.8,.64],[.64,.70],[.43,.70],[.35,.91],[.03,.91],[.08,.74]]):frameIndex===7?box(.05,.39,.81,.34)+polygon([[.5,.44],[.7,.17],[.99,.17],[.92,.47],[.7,.58]]):box(0,.375,1,frameIndex===4||frameIndex===5?.325:.335);
-  const detail=['torso-strip','moving-arm'].includes(part)?'':details(bw,bh,view,kind,frameIndex);
+  const envelope=kind==='vanity'?box(0,0,1,1):kind==='meal'?box(0,.36,1,.40):kind==='eating'?box(.12,.37,.88,.35):frameIndex===6?polygon([[.26,.46],[.62,.46],[.8,.64],[.64,.70],[.43,.70],[.35,.91],[.03,.91],[.08,.74]]):frameIndex===7?box(.05,.39,.81,.34)+polygon([[.5,.44],[.7,.17],[.99,.17],[.92,.47],[.7,.58]]):box(0,.375,1,frameIndex===4||frameIndex===5?.325:.335);
+  const detail=['torso-strip','moving-arm'].includes(part)?'':garmentMap(details(bw,bh,view,kind,frameIndex));
   return `<defs><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><clipPath id="${uid}-envelope">${envelope}</clipPath>${filter('tint',matrix(color))}${skin}</defs><g data-garment-color="${appearance.hex}" clip-path="url(#${uid}-envelope)"><g clip-path="url(#${uid}-cloth)">${picture('tint')}${exposed?`<g data-short-sleeves="true" clip-path="url(#${uid}-forearms)">${picture('skin')}</g>`:''}${detail}</g></g>`;
  }
 }
