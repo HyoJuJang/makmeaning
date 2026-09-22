@@ -43,4 +43,13 @@ The source adaptation in `09d149b` also places mugs/plants in the living table r
 
 ### Remaining limitation
 
-Recommendation runtime indexes are intentionally excluded by the feature and are absent on this machine. `/api/recommendations` returns safe 503 and UI says data is being prepared. Engine behavior is verified with fixtures, but real-data recommendation results are NOT verified or operational until the separate index is supplied. No raw user logs/indexes, secrets, DB writes, remote push or deployment were included.
+At the initial merge, recommendation runtime indexes were absent and the API returned safe 503. This limitation was resolved locally by the follow-up below. No raw user logs/indexes, secrets, DB writes, remote push or deployment were included.
+
+## Follow-up: aggregate catalog update `140580c`
+
+- Incoming changes are only `.gitignore` and `.recommendation/catalog.json`: 6,031 products, aggregate popularity/neighbors and summary; no individual user shards or sample identity file.
+- Integrated without conflicts or home/tab code changes. Existing 3112 server detects the new catalog at runtime without restart.
+- Recommendation tests: 30 Node + 9 Python PASS. Actual HTTP: all four default persona domains return 200 with six results. All 40 persona-owned product anchors return nonempty, same-domain results excluding owned items.
+- On the existing Beauty browser page, clicking “다시 확인” replaces the unavailable message with actual recommendation cards (names, images, prices and reasons).
+- Individual historical-user profiles and sample-user lookup still require private shards/samples. Four built-in fictional personas do not require those files.
+- No deployment performed. Existing Next tracing excludes `.recommendation` from deployment bundles; a future Vercel release must explicitly package only the shareable aggregate catalog, keeping private shards excluded.
