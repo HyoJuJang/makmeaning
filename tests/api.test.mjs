@@ -6,6 +6,9 @@ import { demoHomeResponse, resolveDemoHome, resolveCategoryCollections, projectD
 import { buildDemoCatalog } from '../src/data/demo-catalog.ts';
 import { getCategoryProducts, getHeroProducts, getRoomMirrorProducts } from '../app/category-products.js';
 import { ProductApiError } from '../src/lib/products/contracts.ts';
+import { readyGameAsset } from '../src/lib/game-product-display.ts';
+import { getGameProduct } from '../src/lib/game-assets.ts';
+import { demoCatalogResponse } from '../src/lib/demo-catalog.ts';
 
 const catalog = demoHome.purchases.map(item => ({
   prd_id: item.id, view_name: item.name, discprice: item.price, domain: item.category,
@@ -14,6 +17,31 @@ const catalog = demoHome.purchases.map(item => ({
 }));
 const repository = (rows = catalog) => ({ async find(id) { return rows.find(item => item.prd_id === id) ?? null; } });
 const GET = () => demoHomeResponse(() => repository());
+
+test('game artwork joins exact catalog IDs without replacing products or inventing unknown assets', async () => {
+  const home = await resolveDemoHome(repository());
+  for (const purchase of home.purchases) {
+    const mapped = getGameProduct(purchase.id);
+    const expected = mapped?.assetStatus === 'ready' && mapped.domain === purchase.category ? mapped.asset : null;
+    assert.equal(purchase.gameAsset?.id ?? null, expected?.id ?? null);
+    assert.deepEqual(purchase.gameAsset?.frame, expected?.frame);
+    assert.equal(purchase.imageUrl, `/products/${purchase.illustrationKey}.svg`, 'Original fallback is preserved');
+    assert.equal(purchase.gameAsset?.products, undefined, 'The entire asset index is never sent with a purchase');
+    assert.equal(purchase.gameAsset?.approvedProductIds, undefined, 'Other products sharing the asset stay server-side');
+  }
+  assert.equal(readyGameAsset('shirt', 'fashion'), null, 'Visual aliases are not product IDs');
+  assert.equal(readyGameAsset('1083830467', 'living'), null, 'No cross-domain mapping');
+  assert.equal(readyGameAsset('999999999999999', 'fashion'), null);
+  for (const category of ['food', 'beauty']) {
+    const response = await demoCatalogResponse(category, () => repository());
+    assert.equal(response.status, 200);
+    const result = await response.json();
+    for (const product of result.products) {
+      assert.equal(product.id, product.prd_id);
+      assert.deepEqual(product.gameAsset, product.catalogSource === 'shared-products' ? readyGameAsset(product.prd_id, category) : null);
+    }
+  }
+});
 
 test('home joins one fictional user to real catalog IDs in all four room areas', async () => {
   const response = await GET();

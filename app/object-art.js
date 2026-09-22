@@ -3,6 +3,7 @@ import {escapeAttribute,mirrorAttributes,mirrorImage,roomMirrorPlacement,roomMer
 
 // Code-native object layers share the room's 400 × 600 world coordinates.
 // The original bitmap remains intact; clipped local texture covers its fixed open door.
+import { gameItemArt } from './game-item-art.js';
 const clamp = n => Math.max(0, Math.min(1, Number(n) || 0));
 const mix = (a, b, p) => a + (b - a) * p;
 const points = ps => ps.map(p => p.map(n => n.toFixed(2)).join(',')).join(' ');
@@ -10,8 +11,10 @@ const purchasedArt = (entry, art) => entry ? `<g ${mirrorAttributes(entry)}>${ar
 
 function garment(product, x, sway = 0, scale = 1) {
   const visual = garmentPresentation(product);
-  if (!visual) return '';
-  return `<g transform="translate(${x + sway} ${53+9*scale}) scale(${scale})"><image data-garment-source="${visual.source}" href="${visual.source}" x="-22" y="-12" width="44" height="64"/></g><g data-garment-number="${visual.number}" transform="translate(${x} 111)"><circle r="4.5" fill="#eee9dc" stroke="#9c8e75" stroke-width=".65"/><text y="2.1" text-anchor="middle" fill="#3d5143" font-family="sans-serif" font-size="6.5" font-weight="700">${visual.number}</text></g>`;
+  const mapped = gameItemArt(product.product||product,{x:x+sway-22*scale,y:50,w:44*scale,h:60*scale});
+  if (!mapped && !visual) return '';
+  const number = product.displayIndex;
+  return `${mapped||`<g transform="translate(${x + sway} ${53+9*scale}) scale(${scale})"><image data-garment-source="${visual.source}" href="${visual.source}" x="-22" y="-12" width="44" height="64"/></g>`}<g data-garment-number="${number}" transform="translate(${x} 111)"><circle r="4.5" fill="#eee9dc" stroke="#9c8e75" stroke-width=".65"/><text y="2.1" text-anchor="middle" fill="#3d5143" font-family="sans-serif" font-size="6.5" font-weight="700">${number}</text></g>`;
 }
 
 function wardrobe(open, browse, purchases) {

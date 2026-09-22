@@ -103,3 +103,70 @@ test('readable stale storage after quota failure cannot replenish consumed food;
  const staleScreen=updateDemoState(home,initial,{lampOn:false},s);
  assert.equal(staleScreen.state.foodQuantity[id('milk')],1);assert.equal(staleScreen.state.outfitId,id('shirt'));
 });
+
+test('four buyers keep the same SKU, food quantity, cart and favorites in separate namespaces', async () => {
+ const {personaStorageKey}=await import('../app/persona-browser.js');
+ const s=storage(),personas=['demo-f01','demo-f02','demo-m01','demo-m02'].map(userId=>({...structuredClone(home),user:{...home.user,id:userId}}));
+ const milkId=id('milk');
+ // Old one-user demo values must never migrate into one of the new profiles.
+ saveDemoState(home,{...initialDemoState(home),foodQuantity:{[milkId]:0}},s);
+ s.setItem('gscene-scene-fashion-v1',JSON.stringify({cartIds:['legacy'],savedIds:['legacy']}));
+ personas.forEach((person,index)=>{
+  assert.equal(readDemoState(person,s).foodQuantity[milkId],3);
+  assert.equal(s.getItem(personaStorageKey('gscene-scene-fashion-v1',person)),null);
+  let state=initialDemoState(person);
+  for(let count=0;count<index;count++)state=updateDemoState(person,state,latest=>consumeOwnedFood(person,latest,milkId),s).state;
+  for(const base of ['gscene-scene-fashion-v1','gscene-scene-living-v1','gscene-catalog-food-v1','gscene-catalog-beauty-v1']){
+   s.setItem(personaStorageKey(base,person),JSON.stringify({cartIds:[`cart-${index}`],savedIds:[`favorite-${index}`]}));
+  }
+ });
+ personas.forEach((person,index)=>{
+  assert.equal(readDemoState(person,s).foodQuantity[milkId],3-index);
+  assert.deepEqual(JSON.parse(s.getItem(personaStorageKey('gscene-scene-fashion-v1',person))),{cartIds:[`cart-${index}`],savedIds:[`favorite-${index}`]});
+ });
+ resetDemoState(personas[2],s);
+ personas.forEach((person,index)=>{
+  assert.equal(readDemoState(person,s).foodQuantity[milkId],index===2?3:3-index);
+  assert.equal(s.getItem(personaStorageKey('gscene-catalog-food-v1',person))===null,index===2);
+ });
+ assert.equal(readDemoState(home,s).foodQuantity[milkId],0);
+ assert.equal(JSON.parse(s.getItem('gscene-scene-fashion-v1')).cartIds[0],'legacy');
+});
+
+test('a failed save for one profile cannot replace another profile state', async () => {
+ const {personaStorageKey}=await import('../app/persona-browser.js');
+ const s=storage(),a={...home,user:{...home.user,id:'demo-f01'}},b={...home,user:{...home.user,id:'demo-m01'}};
+ saveDemoState(a,initialDemoState(a),s);saveDemoState(b,initialDemoState(b),s);
+ const write=s.setItem;s.setItem=(key,value)=>{if(key===personaStorageKey(DEMO_STATE_KEY,a))throw new Error('quota');write(key,value);};
+ const aEaten=updateDemoState(a,initialDemoState(a),latest=>consumeOwnedFood(a,latest,id('milk')),s);
+ const bEaten=updateDemoState(b,initialDemoState(b),latest=>consumeOwnedFood(b,latest,id('milk')),s);
+ assert.equal(aEaten.saved,false);assert.equal(bEaten.saved,true);
+ const aAgain=updateDemoState(a,aEaten.state,latest=>consumeOwnedFood(a,latest,id('milk')),s);
+ assert.equal(aAgain.state.foodQuantity[id('milk')],1);
+ assert.equal(readDemoState(b,s).foodQuantity[id('milk')],2);
+});
+
+test('persona preference allows only fictional IDs and keeps buyer selection separate from avatar appearance', async () => {
+ const {personaCookie,selectedPersona,personaChoices}=await import('../app/persona-browser.js');
+ assert.equal(selectedPersona(''), 'demo-f01');
+ assert.equal(selectedPersona('other=1; gscene-persona=demo-m02'), 'demo-m02');
+ assert.equal(selectedPersona('gscene-persona=administrator'), 'demo-f01');
+ assert.throws(()=>personaCookie('demo-f01; Path=/other'));
+ assert.equal(personaCookie('demo-f02',true),'gscene-persona=demo-f02; Path=/; Max-Age=2592000; SameSite=Lax; Secure');
+ const profile={user:{id:'demo-f01',avatarId:'m02'},personas:[{id:'demo-f01',name:'민서',theme:'미니멀'}, {id:'demo-m02',name:'준호'}, {id:'unknown',name:'잘못된 사용자'}, {id:'demo-f01',name:'중복'}]};
+ assert.deepEqual(personaChoices(profile).map(persona=>persona.id),['demo-f01','demo-m02']);
+ const before=JSON.stringify(profile);personaCookie('demo-m02');assert.equal(JSON.stringify(profile),before);
+});
+
+
+test('client profile watcher and server source selection agree for encoded, malformed and duplicate cookies', async () => {
+ const {selectedPersona}=await import('../app/persona-browser.js');
+ const {personaSourceFromRequest}=await import('../src/lib/demo-personas.ts');
+ const cookies=['','unrelated=demo-m01','gscene-persona=demo-m01','gscene-persona=demo%2Dm02','gscene-persona=%64emo-f02','gscene-persona=%','gscene-persona=%2564emo-f02','gscene-persona=demo-m01; gscene-persona=demo-f02','gscene-persona=demo-m02; gscene-persona=demo-m02','gscene-persona=demo-m01; other=1; gscene-persona=unknown','gscene-persona=demo-m02=extra'];
+ for(const cookie of cookies){
+  const expected=personaSourceFromRequest(new Request('https://demo.example/api/demo/home',{headers:{cookie}})).user.id;
+  assert.equal(selectedPersona(cookie),expected,cookie);
+ }
+ assert.equal(selectedPersona('gscene-persona=demo%2Dm02'),'demo-m02');
+ assert.equal(selectedPersona('gscene-persona=demo-m02; gscene-persona=demo-m02'),'demo-f01');
+});

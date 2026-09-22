@@ -3,15 +3,18 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import type { DemoHome, Purchase } from '../../types/home';
 import { garmentPresentation } from '../../../app/garment-art.js';
-import { DEMO_STATE_KEY, applyOwnedOutfit, readDemoState, updateDemoState, type DemoState } from '../../../app/demo-state.js';
+import { demoStateKey, applyOwnedOutfit, readDemoState, updateDemoState, type DemoState } from '../../../app/demo-state.js';
 import { getCategoryProducts, getHeroProducts } from '../../../app/category-products.js';
 import LivingOwnedProducts from './LivingOwnedProducts';
+import PersonaSwitcher from '../PersonaSwitcher';
+import { personaStorageKey } from '../../../app/persona-browser.js';
 import type { DemoScene, SceneCategory, SceneProduct } from '../../types/scene';
 import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
 import { restoreSceneCollection } from '../../lib/scene/collection-state';
 import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
 import CategoryNav, { CategoryIcon } from '../navigation/CategoryNav';
+import { GameItemSprite } from '../GameItemSprite';
 import './scene.css';
 import './quality.css';
 
@@ -55,7 +58,8 @@ function Icon({ name, size = 20 }: { name: 'back' | 'bag' | 'heart' | 'home' | '
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-function ProductVisual({ item }: { item: Pick<Item, 'imageUrl' | 'name'> & Partial<Pick<Purchase, 'illustrationKey' | 'roomSlot'>> }) {
+function ProductVisual({ item }: { item: Pick<Item, 'imageUrl' | 'name'> & Partial<Pick<Purchase, 'illustrationKey' | 'roomSlot' | 'gameAsset'>> }) {
+  if (item.gameAsset) return <GameItemSprite asset={item.gameAsset} className="sc-product-visual" />;
   const garment = garmentPresentation(item);
   const visualLabel = item.illustrationKey ? `${item.name} 공간용 예시 그림` : item.name;
   const sprite = item.imageUrl.startsWith('/scene-art/products.png#') ? SPRITES[item.imageUrl.split('#')[1]] : undefined;
@@ -121,7 +125,8 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
   const filterButtonRef = useRef<HTMLButtonElement>(null);
   const returnToFilters = useRef(false);
   const loadedStoreKey = useRef<string | null>(null);
-  const storeKey = `gscene-scene-${category}-v1`;
+  const baseStoreKey = `gscene-scene-${category}-v1`;
+  const storeKey = home ? personaStorageKey(baseStoreKey, home) : null;
 
   useEffect(() => {
     const abort = new AbortController();
@@ -142,30 +147,31 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         const [homeData, sceneData]: [DemoHome, DemoScene] = await Promise.all([responses[0].json(), responses[1].json()]);
         if (!Array.isArray(homeData.purchases) || !homeData.user?.name || sceneData.category !== category || !Array.isArray(sceneData.products) || !Array.isArray(sceneData.cartIds)) throw new Error('Invalid scene');
         if (!mounted) return;
+        const resolvedStoreKey = personaStorageKey(baseStoreKey, homeData);
         let collection = restoreSceneCollection(sceneData, null);
-        try { collection = restoreSceneCollection(sceneData, localStorage.getItem(storeKey)); }
+        try { collection = restoreSceneCollection(sceneData, localStorage.getItem(resolvedStoreKey)); }
         catch { /* Blocked storage keeps this visit usable. */ }
         setConfirmedState(readDemoState(homeData));
         setHome(homeData); setCatalog(sceneData); setCartIds(collection.cartIds); setSavedIds(collection.savedIds);
         setSelectedId(null);
-        loadedStoreKey.current = storeKey;
+        loadedStoreKey.current = resolvedStoreKey;
         setStorageReady(true);
       } catch { if (mounted) setError(true); }
       finally { clearTimeout(timeout); }
     }
     load();
     return () => { mounted = false; abort.abort(); clearTimeout(timeout); };
-  }, [category, attempt, storeKey]);
+  }, [category, attempt, baseStoreKey]);
 
   useEffect(() => {
-    if (!storageReady || loadedStoreKey.current !== storeKey) return;
+    if (!storageReady || !storeKey || loadedStoreKey.current !== storeKey) return;
     try { localStorage.setItem(storeKey, JSON.stringify({ cartIds, savedIds })); }
     catch { setNotice('이 브라우저에서는 보관할 수 없어, 이번 방문 동안만 유지돼요.'); }
   }, [cartIds, savedIds, storageReady, storeKey]);
   useEffect(() => { if (!notice) return; const timeout = setTimeout(() => setNotice(''), 3500); return () => clearTimeout(timeout); }, [notice]);
 
   useEffect(() => {
-    if (!home || !catalog) return;
+    if (!home || !catalog || !storeKey) return;
     const restore = () => {
       setConfirmedState(readDemoState(home));
       try {
@@ -174,7 +180,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         setSavedIds(previous => JSON.stringify(previous) === JSON.stringify(next.savedIds) ? previous : next.savedIds);
       } catch { /* Keep current in-memory choices when storage is unavailable. */ }
     };
-    const onStorage = (event: StorageEvent) => { if ([DEMO_STATE_KEY, storeKey, null].includes(event.key)) restore(); };
+    const onStorage = (event: StorageEvent) => { if ([demoStateKey(home), storeKey, null].includes(event.key)) restore(); };
     const onPageShow = () => { restore(); setOutfitPreviewId(null); setLampPreview(null); setPlacedId(null); setLookIds({}); setSeated(false); };
     window.addEventListener('storage', onStorage);
     window.addEventListener('pageshow', onPageShow);
@@ -316,6 +322,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         <button className="sc-icon-button sc-bag" aria-label={`장바구니 ${cartIds.length}개`} onClick={() => setPanel('cart')}><Icon name="bag" /><span>{cartIds.length}</span></button>
       </div>
     </header>
+    {home && <PersonaSwitcher home={home} />}
     {(!home || !catalog) ? <section className="sc-load" role="status"><span className="sc-kicker">YOUR NEXT SCENE</span><h1>{error ? '공간을 불러오지 못했어요' : '나의 공간을 준비하고 있어요'}</h1><p>{error ? '연결을 확인한 뒤 다시 시도해 주세요.' : '구매한 물건과 새로운 취향을 연결하는 중'}</p>{error && <button className="sc-primary" onClick={() => setAttempt(value => value + 1)}>다시 불러오기</button>}</section> : <>
       <div className="sc-heading"><div><span className="sc-category-mark" aria-hidden="true"><CategoryIcon category={category} /></span><h1>{config.title}</h1></div><span className="sc-person">{home.user.name}의 작은 취향 공간</span></div>
       <div className="sc-layout">
@@ -329,7 +336,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
               {placedProduct && <RoomPlacement key={`${placedProduct.id}-${previewSequence}`} productId={placedProduct.id} lit={lampLit} />}
               {category === 'fashion' && <div className="sc-wardrobe-owned" aria-label="내가 보유한 의류 옷걸이">
                 {wardrobeEntries.map(entry => <button key={entry.id} className="sc-wardrobe-garment" data-wardrobe-product-id={entry.id} data-hero-product-id={entry.id} data-hero-status={entry.status} data-hero-role={entry.presentationRole} data-hero-source-image={entry.imageUrl} data-wearing={entry.status === 'applied'} aria-label={`${entry.product.name} 입어보기${entry.status === 'applied' ? ', 현재 착장' : ''}`} aria-pressed={outfitPreviewId === entry.id} onClick={() => choose(entry.product, 'owned')}>
-                  {entry.artVisible && <img src={entry.imageUrl} data-garment-source={entry.imageUrl} alt="" aria-hidden="true" />}
+                  {entry.artVisible && (entry.product.gameAsset ? <GameItemSprite asset={entry.product.gameAsset} className="sc-wardrobe-asset" productId={entry.id} /> : <img src={entry.imageUrl} data-garment-source={entry.imageUrl} alt="" aria-hidden="true" />)}
                   <span data-garment-number={entry.displayIndex}>{entry.displayIndex}{entry.status === 'applied' && <i aria-hidden="true">✓</i>}</span>
                 </button>)}
               </div>}

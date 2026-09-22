@@ -52,7 +52,8 @@ const addImage = path => assets.set(path.split('#')[0], /image\//);
 
 if (!options.catalogOnly) {
   const home = await json('/api/demo/home');
-  assert.equal(home.user.id, 'demo-user');
+  assert.equal(home.user.id, 'demo-f01');
+  assert.deepEqual(home.personas.map(persona => persona.id), ['demo-f01', 'demo-f02', 'demo-m01', 'demo-m02']);
   assert.equal(home.purchases.length, 10);
   assert.equal(home.demo.isDemo, true);
   assert.equal(home.demo.ownership, 'fictional');
@@ -84,6 +85,7 @@ if (!options.catalogOnly) {
     assert.notEqual(purchase.id, purchase.illustrationKey, 'Artwork keys are not product IDs');
     assert.equal(purchase.imageUrl, `/products/${purchase.illustrationKey}.svg`);
     addImage(purchase.imageUrl);
+    if(purchase.gameAsset?.url) addImage(purchase.gameAsset.url);
   });
   console.log('PASS: home 10 purchases match shared product ID/name/price/domain; demo/artwork boundaries explicit');
   console.log('PASS: four category sources project home purchases and share hero/mirror identity, order, images and default state');

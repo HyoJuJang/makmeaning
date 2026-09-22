@@ -1,0 +1,599 @@
+{
+  "schemaVersion": 1,
+  "ownership": "fictional",
+  "defaultPersonaId": "demo-f01",
+  "personas": [
+    {
+      "id": "demo-f01",
+      "name": "민서",
+      "avatarId": "f01",
+      "theme": "밝은 홈카페",
+      "palette": "화이트 · 하늘색 · 핑크",
+      "story": "집에서 간단한 아침을 먹고 따뜻한 조명 아래 쉬는 일상을 즐긴다.",
+      "purchases": [
+        {
+          "id": "1083830467",
+          "purchaseId": "demo-f01-fashion-1",
+          "category": "fashion",
+          "illustrationKey": "shirt",
+          "imageUrl": "/products/shirt.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 1,
+          "roomSlot": "wardrobe-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1124808739",
+          "purchaseId": "demo-f01-fashion-2",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 2,
+          "roomSlot": "wardrobe-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1113830439",
+          "purchaseId": "demo-f01-fashion-3",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 3,
+          "roomSlot": "wardrobe-3",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1113622242",
+          "purchaseId": "demo-f01-food-1",
+          "category": "food",
+          "illustrationKey": "milk",
+          "imageUrl": "/products/milk.svg",
+          "presentationRole": "fridge",
+          "displayOrder": 1,
+          "roomSlot": "fridge-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1015281967",
+          "purchaseId": "demo-f01-food-2",
+          "category": "food",
+          "illustrationKey": "food",
+          "imageUrl": "/products/food.svg",
+          "presentationRole": "pantry",
+          "displayOrder": 2,
+          "roomSlot": "pantry-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1134436378",
+          "purchaseId": "demo-f01-food-3",
+          "category": "food",
+          "illustrationKey": "food",
+          "imageUrl": "/products/food.svg",
+          "presentationRole": "pantry",
+          "displayOrder": 3,
+          "roomSlot": "pantry-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1053232515",
+          "purchaseId": "demo-f01-living-1",
+          "category": "living",
+          "illustrationKey": "lamp",
+          "imageUrl": "/products/lamp.svg",
+          "presentationRole": "lamp",
+          "displayOrder": 1,
+          "roomSlot": "lamp-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "on": true
+          }
+        },
+        {
+          "id": "1057538146",
+          "purchaseId": "demo-f01-living-2",
+          "category": "living",
+          "illustrationKey": "mug",
+          "imageUrl": "/products/mug.svg",
+          "presentationRole": "table",
+          "displayOrder": 2,
+          "roomSlot": "table-1",
+          "purchasedAt": "데모 구매",
+          "state": {}
+        },
+        {
+          "id": "16052422",
+          "purchaseId": "demo-f01-beauty-1",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "vanity",
+          "displayOrder": 1,
+          "roomSlot": "vanity-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": true
+          }
+        },
+        {
+          "id": "1059856091",
+          "purchaseId": "demo-f01-beauty-2",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "shelf",
+          "displayOrder": 2,
+          "roomSlot": "vanity-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "demo-f02",
+      "name": "지우",
+      "avatarId": "f02",
+      "theme": "식물과 홈쿠킹",
+      "palette": "버건디 · 그린 · 그레이",
+      "story": "주말에 집에서 요리하고 식물 소품으로 공간을 꾸미는 것을 좋아한다.",
+      "purchases": [
+        {
+          "id": "1134622052",
+          "purchaseId": "demo-f02-fashion-1",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 1,
+          "roomSlot": "wardrobe-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1105155685",
+          "purchaseId": "demo-f02-fashion-2",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 2,
+          "roomSlot": "wardrobe-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1092856012",
+          "purchaseId": "demo-f02-fashion-3",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 3,
+          "roomSlot": "wardrobe-3",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1050446036",
+          "purchaseId": "demo-f02-food-1",
+          "category": "food",
+          "illustrationKey": "food",
+          "imageUrl": "/products/food.svg",
+          "presentationRole": "pantry",
+          "displayOrder": 1,
+          "roomSlot": "pantry-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1083510719",
+          "purchaseId": "demo-f02-food-2",
+          "category": "food",
+          "illustrationKey": "water",
+          "imageUrl": "/products/water.svg",
+          "presentationRole": "fridge",
+          "displayOrder": 2,
+          "roomSlot": "fridge-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1033331215",
+          "purchaseId": "demo-f02-food-3",
+          "category": "food",
+          "illustrationKey": "water",
+          "imageUrl": "/products/water.svg",
+          "presentationRole": "fridge",
+          "displayOrder": 3,
+          "roomSlot": "fridge-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1057182462",
+          "purchaseId": "demo-f02-living-1",
+          "category": "living",
+          "illustrationKey": "plant",
+          "imageUrl": "/products/plant.svg",
+          "presentationRole": "table",
+          "displayOrder": 1,
+          "roomSlot": "table-1",
+          "purchasedAt": "데모 구매",
+          "state": {}
+        },
+        {
+          "id": "1056652878",
+          "purchaseId": "demo-f02-living-2",
+          "category": "living",
+          "illustrationKey": "lamp",
+          "imageUrl": "/products/lamp.svg",
+          "presentationRole": "lamp",
+          "displayOrder": 2,
+          "roomSlot": "lamp-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "on": true
+          }
+        },
+        {
+          "id": "1118407031",
+          "purchaseId": "demo-f02-beauty-1",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "vanity",
+          "displayOrder": 1,
+          "roomSlot": "vanity-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": true
+          }
+        },
+        {
+          "id": "1088835047",
+          "purchaseId": "demo-f02-beauty-2",
+          "category": "beauty",
+          "illustrationKey": "cream",
+          "imageUrl": "/products/cream.svg",
+          "presentationRole": "shelf",
+          "displayOrder": 2,
+          "roomSlot": "vanity-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "demo-m01",
+      "name": "도윤",
+      "avatarId": "m01",
+      "theme": "차분한 독서 공간",
+      "palette": "네이비 · 그레이 · 아이보리",
+      "story": "단정한 기본 의류를 즐겨 입고 저녁에는 조명을 켜고 책을 읽는다.",
+      "purchases": [
+        {
+          "id": "1128893597",
+          "purchaseId": "demo-m01-fashion-1",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 1,
+          "roomSlot": "wardrobe-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1132775217",
+          "purchaseId": "demo-m01-fashion-2",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 2,
+          "roomSlot": "wardrobe-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1111946338",
+          "purchaseId": "demo-m01-fashion-3",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 3,
+          "roomSlot": "wardrobe-3",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1113622242",
+          "purchaseId": "demo-m01-food-1",
+          "category": "food",
+          "illustrationKey": "milk",
+          "imageUrl": "/products/milk.svg",
+          "presentationRole": "fridge",
+          "displayOrder": 1,
+          "roomSlot": "fridge-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1033331215",
+          "purchaseId": "demo-m01-food-2",
+          "category": "food",
+          "illustrationKey": "water",
+          "imageUrl": "/products/water.svg",
+          "presentationRole": "fridge",
+          "displayOrder": 2,
+          "roomSlot": "fridge-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1069125001",
+          "purchaseId": "demo-m01-food-3",
+          "category": "food",
+          "illustrationKey": "food",
+          "imageUrl": "/products/food.svg",
+          "presentationRole": "pantry",
+          "displayOrder": 3,
+          "roomSlot": "pantry-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1056652878",
+          "purchaseId": "demo-m01-living-1",
+          "category": "living",
+          "illustrationKey": "lamp",
+          "imageUrl": "/products/lamp.svg",
+          "presentationRole": "lamp",
+          "displayOrder": 1,
+          "roomSlot": "lamp-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "on": true
+          }
+        },
+        {
+          "id": "1678991",
+          "purchaseId": "demo-m01-living-2",
+          "category": "living",
+          "illustrationKey": "pillow",
+          "imageUrl": "/products/pillow.svg",
+          "presentationRole": "bed",
+          "displayOrder": 2,
+          "roomSlot": "bed-1",
+          "purchasedAt": "데모 구매",
+          "state": {}
+        },
+        {
+          "id": "1053067763",
+          "purchaseId": "demo-m01-beauty-1",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "vanity",
+          "displayOrder": 1,
+          "roomSlot": "vanity-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": true
+          }
+        },
+        {
+          "id": "1059856091",
+          "purchaseId": "demo-m01-beauty-2",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "shelf",
+          "displayOrder": 2,
+          "roomSlot": "vanity-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": false
+          }
+        }
+      ]
+    },
+    {
+      "id": "demo-m02",
+      "name": "준호",
+      "avatarId": "m02",
+      "theme": "편안한 작업실",
+      "palette": "블루 · 블랙 · 화이트",
+      "story": "가벼운 캐주얼을 입고 집에서 개인 작업을 하며 간단한 간식을 곁들인다.",
+      "purchases": [
+        {
+          "id": "1108455723",
+          "purchaseId": "demo-m02-fashion-1",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 1,
+          "roomSlot": "wardrobe-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1108216372",
+          "purchaseId": "demo-m02-fashion-2",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 2,
+          "roomSlot": "wardrobe-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1111946338",
+          "purchaseId": "demo-m02-fashion-3",
+          "category": "fashion",
+          "illustrationKey": "knit",
+          "imageUrl": "/products/knit.svg",
+          "presentationRole": "wardrobe",
+          "displayOrder": 3,
+          "roomSlot": "wardrobe-3",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "wearing": false
+          }
+        },
+        {
+          "id": "1029143151",
+          "purchaseId": "demo-m02-food-1",
+          "category": "food",
+          "illustrationKey": "food",
+          "imageUrl": "/products/food.svg",
+          "presentationRole": "pantry",
+          "displayOrder": 1,
+          "roomSlot": "pantry-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1131432801",
+          "purchaseId": "demo-m02-food-2",
+          "category": "food",
+          "illustrationKey": "water",
+          "imageUrl": "/products/water.svg",
+          "presentationRole": "fridge",
+          "displayOrder": 2,
+          "roomSlot": "fridge-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1015281967",
+          "purchaseId": "demo-m02-food-3",
+          "category": "food",
+          "illustrationKey": "food",
+          "imageUrl": "/products/food.svg",
+          "presentationRole": "pantry",
+          "displayOrder": 3,
+          "roomSlot": "pantry-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "quantity": 3
+          }
+        },
+        {
+          "id": "1000432412",
+          "purchaseId": "demo-m02-living-1",
+          "category": "living",
+          "illustrationKey": "lamp",
+          "imageUrl": "/products/lamp.svg",
+          "presentationRole": "lamp",
+          "displayOrder": 1,
+          "roomSlot": "lamp-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "on": true
+          }
+        },
+        {
+          "id": "1057182462",
+          "purchaseId": "demo-m02-living-2",
+          "category": "living",
+          "illustrationKey": "plant",
+          "imageUrl": "/products/plant.svg",
+          "presentationRole": "table",
+          "displayOrder": 2,
+          "roomSlot": "table-1",
+          "purchasedAt": "데모 구매",
+          "state": {}
+        },
+        {
+          "id": "1032164641",
+          "purchaseId": "demo-m02-beauty-1",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "vanity",
+          "displayOrder": 1,
+          "roomSlot": "vanity-1",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": true
+          }
+        },
+        {
+          "id": "1120723268",
+          "purchaseId": "demo-m02-beauty-2",
+          "category": "beauty",
+          "illustrationKey": "serum",
+          "imageUrl": "/products/serum.svg",
+          "presentationRole": "shelf",
+          "displayOrder": 2,
+          "roomSlot": "vanity-2",
+          "purchasedAt": "데모 구매",
+          "state": {
+            "featured": false
+          }
+        }
+      ]
+    }
+  ]
+}

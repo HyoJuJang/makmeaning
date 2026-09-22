@@ -1,13 +1,13 @@
 import {InteractionController,OBJECTS} from './interactions.js';
 import {CATEGORY_ROUTES,CATEGORY_OBJECTS,OBJECT_CATEGORIES} from './category-routes.js';
-import {DEMO_STATE_KEY,readDemoState,resetDemoState,outfitArtKey,consumeOwnedFood,updateDemoState} from './demo-state.js';
+import {demoStateKey,readDemoState,resetDemoState,outfitArtKey,consumeOwnedFood,updateDemoState} from './demo-state.js';
 import {objectArt} from './object-art.js';
+import {gameItemArt} from './game-item-art.js';
 import {getCategoryProducts,getRoomMirrorProducts} from './category-products.js';
 import {placedMirrorProducts,roomMirrorPlacement} from './room-mirror.js';
 import {AVATARS,avatarById,avatarSVG} from './avatar.js';
 import {START,APPROACHES,isWalkable,findPath,moveWithCollision} from './movement.js';
-const KEY=DEMO_STATE_KEY;
-const ROOM_RETURN_KEY='gscene-room-return-v1';
+import {personaStorageKey,mountPersonaSelector,watchPersona} from './persona-browser.js';
 const LEGACY_AVATARS=new Map([['short','m01'],['wave','m02'],['bob','f01']]);
 const canonicalAvatarId=id=>LEGACY_AVATARS.get(id)||id;
 const escapeHTML=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -25,7 +25,7 @@ function validateHome(data){
   });
   categories[category]={...source,ownedProducts};
  }
- return {demo:data.demo,user:{...data.user,name:data.user.name.trim().slice(0,40),avatarId:avatarById(canonicalAvatarId(data.user.avatarId)).id},categories,purchases:CATEGORIES.flatMap(category=>categories[category].ownedProducts)};
+ return {demo:data.demo,personas:data.personas,user:{...data.user,name:data.user.name.trim().slice(0,40),avatarId:avatarById(canonicalAvatarId(data.user.avatarId)).id},categories,purchases:CATEGORIES.flatMap(category=>categories[category].ownedProducts)};
 }
 
 async function loadHome(){
@@ -50,6 +50,10 @@ async function loadHome(){
  }
 }
 const home=await loadHome();
+const KEY=demoStateKey(home);
+const ROOM_RETURN_KEY=personaStorageKey('gscene-room-return-v1',home);
+mountPersonaSelector(home,document.querySelector('.intro'));
+watchPersona(home.user.id);
 const products=CATEGORIES.flatMap(category=>getCategoryProducts(home.categories[category]).map(entry=>entry.product));
 const mirrorProducts=()=>CATEGORIES.flatMap(category=>getRoomMirrorProducts(home.categories[category],state));
 let state=readDemoState(home,localStorage);
@@ -61,7 +65,7 @@ document.querySelector('.home-section').setAttribute('aria-label',`${home.user.n
 document.title=`G:Scene — ${home.user.name}의 공간`;
 let active=null,returnFocus=null,draftAvatar=null;
 const icons={knit:'<path d="M17 8 8 13 2 29l9 4 5-9v28h28V24l5 9 9-4-6-16-9-5-7 5h-12Z" fill="#e5ddc6"/><path d="M24 9q6 12 12 0M18 46h24M18 49h24" fill="none" stroke="#c3b898" stroke-width="2"/>',shirt:'<path d="m17 8-9 5-6 16 9 4 5-9v28h28V24l5 9 9-4-6-16-9-5-13 4Z" fill="#93afbe"/><path d="m23 9 7 6 7-6M30 15v36M35 24h6v7h-6Z" fill="none" stroke="#648493" stroke-width="1.5"/>',milk:'<path d="m19 9 7-7h16l5 9v44H19Z" fill="#f5f1db"/><path d="M19 11h28v13H19Z" fill="#7c9a8c"/><path d="m19 9 7-7v9M26 2l6 9h15" fill="none" stroke="#bec8b4"/><text x="23" y="36" font-size="8" fill="#678571">MILK</text>',water:'<rect x="24" y="3" width="13" height="6" rx="2" fill="#7d9f9e"/><path d="m24 9-5 10v31q0 5 5 5h14q5 0 5-5V19L37 9Z" fill="#c5dcdb"/><path d="M20 31h22v13H20Z" fill="#f5f6e9"/><path d="M25 18v10" stroke="#f4fbef" stroke-width="3" stroke-linecap="round"/>',vitamin:'<rect x="19" y="8" width="25" height="9" rx="3" fill="#ded9c7"/><rect x="17" y="17" width="29" height="38" rx="6" fill="#ad8552"/><rect x="19" y="27" width="25" height="18" rx="1" fill="#f1ead9"/><path d="M31 31v10M26 36h10" stroke="#859574" stroke-width="2"/>',cushion:'<rect x="8" y="11" width="43" height="40" rx="10" fill="#829471" transform="rotate(-6 30 30)"/><rect x="12" y="15" width="35" height="32" rx="7" fill="none" stroke="#a4b191"/>',lamp:'<path d="M28 23h4v29H28Z" fill="#9b7752"/><ellipse cx="30" cy="53" rx="15" ry="3" fill="#947652"/><path d="m19 5-8 21h38L41 5Z" fill="#e6d5a5"/><ellipse cx="30" cy="26" rx="19" ry="3" fill="#c9b882"/>',serum:'<rect x="22" y="5" width="16" height="6" rx="2" fill="#526c59"/><path d="M30 2h13v4H30v9" fill="none" stroke="#526c59" stroke-width="3"/><rect x="18" y="14" width="25" height="40" rx="5" fill="#b4c3a1"/><rect x="20" y="27" width="21" height="16" rx="1" fill="#edf0de"/><path d="M26 32h9M27 36h7" stroke="#7a8f70"/>',cream:'<rect x="11" y="28" width="39" height="25" rx="7" fill="#e6dbbf"/><rect x="9" y="22" width="43" height="10" rx="4" fill="#698372"/><path d="M20 40h21M23 44h15" stroke="#b5a887"/>'};
-const roleLabels={wardrobe:'옷장',fridge:'냉장고',pantry:'팬트리',sofa:'소파',lamp:'거실 스탠드',vanity:'화장대',shelf:'선반'};
+const roleLabels={wardrobe:'옷장',fridge:'냉장고',pantry:'팬트리',sofa:'소파',lamp:'거실 스탠드',vanity:'화장대',shelf:'선반',table:'테이블',bed:'침대'};
 const productLocation=p=>roleLabels[p.presentationRole]||'공간';
 function placedPurchases(){return placedMirrorProducts(mirrorProducts());}
 function renderHouse(){
@@ -71,7 +75,10 @@ function renderHouse(){
  document.querySelector('.purchase-layer').innerHTML=placedPurchases();
  const mirror=mirrorProducts(),featured=mirror.find(entry=>entry.category==='beauty'&&entry.featured),lamp=mirror.find(entry=>entry.presentationRole==='lamp');
  const beautyPosition=featured?roomMirrorPlacement(featured,mirror):null;
- document.querySelector('.state-layer').innerHTML=`<defs><radialGradient id="roomGlow"><stop stop-color="#fff1c6" stop-opacity=".5"/><stop offset=".45" stop-color="#ffebbb" stop-opacity=".18"/><stop offset="1" stop-color="#ffebbb" stop-opacity="0"/></radialGradient></defs>${lamp?`<ellipse cx="355" cy="424" rx="26" ry="32" fill="url(#roomGlow)" opacity="${lamp.on?'.24':'0'}"/>`:''}${featured?`<g class="beauty-selection" data-featured-product-id="${featured.productId}" opacity="${controller.view().heldProductId?0:1}"><ellipse cx="${beautyPosition.x+beautyPosition.w/2}" cy="254" rx="10" ry="2" fill="#718b66" opacity=".45"/><rect x="315" y="257" width="55" height="14" rx="4" fill="#f8f4e9" fill-opacity=".92"/><text x="343" y="267" text-anchor="middle" font-size="8.5" fill="#284b3c">${featured.displayIndex}번 꺼냄</text></g>`:''}`;
+ const lampPosition=lamp?roomMirrorPlacement(lamp,mirror):null;
+ const lampTarget=document.querySelector('button.lamp-target');
+ if(lampTarget&&lampPosition){lampTarget.style.left=`${lampPosition.x/4}%`;lampTarget.style.top=`${lampPosition.y/6}%`;lampTarget.style.width=`${lampPosition.w/4}%`;lampTarget.style.height=`${lampPosition.h/6}%`;}
+ document.querySelector('.state-layer').innerHTML=`<defs><radialGradient id="roomGlow"><stop stop-color="#fff1c6" stop-opacity=".5"/><stop offset=".45" stop-color="#ffebbb" stop-opacity=".18"/><stop offset="1" stop-color="#ffebbb" stop-opacity="0"/></radialGradient></defs>${lamp?`<ellipse cx="${lampPosition.x+lampPosition.w/2}" cy="${lampPosition.y+lampPosition.h*.22}" rx="26" ry="32" fill="url(#roomGlow)" opacity="${lamp.on?'.24':'0'}"/>`:''}${featured?`<g class="beauty-selection" data-featured-product-id="${featured.productId}" opacity="${controller.view().heldProductId?0:1}"><ellipse cx="${beautyPosition.x+beautyPosition.w/2}" cy="254" rx="10" ry="2" fill="#718b66" opacity=".45"/><rect x="315" y="257" width="55" height="14" rx="4" fill="#f8f4e9" fill-opacity=".92"/><text x="343" y="267" text-anchor="middle" font-size="8.5" fill="#284b3c">${featured.displayIndex}번 꺼냄</text></g>`:''}`;
 
  if(typeof paintActor==='function')paintActor(true);paintObjects(true);
 }
@@ -82,7 +89,7 @@ function productHTML(p,category=active){let label='',disabled=false,meta=`${esca
  if(category==='food'){meta+=` · 데모 잔량 ${state.foodQuantity[p.id]}회`;label=state.foodQuantity[p.id]?'먹기':'다 먹었어요';disabled=!state.foodQuantity[p.id]||controller.selectedFood!==p.id;}
  if(category==='living'&&p.illustrationKey==='lamp')label=state.lampOn?'조명 끄기':'조명 켜기';
  if(category==='beauty'){label=state.featuredBeautyId===p.id?'꺼내두었어요':'꺼내두기';disabled=state.featuredBeautyId===p.id;}
- return `<div class="product" data-product="${p.id}" data-illustration="${p.illustrationKey}" data-room-slot="${p.roomSlot}"><div class="thumb" aria-hidden="true"><img src="${p.imageUrl}" alt="" width="60" height="60" loading="lazy" data-illustration="${p.illustrationKey}"></div><div class="product-info">${category==='food'&&['fridge','pantry'].includes(controller.objectId)?`<button class="food-select" data-food-select="${p.id}" aria-pressed="${controller.selectedFood===p.id}">${escapeHTML(p.name)}</button>`:`<h3 class="product-name">${escapeHTML(p.name)}</h3>`}<p class="product-meta">${meta}</p><p class="product-meta product-price">카탈로그 참고가 ${p.price.toLocaleString('ko-KR')}원</p>${p.illustrationKey==='cushion'?'<p class="product-meta">소파에 놓여 있어요</p>':''}</div>${label?`<button class="action" data-action="${p.id}" aria-label="${escapeHTML(p.name)} ${label}" ${disabled?'disabled':''}>${label}</button>`:''}</div>`;
+ return `<div class="product" data-product="${p.id}" data-illustration="${p.illustrationKey}" data-room-slot="${p.roomSlot}"><div class="thumb" aria-hidden="true">${gameItemArt(p)||`<img src="${p.imageUrl}" alt="" width="60" height="60" loading="lazy" data-illustration="${p.illustrationKey}">`}</div><div class="product-info">${category==='food'&&['fridge','pantry'].includes(controller.objectId)?`<button class="food-select" data-food-select="${p.id}" aria-pressed="${controller.selectedFood===p.id}">${escapeHTML(p.name)}</button>`:`<h3 class="product-name">${escapeHTML(p.name)}</h3>`}<p class="product-meta">${meta}</p><p class="product-meta product-price">카탈로그 참고가 ${p.price.toLocaleString('ko-KR')}원</p>${p.illustrationKey==='cushion'?'<p class="product-meta">소파에 놓여 있어요</p>':''}</div>${label?`<button class="action" data-action="${p.id}" aria-label="${escapeHTML(p.name)} ${label}" ${disabled?'disabled':''}>${label}</button>`:''}</div>`;
 }
 function renderProducts(){document.querySelector('.product-list').innerHTML=products.filter(p=>p.category===active).map(p=>productHTML(p,active)).join('');}
 function openRoom(room,trigger){stopMovement();inform(`${roomInfo[room][1]}에 도착했어요`);active=room;returnFocus=trigger;persist(`${roomInfo[room][1]}으로 이동했어요`,{avatarRoom:room});const info=roomInfo[room];document.querySelector('#modal-root').innerHTML=`<div class="overlay"><section class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" aria-describedby="sheet-desc"><div class="handle"></div><div class="sheet-head"><div><span class="sheet-eyebrow">${info[0].toUpperCase()} / MY OBJECTS</span><h2 id="sheet-title">${info[1]}</h2></div><button class="close" aria-label="닫기">×</button></div><p class="sheet-desc" id="sheet-desc">${info[2]}</p><div class="sheet-content"><h3 class="list-heading">구매한 물건 · ${products.filter(p=>p.category===room).length}</h3><div class="product-list"></div></div><p class="sheet-note">실상품에 연결한 가상 구매 · 그림은 실제 외형이 아니에요</p></section></div>`;renderProducts();document.body.style.overflow='hidden';document.querySelector('#app').inert=true;document.querySelector('.close').focus();}
@@ -156,7 +163,7 @@ function paintActor(force=false){const actor=document.querySelector('.walker');i
 document.querySelectorAll('[data-room]').forEach(btn=>btn.addEventListener('click',()=>{objectTrigger=btn;requestIntent({type:'object',id:btn.dataset.target||categoryObject[btn.dataset.room],trigger:btn});}));
 document.querySelector('button.bed-target').addEventListener('click',e=>{objectTrigger=e.currentTarget;requestIntent({type:'object',id:'bed',trigger:e.currentTarget});});
 document.querySelector('button.window-target').addEventListener('click',e=>{objectTrigger=e.currentTarget;requestIntent({type:'object',id:'window',trigger:e.currentTarget});});
-document.querySelector('#reset').addEventListener('click',()=>{if(active)closeRoom();try{localStorage.removeItem('gscene-scene-fashion-v1');localStorage.removeItem('gscene-scene-living-v1');for(const key of ['gscene-food-v1','gscene-catalog-food-v1','gscene-catalog-beauty-v1'])localStorage.removeItem(key);}catch{}handleEffects(controller.dispatch({type:'RESET'}));state=resetDemoState(home,localStorage);position={...START};direction='down';persist('데모를 초기화했어요');});
+document.querySelector('#reset').addEventListener('click',()=>{if(active)closeRoom();try{sessionStorage.removeItem(ROOM_RETURN_KEY);}catch{}handleEffects(controller.dispatch({type:'RESET'}));state=resetDemoState(home,localStorage);position={...START};direction='down';persist('데모를 초기화했어요');});
 document.querySelector('#tray-root').addEventListener('click',e=>{e.stopPropagation();const command=e.target.closest('[data-tray]')?.dataset.tray;if(command==='category'){requestIntent({type:'object',id:controller.objectId,trigger:objectTrigger});return;}if(command==='exit'){handleEffects(controller.dispatch({type:'CANCEL'}));return;}if(command==='expand'){handleEffects(controller.dispatch({type:'EXPAND'}));return;}if(command==='lamp'){handleEffects(controller.dispatch({type:'LAMP_TOGGLE'}));ensureInteractionVisible();return;}if(command==='window'){handleEffects(controller.dispatch({type:'WINDOW_TOGGLE'}));ensureInteractionVisible();return;}const food=e.target.closest('[data-food-select]');if(food){handleEffects(controller.dispatch({type:'SELECT_FOOD',productId:food.dataset.foodSelect}));return;}const button=e.target.closest('[data-action]');if(button&&!button.disabled)productAction(button.dataset.action);});
 document.querySelector('#modal-root').addEventListener('click',e=>{if(e.target.classList.contains('overlay')||e.target.closest('.close'))return closeRoom();const choice=e.target.closest('[data-avatar]');if(choice){draftAvatar=choice.dataset.avatar;renderAvatarChoices();document.querySelector(`[data-avatar="${draftAvatar}"]`).focus();return;}if(e.target.closest('.apply-avatar')){const selected=draftAvatar;closeRoom();persist(`${avatarById(selected).name} 캐릭터로 바꿨어요`,{avatarId:selected});return;}const button=e.target.closest('[data-action]');if(button&&!button.disabled){productAction(button.dataset.action);document.querySelector(`[data-action="${button.dataset.action}"]:not(:disabled)`)?.focus();}});
 document.addEventListener('keydown',e=>{if(!active)return;if(e.key==='Escape'){e.preventDefault();closeRoom();return;}if(e.key==='Tab'){const focusables=[...document.querySelector('.sheet').querySelectorAll('button:not(:disabled),input:not(:disabled),select:not(:disabled),textarea:not(:disabled),a[href],[tabindex="0"]')];const first=focusables[0],last=focusables.at(-1);if(e.shiftKey&&(document.activeElement===first||!focusables.includes(document.activeElement))){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}});

@@ -6,11 +6,14 @@ import { addToCart, cartTotal, normalizeCart, restoreCatalogState } from '../../
 import { getCategoryProducts } from '../../../app/category-products.js';
 import { catalogRoomItems } from '../../lib/catalog-room';
 import { roomArtworkIsVisible, repeatedEatingPointer, type EatingPointer } from '../../lib/catalog-eating-input';
-import {readDemoState,consumeOwnedFood,updateDemoState, type DemoState} from '../../../app/demo-state.js';
+import {demoStateKey,readDemoState,consumeOwnedFood,updateDemoState, type DemoState} from '../../../app/demo-state.js';
 import RoomAvatar from '../scene/RoomAvatar';
+import PersonaSwitcher from '../PersonaSwitcher';
+import { personaStorageKey } from '../../../app/persona-browser.js';
 import EatingAvatar from './EatingAvatar';
 import {EATING_DURATION,REDUCED_EATING_DURATION} from '../../../app/food-action.js';
 import CategoryNav, { CategoryIcon } from '../navigation/CategoryNav';
+import { GameItemSprite } from '../GameItemSprite';
 import '../scene/scene.css';
 import './catalog.css';
 import '../scene/quality.css';
@@ -36,6 +39,7 @@ function Icon({ name, size = 20 }: { name: 'back' | 'bag' | 'heart' | 'home' | '
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 function ProductVisual({ product }: { product: DisplayProduct }) {
+  if (product.gameAsset && product.imageKind === 'illustration') return <GameItemSprite asset={product.gameAsset} className="sc-product-visual" />;
   return <img className="sc-product-visual" src={product.imageUrl} alt="" loading="lazy" />;
 }
 function CatalogDialog({ title, viewKey, onClose, children }: { title: string; viewKey: string; onClose: () => void; children: ReactNode }) {
@@ -60,8 +64,10 @@ function CatalogDialog({ title, viewKey, onClose, children }: { title: string; v
 /** Food and beauty share the upstream room presentation, with no scenario or recommendation engine. */
 export default function CatalogScenePage({ category }: { category: CatalogCategory }) {
   const config = CONFIG[category];
-  const storageKey = `gscene-catalog-${category}-v1`;
+  const baseStorageKey = `gscene-catalog-${category}-v1`;
   const [data, setData] = useState<DemoCatalog | null>(null);
+  const storageKey = data ? personaStorageKey(baseStorageKey, data.home) : null;
+  const loadedStoreKey = useRef<string | null>(null);
   const [confirmed, setConfirmed] = useState<DemoState | null>(null);
   const [state, setState] = useState<State>({ cart: [], savedProductIds: [] });
   const [error, setError] = useState(false);
@@ -86,25 +92,29 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
     const timer = setTimeout(() => controller.abort(), 10000);
     let mounted = true;
     setError(false);
+    setData(null); setConfirmed(null); setSelectedId(null);
+    loadedStoreKey.current = null;
     fetch(`/api/demo/${category}`, { signal: controller.signal, cache: 'no-store' })
       .then(response => { if (!response.ok) throw new Error('Catalog unavailable'); return response.json(); })
       .then((catalog: DemoCatalog) => {
         if (!mounted) return;
         if (catalog.category !== category || !Array.isArray(catalog.products) || !Array.isArray(catalog.purchases) || !catalog.user?.id || !catalog.collection || getCategoryProducts(catalog.collection).some(entry => !catalog.products.some(product => product.id === entry.id && product.catalogSource === 'shared-products'))) throw new Error('Invalid catalog');
+        const resolvedStoreKey = personaStorageKey(baseStorageKey, catalog.home);
         let stored: unknown = null, legacy: unknown = null;
         try {
-          stored = localStorage.getItem(storageKey);
-          if (category === 'food') legacy = localStorage.getItem('gscene-food-v1');
+          stored = localStorage.getItem(resolvedStoreKey);
+          if (category === 'food') legacy = localStorage.getItem(personaStorageKey('gscene-food-v1', catalog.home));
         } catch { /* The validated default catalog remains usable. */ }
+        loadedStoreKey.current = resolvedStoreKey;
         setState(restoreCatalogState(catalog, stored, legacy));
         setData(catalog); setConfirmed(readDemoState(catalog.home));
       }).catch(() => { if (mounted) setError(true); })
       .finally(() => clearTimeout(timer));
     return () => { mounted = false; controller.abort(); clearTimeout(timer); };
-  }, [category, storageKey, attempt]);
+  }, [category, baseStorageKey, attempt]);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || !storageKey || loadedStoreKey.current !== storageKey) return;
     try { localStorage.setItem(storageKey, JSON.stringify({ version: 1, ...state })); }
     catch { setStorageNotice(true); }
   }, [data, state, storageKey]);
@@ -125,7 +135,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   }, [panel]);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || !storageKey) return;
     const restore = () => {
       cancelEating();
       setConfirmed(readDemoState(data.home));
@@ -134,7 +144,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
         setState(previous => JSON.stringify(previous) === JSON.stringify(next) ? previous : next);
       } catch { /* Keep this visit's choices when storage is unavailable. */ }
     };
-    const storage = (event: StorageEvent) => { if (event.key === 'gscene-main-v1' || event.key === storageKey || event.key === null) restore(); };
+    const storage = (event: StorageEvent) => { if (event.key === demoStateKey(data.home) || event.key === storageKey || event.key === null) restore(); };
     window.addEventListener('pageshow', restore); window.addEventListener('storage', storage);
     return () => { window.removeEventListener('pageshow', restore); window.removeEventListener('storage', storage); };
   }, [data, storageKey]);
@@ -246,6 +256,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
 
   return <main className={`sc-page sc-${category} catalog-page`} onClickCapture={protectEatingReveal}>
     <header className="sc-header"><a href="/" className="sc-back" aria-label="내 공간으로 돌아가기"><Icon name="back" /><span>내 공간</span></a><a href="/" className="sc-brand">G:Scene<span>.</span></a><div className="sc-header-actions"><button className="sc-icon-button" aria-label={`찜한 상품 ${saved.length}개`} onClick={() => openPanel('saved')}><Icon name="heart" /></button><button className="sc-icon-button sc-bag" aria-label={`장바구니 ${cartCount}개`} onClick={() => openPanel('cart')}><Icon name="bag" /><span>{cartCount}</span></button></div></header>
+    {data && <PersonaSwitcher home={data.home} />}
     {!data ? <section className="sc-load" role={error ? 'alert' : 'status'}><span className="sc-kicker">{config.english}</span><h1>{error ? '공간을 불러오지 못했어요' : '나의 공간을 준비하고 있어요'}</h1><p>{error ? '연결을 확인한 뒤 다시 시도해 주세요.' : '구매한 상품을 살펴보는 중이에요.'}</p>{error && <button className="sc-primary" onClick={() => setAttempt(value => value + 1)}>다시 불러오기</button>}</section> : <>
       <div className="sc-heading"><div><span className="sc-category-mark" aria-hidden="true"><CategoryIcon category={category} /></span><h1>{config.title}</h1></div><span className="sc-person">{data.user.name}의 작은 취향 공간</span></div>
       <section ref={roomRef} tabIndex={-1} className="sc-collection" aria-label={`${config.title}의 구매 상품`}>
@@ -263,7 +274,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
             {roomItems.map(({entry, product, placement, visible, remaining, featured}) => <g key={entry.id} data-room-product-id={entry.id} data-hero-product-id={entry.id} data-hero-status={entry.status} data-hero-role={entry.presentationRole} data-hero-source-image={entry.imageUrl} data-hero-remaining={remaining ?? undefined} data-room-zone={placement.zone} data-remaining={remaining ?? undefined} data-featured={category === 'beauty' ? featured : undefined}>
               {visible && <>
                 <ellipse cx={placement.art.x + placement.art.width / 2} cy={placement.art.y + placement.art.height} rx={placement.art.width * .43} ry={1.4} fill={category === 'beauty' && featured ? '#526c4c' : '#536047'} opacity={category === 'beauty' && featured ? .4 : .2} />
-                <svg x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} viewBox={placement.art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={entry.imageUrl} width="60" height="60" data-product-image={entry.id} /></svg>
+                {entry.product.gameAsset ? <GameItemSprite asset={entry.product.gameAsset} x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} productId={entry.id} /> : <svg x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} viewBox={placement.art.viewBox} preserveAspectRatio="xMidYMax meet" overflow="hidden"><image href={entry.imageUrl} width="60" height="60" data-product-image={entry.id} /></svg>}
               </>}
               {!eating && <path d={`M${placement.art.x + placement.art.width / 2} ${placement.art.y + placement.art.height / 2}L${placement.pin.x} ${placement.pin.y}`} fill="none" stroke="#708467" strokeWidth=".8" opacity={selectedId === product.id ? .75 : .3} />}
             </g>)}

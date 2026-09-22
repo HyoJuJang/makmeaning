@@ -6,8 +6,10 @@ import * as avatars from '../avatar.js';
 import * as scenes from '../scene-entry.js';
 import * as interactions from '../interactions.js';
 import * as demoState from '../demo-state.js';
+import * as personas from '../persona-browser.js';
 import * as categoryRoutes from '../category-routes.js';
 import * as objects from '../object-art.js';
+import * as gameItems from '../game-item-art.js';
 import * as categoryProducts from '../category-products.js';
 import * as roomMirror from '../room-mirror.js';
 import {demoHome} from '../../src/data/demo-home.ts';
@@ -45,7 +47,7 @@ const fetchHome=async(url,options)=>{
   return {ok:true,json:async()=>structuredClone(apiHome)};
 };
 const context=vm.createContext({
-  ...movement,...avatars,...scenes,...interactions,...objects,...categoryRoutes,...demoState,...categoryProducts,...roomMirror,document,
+  ...movement,...avatars,...scenes,...interactions,...objects,...gameItems,...categoryRoutes,...demoState,...personas,...categoryProducts,...roomMirror,document,
   window:{addEventListener(type,fn){windowEvents.set(type,fn);},location:{assign(href){routeRequests.push(href);}},innerHeight:844,scrollBy(){}},
   sessionStorage:{getItem(key){return sessionState.get(key)||null;},setItem(key,value){sessionState.set(key,value);},removeItem(key){sessionState.delete(key);}},
   localStorage:{removeItem(key){if(key==='gscene-main-v1')savedState=null;},getItem(){return savedState;},setItem(key,value){assert.equal(key,'gscene-main-v1');savedState=value;}},

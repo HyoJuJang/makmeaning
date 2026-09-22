@@ -23,7 +23,7 @@ export function catalogRoomPlacement(entry: CategoryProductEntry | undefined, en
   const sameSurface = (item: CategoryProductEntry) => entry.category === 'food'
     ? (entry.presentationRole === 'fridge' ? item.presentationRole === 'fridge' : item.presentationRole !== 'fridge')
     : (entry.presentationRole === 'vanity' ? item.presentationRole === 'vanity' : item.presentationRole !== 'vanity');
-  const peers = entries.filter(sameSurface);
+  const peers = entries.filter(item => item.category === entry.category && sameSurface(item));
   const index = Math.max(0, peers.findIndex(item => item.id === entry.id));
   const category = entry.category;
   const base = { category, number: entry.displayIndex };
@@ -39,9 +39,10 @@ export function catalogRoomPlacement(entry: CategoryProductEntry | undefined, en
       pin: { x: 126 + column * 30, y: peers.length > 2 ? 26 + row * 35 : 30 + row * 74 }, art: { x, y, width, height, viewBox } };
   }
   if (category === 'food') {
-    const column = index % 3, row = Math.floor(index / 3);
+    const columns = peers.length > 4 ? 3 : 2;
+    const column = index % columns, row = Math.floor(index / columns);
     return { ...base, zone: entry.presentationRole === 'pantry' ? 'pantry' : 'shelf', label: '팬트리', approachX: 77,
-      pin: { x: 374 + column * 22, y: 43 + row * 34 }, art: { x: 325 + column * 15, y: 35 + row * 29, width: 14, height: 21, viewBox } };
+      pin: { x: 374 + column * 22, y: 43 + row * 34 }, art: { x: 324 + column * (columns === 3 ? 16 : 24), y: 34 + row * 29, width: columns === 3 ? 14 : 20, height: 22, viewBox } };
   }
   if (entry.presentationRole === 'vanity') {
     return { ...base, zone: 'vanity', label: '화장대', approachX: 55,

@@ -19,7 +19,7 @@ http.createServer(async(req,res)=>{
    res.writeHead(405,{'Allow':'GET, HEAD'});return res.end('Method not allowed');
   }
   try{
-   const response=await getDemoHome();
+   const response=await getDemoHome(new Request('http://localhost'+req.url,{headers:{cookie:req.headers.cookie||''}}));
    const body=req.method==='HEAD'?undefined:Buffer.from(await response.arrayBuffer());
    res.writeHead(response.status,Object.fromEntries(response.headers));
    return res.end(body);

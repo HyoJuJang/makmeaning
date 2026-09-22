@@ -1,6 +1,6 @@
 // Category data owns identity, order and state. Screen geometry only consumes it.
 export const CATEGORY_HERO_LIMITS=Object.freeze({fashion:4,food:6,living:4,beauty:4});
-const roles=new Set(['wardrobe','fridge','pantry','sofa','lamp','vanity','shelf']);
+const roles=new Set(['wardrobe','fridge','pantry','sofa','lamp','vanity','shelf','table','bed']);
 const defaultRole={fashion:'wardrobe',food:'shelf',living:'shelf',beauty:'shelf'};
 const order=product=>Number.isFinite(product.displayOrder)?product.displayOrder:Number.MAX_SAFE_INTEGER;
 
