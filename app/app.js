@@ -77,8 +77,19 @@ function renderHouse(){
  const beautyPosition=featured?roomMirrorPlacement(featured,mirror):null;
  const lampPosition=lamp?roomMirrorPlacement(lamp,mirror):null;
  const lampTarget=document.querySelector('button.lamp-target');
- if(lampTarget&&lampPosition){lampTarget.style.left=`${lampPosition.x/4}%`;lampTarget.style.top=`${lampPosition.y/6}%`;lampTarget.style.width=`${lampPosition.w/4}%`;lampTarget.style.height=`${lampPosition.h/6}%`;}
- document.querySelector('.state-layer').innerHTML=`<defs><radialGradient id="roomGlow"><stop stop-color="#fff1c6" stop-opacity=".5"/><stop offset=".45" stop-color="#ffebbb" stop-opacity=".18"/><stop offset="1" stop-color="#ffebbb" stop-opacity="0"/></radialGradient></defs>${lamp?`<ellipse cx="${lampPosition.x+lampPosition.w/2}" cy="${lampPosition.y+lampPosition.h*.22}" rx="26" ry="32" fill="url(#roomGlow)" opacity="${lamp.on?'.24':'0'}"/>`:''}${featured?`<g class="beauty-selection" data-featured-product-id="${featured.productId}" opacity="${controller.view().heldProductId?0:1}"><ellipse cx="${beautyPosition.x+beautyPosition.w/2}" cy="254" rx="10" ry="2" fill="#718b66" opacity=".45"/><rect x="315" y="257" width="55" height="14" rx="4" fill="#f8f4e9" fill-opacity=".92"/><text x="343" y="267" text-anchor="middle" font-size="8.5" fill="#284b3c">${featured.displayIndex}번 꺼냄</text></g>`:''}`;
+ if(lampTarget){
+  const remote=lamp?.product.gameAsset?.status==='ready'&&lamp.product.gameAsset.familyId==='floor_lamp';
+  lampTarget.hidden=!lamp;
+  lampTarget.classList.toggle('lamp-remote',remote);
+  lampTarget.setAttribute('aria-pressed',String(Boolean(lamp?.on)));
+  lampTarget.setAttribute('aria-label',lamp?.on?'조명 끄기':'조명 켜기');
+  lampTarget.innerHTML=remote?'<span class="lamp-remote-face" aria-hidden="true"><svg viewBox="0 0 20 20"><path d="M10 3v6M6 5.5a6 6 0 1 0 8 0"/></svg></span>':'';
+  // A floor lamp uses the table remote at the existing actor approach point.
+  // Its product artwork and glow remain at the actual floor-lamp placement.
+  const target=remote?{x:356,y:430,w:44,h:44}:lampPosition;
+  if(target){lampTarget.style.left=`${target.x/4}%`;lampTarget.style.top=`${target.y/6}%`;lampTarget.style.width=`${target.w/4}%`;lampTarget.style.height=`${target.h/6}%`;}
+ }
+ document.querySelector('.state-layer').innerHTML=`<defs><radialGradient id="roomGlow"><stop stop-color="#fff1c6" stop-opacity=".5"/><stop offset=".45" stop-color="#ffebbb" stop-opacity=".18"/><stop offset="1" stop-color="#ffebbb" stop-opacity="0"/></radialGradient></defs>${lamp?`<ellipse cx="${lampPosition.x+lampPosition.w/2}" cy="${lampPosition.y+lampPosition.h*.22}" rx="26" ry="32" fill="url(#roomGlow)" opacity="${lamp.on?'.24':'0'}"/>`:''}${featured?`<g class="beauty-selection" data-featured-product-id="${featured.productId}" opacity="${controller.view().heldProductId?0:1}"><ellipse cx="${beautyPosition.x+beautyPosition.w/2}" cy="254" rx="10" ry="2" fill="#718b66" opacity=".45"/></g>`:''}`;
 
  if(typeof paintActor==='function')paintActor(true);paintObjects(true);
 }

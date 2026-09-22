@@ -3,7 +3,7 @@ import { objectArt } from '../object-art.js';
 import { placedMirrorProducts } from '../room-mirror.js';
 import { getHeroProducts, getRoomMirrorProducts } from '../category-products.js';
 import { demoHome } from '../../src/data/demo-home.ts';
-import { initialDemoState, applyOwnedOutfit, selectWardrobeProducts, toRoomVisualState } from '../demo-state.js';
+import { initialDemoState, applyOwnedOutfit, consumeOwnedFood, selectWardrobeProducts, toRoomVisualState } from '../demo-state.js';
 import { garmentPresentation } from '../garment-art.js';
 import { gameItemArt } from '../game-item-art.js';
 const categories=['fashion','food','living','beauty'];
@@ -18,6 +18,29 @@ for(const entry of entries){
  assert(markup.includes(`data-product-state="${entry.status}"`));
 }
 assert.deepEqual(ids(draw([])),[],'Empty category sources cannot invent a purchase');
+const foodProducts=demoHome.categories.food.ownedProducts;
+assert.deepEqual(foodProducts.map(product=>state.foodQuantity[product.id]),[3,3,3],'Use the category-owned quantities already in the demo source');
+assert(markup.includes('>보유 식품 3개</text>'),'Three in-stock product IDs are three foods, not nine servings');
+assert(!markup.includes('보유 식품 잔량'));
+const firstFood=foodProducts[0];
+const onceConsumed=consumeOwnedFood(demoHome,state,firstFood.id);
+assert.equal(onceConsumed.foodQuantity[firstFood.id],2);
+assert(draw(mirror(demoHome,onceConsumed)).includes('>보유 식품 3개</text>'),'Eating one serving does not remove an in-stock product');
+let oneDepleted=onceConsumed;
+while(oneDepleted.foodQuantity[firstFood.id]>0)oneDepleted=consumeOwnedFood(demoHome,oneDepleted,firstFood.id);
+assert(draw(mirror(demoHome,oneDepleted)).includes('>보유 식품 2개</text>'),'A fully consumed product is excluded from the food count');
+let allDepleted=oneDepleted;
+for(const product of foodProducts)while(allDepleted.foodQuantity[product.id]>0)allDepleted=consumeOwnedFood(demoHome,allDepleted,product.id);
+assert(draw(mirror(demoHome,allDepleted)).includes('>보유 식품 없음</text>'),'All-zero quantities show the empty food state');
+assert(draw([]).includes('>보유 식품 없음</text>'),'No room food entries show the empty food state');
+const sharedArtworkHome=structuredClone(demoHome);
+const [firstShared,secondShared]=sharedArtworkHome.categories.food.ownedProducts;
+secondShared.illustrationKey=firstShared.illustrationKey;
+secondShared.imageUrl=firstShared.imageUrl;
+assert.notEqual(firstShared.id,secondShared.id);
+assert(draw(mirror(sharedArtworkHome,state)).includes('>보유 식품 3개</text>'),'Different canonical product IDs sharing artwork still count separately');
+assert(draw([...entries,entries.find(entry=>entry.productId===firstFood.id)]).includes('>보유 식품 3개</text>'),'Repeated room entries cannot count the same product ID twice');
+assert.deepEqual(foodProducts.map(product=>state.foodQuantity[product.id]),[3,3,3],'Rendering and consumption leave the original quantities unchanged');
 for(const confirmed of demoHome.categories.fashion.ownedProducts){
  const next=applyOwnedOutfit(demoHome,state,confirmed.id);
  const hero=getHeroProducts(demoHome.categories.fashion,next);

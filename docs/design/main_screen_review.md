@@ -450,3 +450,12 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - Independent critic viewed all 12 screenshots and source photographs. No blocking clothing/limb/clipping defects. External M02 blue-cardigan hanger artwork remains more saturated than its source photo; the avatar palette is muted dark blue matching the photo family. No new external image generation in this scope.
 - Full npm test, typecheck, production build and local release API contract PASS. Canonical cart API rejects legacy aliases, validates matching prd_id/domain, and tolerates unavailable artwork without erasing real cart products.
 - Evidence: Codex outputs/real-commerce-20260922 (12 wardrobe screenshots, Room hoodie, mobile carts, QA logs). Production validation appended after release.
+
+
+## 2026-09-22 — Home-sized category shell and room labels
+
+- Home, all four category pages, and category navigation share the same 520px maximum width; horizontal padding follows Home. Avatar size follows its scene container instead of desktop viewport width. Category recommendations stay two columns inside this shell.
+- Home food label counts distinct remaining product IDs rather than summing demo servings (3 items instead of 9 uses). Individual consumption state is preserved: actual browser 3 → 3 → 2 items after three uses of one food, then personal reset restored 3. Removed the Beauty `1번 꺼냄` badge while retaining selection state/highlight.
+- Integrated the handed-off floor-lamp remote and flat tabletop repair; desktop/mobile toggle and existing outfit state remain intact.
+- Actual browser: 1280px viewport Home and four scenes share 520px width; all four scenes/nav fit 390px and 320px without horizontal overflow. Owned wear, Room return, photo toggle, Beauty approach/entry, food consumption/reset tested. Independent critic found early screenshot loading artifacts; repeated fully loaded states and closed all three concerns, no remaining important visual defect.
+- Full npm test, production build and typecheck PASS. Evidence: Codex outputs/scene-shell-20260922.

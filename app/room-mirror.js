@@ -66,6 +66,11 @@ export function roomMerchandiseRepairs(){
  <path d="M147 343h17v1h-17ZM140 353h30v1h-30ZM139 366h35v1h-35ZM145 380h31v1h-31ZM141 390h23v1h-23" fill="#d3a771" opacity=".7"/>
  <path d="M153 350h18v1h-18ZM138 372h18v1h-18ZM157 385h17v1h-17ZM147 395h20v1h-20" fill="#ae814e" opacity=".6"/>
  </g>
- <path d="M350 411Q356 408 362 412L364 417Q369 421 369 428Q368 433 361 435L361 443Q356 447 350 443V435Q344 433 343 428Q343 421 348 417Z" fill="#b88c53"/>
+ <g data-background="lamp-table-surface">
+ <path d="M342 409h28v40h-28Z" fill="#b88c53"/>
+ <path d="M343 410h26v2h-26ZM343 422h26v1h-26ZM343 436h26v1h-26" fill="#c79a60"/>
+ <path d="M342 409v40h28M347 417h17M351 431h17M344 443h16" fill="none" stroke="#9e7746" stroke-width="1"/>
+ <path d="M370 410v39" stroke="#6c583d" stroke-width="2"/>
+ </g>
  </g>`;
 }

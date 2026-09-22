@@ -9,7 +9,7 @@
   transform: translateX(-50%);
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  width: min(520px, 100%);
+  width: min(var(--gs-page-width), 100%);
   height: var(--gs-nav-height);
   padding: 4px max(12px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
   border: 0;

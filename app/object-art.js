@@ -48,8 +48,8 @@ function fridge(open, selected, entries) {
   const handX = mix(239,305,open), handY = mix(119,139,open);
   const foodEntries=entries.filter(entry=>entry.category==='food');
   const food=entry=>{const placement=roomMirrorPlacement(entry,foodEntries);return purchasedArt(entry,`${selected===entry.productId&&entry.artVisible?`<rect x="${placement.x}" y="${placement.y}" width="${placement.w}" height="${placement.h}" rx="3" fill="#ecdfac" stroke="#5b795d"/>`:''}${mirrorImage(entry,placement)}`);};
-  const labels={milk:'우유',water:'물',vitamin:'영양제'};
-  const summary=foodEntries.some(entry=>entry.product.imageKind==='product-photo')?`보유 식품 잔량 ${foodEntries.reduce((sum,entry)=>sum+entry.remaining,0)}회`:foodEntries.map(entry=>`${labels[entry.illustrationKey]||entry.product.name.slice(0,5)} ${entry.remaining}`).join(' · ');
+  const inStockCount=new Set(foodEntries.filter(entry=>entry.remaining>0).map(entry=>entry.productId)).size;
+  const summary=inStockCount?`보유 식품 ${inStockCount}개`:'보유 식품 없음';
   return `<g data-object-art="fridge" data-open="${open.toFixed(3)}">
     <defs><clipPath id="fixed-fridge-door-repair"><path d="M282 94 314 119V186H282Z"/></clipPath></defs>
     <g clip-path="url(#fixed-fridge-door-repair)"><image href="/assets/gather-room.png" x="82" y="-41" width="400" height="600"/></g>

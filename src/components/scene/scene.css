@@ -1,4 +1,4 @@
-.sc-page{--sc-ink:#233b34;--sc-muted:#7b8178;--sc-line:#e7e5dd;--sc-paper:#fbfaf6;--sc-green:#294d40;background:var(--sc-paper);color:var(--sc-ink);min-height:100svh;margin:0 auto;max-width:1200px;padding:0 36px 100px;font-size:14px;line-height:1.5;letter-spacing:-.35px}
+.sc-page{--sc-ink:#233b34;--sc-muted:#7b8178;--sc-line:#e7e5dd;--sc-paper:#fbfaf6;--sc-green:#294d40;background:var(--sc-paper);color:var(--sc-ink);min-height:100svh;margin:0 auto;max-width:var(--gs-page-width);padding:0 22px 100px;font-size:14px;line-height:1.5;letter-spacing:-.35px}
 .sc-page button,.sc-page input,.sc-page select{font:inherit;color:inherit}
 .sc-page button,.sc-page a{touch-action:manipulation}
 .sc-page a{text-decoration:none;color:inherit}
@@ -141,7 +141,7 @@
 .sc-load .sc-primary{width:auto;margin-top:22px}
 @media(min-width:1000px){.sc-context{position:sticky;top:18px}
 .sc-product-grid{gap:28px 18px}}
-@media(max-width:760px){.sc-page{max-width:520px;padding:0 20px 88px}
+@media(max-width:760px){.sc-page{padding:0 22px 88px}
 .sc-header{height:60px}
 .sc-brand{font-size:22px}
 .sc-back{width:80px;font-size:10px;gap:5px}
@@ -186,7 +186,7 @@
 .sc-demo-note{font-size:8px}
 .sc-dialog{margin:auto auto 0;width:100%;max-width:520px;max-height:90svh;border-radius:22px 22px 0 0;padding-bottom:env(safe-area-inset-bottom)}
 .sc-dialog-inner{padding:15px 22px 25px}}
-@media(max-width:359px){.sc-page{padding-left:14px;padding-right:14px}
+@media(max-width:359px){
 .sc-heading h1{font-size:27px}
 .sc-heading p{font-size:10px}
 .sc-person{display:none}
@@ -214,7 +214,7 @@
 .sc-top-pick{font-size:8px}}
 
 /* Room-first recommendations: pixel furniture, item slots, a single scene control. */
-.sc-page{max-width:860px;padding:0 24px 100px;--sc-line:#dfded3}
+.sc-page{padding:0 22px 100px;--sc-line:#dfded3}
 .sc-header{height:56px}
 .sc-heading{padding:16px 0 12px;display:flex;align-items:center;justify-content:space-between}
 .sc-heading>div{display:flex;align-items:center;gap:10px}
@@ -230,7 +230,7 @@
 .sc-room-hud b{font-size:10px;font-weight:500;letter-spacing:1px}
 .sc-room{aspect-ratio:3;overflow:hidden;border-bottom:2px solid #aaa18d}
 .sc-room-art{image-rendering:pixelated;object-fit:cover}
-.sc-room-avatar{position:absolute;z-index:2;right:7%;bottom:3%;width:clamp(38px,9vw,70px);pointer-events:none;filter:drop-shadow(1px 3px 0 #51453833);animation:sc-idle 3s steps(2,end) infinite;transform-origin:bottom center}
+.sc-room-avatar{position:absolute;z-index:2;right:7%;bottom:3%;width:clamp(32px,11%,52px);pointer-events:none;filter:drop-shadow(1px 3px 0 #51453833);animation:sc-idle 3s steps(2,end) infinite;transform-origin:bottom center}
 .sc-room-avatar svg{display:block;width:100%;height:auto;image-rendering:pixelated}
 .sc-living .sc-room-avatar{right:22%;bottom:1%}
 .sc-room-footnote{font-size:8px;border-radius:0;bottom:auto;top:6px;right:7px;background:#fbfaf0e8;color:#515e4e;text-shadow:none;padding:3px 5px}
@@ -307,7 +307,7 @@
 @keyframes sc-idle{0%,75%,100%{transform:translateY(0)}85%{transform:translateY(-2px)}}
 @keyframes sc-pick{from{transform:scale(1.12);opacity:.4}to{transform:scale(1);opacity:1}}
 @media(max-width:760px){
-  .sc-page{max-width:580px;padding:0 16px 88px}
+  .sc-page{padding:0 22px 88px}
   .sc-header{height:52px}
   .sc-heading{padding:12px 0 10px}
   .sc-heading h1{font-size:23px}
@@ -335,7 +335,6 @@
   .sc-dialog-inner{padding:14px 20px 26px}
 }
 @media(max-width:359px){
-  .sc-page{padding-left:12px;padding-right:12px}
   .sc-header{height:48px}
   .sc-heading{padding:8px 0}
   .sc-heading h1{font-size:22px}
@@ -448,3 +447,8 @@
 .sc-outfit-status button{flex:none;min-height:36px;padding:4px 9px;border:1px solid #d5d9cc;border-radius:8px;background:#faf9f3;color:#405744;font:inherit}
 
 .sc-cart-quantity{display:flex;align-items:center;gap:2px;border:1px solid #ced6c4;width:max-content;margin-top:8px;border-radius:5px;overflow:hidden}.sc-cart-quantity button{min-width:44px;min-height:44px;background:transparent;padding:4px;font-size:16px!important}.sc-cart-quantity output{min-width:24px;text-align:center;font-size:12px}.sc-cart-quantity button:disabled{opacity:.4}.sc-commerce-status{font-size:11px;line-height:1.7;color:#7d684a}.sc-commerce-status p{padding:8px 0}.sc-commerce-status:empty{display:none}.sc-dialog-item>.sc-icon-button{min-width:44px;min-height:44px}.sc-cart-save{margin-top:10px;width:100%;min-height:44px}
+
+/* A category remains inside the same phone-sized shell as Main Room. */
+.sc-page .rec-panel .rec-products{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sc-page .rec-panel .rec-product{padding:13px 11px}
+@media(max-width:350px){.sc-page{padding-left:15px;padding-right:15px}}
