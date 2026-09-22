@@ -52,7 +52,7 @@ function CatalogDialog({ title, viewKey, onClose, children }: { title: string; v
   </dialog>;
 }
 
-/** Food and beauty share room presentation and switchable product recommendations. */
+/** Food and beauty share room presentation and recommendations for the selected product. */
 export default function CatalogScenePage({ category }: { category: CatalogCategory }) {
   const config = CONFIG[category];
   const storageKey = `gscene-catalog-${category}-v1`;
@@ -66,7 +66,6 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
-  const [sort, setSort] = useState('catalog');
   const [notice, setNotice] = useState('');
   const [interaction, setInteraction] = useState({ x: config.homeX as number, key: 0 });
   const roomRef = useRef<HTMLElement>(null);
@@ -141,8 +140,6 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   const anchor = rail.find(product => product.id === selectedId);
   const detail = data?.products.find(product => product.id === detailId);
   const cartCount = state.cart.reduce((total, line) => total + line.quantity, 0);
-  const products = [...(data?.products ?? [])];
-  if (sort === 'price-low') products.sort((a, b) => a.price - b.price);
 
   function openPanel(next: Panel, productId?: string) {
     if (!panel) returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -192,15 +189,8 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
         <div className="sc-anchor-caption" aria-live="polite"><span className="sc-small-star" aria-hidden="true">＋</span>{anchor ? <p><b>{anchor.name}</b><small>{tab === 'owned' ? `가상 보유 · ${ownedStatus(anchor.id)}` : '장바구니 상품 · 아직 구매 전이에요'}</small></p> : <p>{rail.length ? '상품을 골라 자세히 살펴보세요.' : tab === 'owned' ? '구매 기록이 없어도 상품을 둘러볼 수 있어요.' : '아직 장바구니에 담긴 상품이 없어요.'}</p>}{anchor && <button className="sc-text-button" onClick={() => openPanel('product', anchor.id)}>상품 보기 ↗</button>}</div>
       </section>
       <p className="sc-demo-note catalog-state-note">가상 보유 상태는 내 공간과 연결돼요. 그림은 실제 상품 외형이 아닌 공간용 예시예요.{category === 'food' && <><br />데모 잔량은 사용 횟수이며 상품의 포장 수량·재고와 달라요.</>}</p>
-      <RecommendationPanel domain={category} userId={data.user.id} anchorProductId={anchor?.id} purchasedProductIds={purchases.map(product => product.id)} cartProductIds={state.cart.map(line => line.productId)} />
-      <section className="sc-results" aria-labelledby="catalog-products-title"><div className="sc-results-heading"><h2 id="catalog-products-title"><span className="sc-pixel-spark" aria-hidden="true">✳</span>{config.label} 둘러보기 <span className="sc-result-count">{products.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={sort} onChange={event => setSort(event.target.value)}><option value="catalog">기본순</option><option value="price-low">낮은 가격순</option></select></label></div>
-        <div className="sc-product-grid">{products.map(product => {
-          const inCart = state.cart.some(line => line.productId === product.id);
-          return <article className="sc-card" key={product.id}><div className="sc-card-image"><button className="sc-card-open" aria-label={`${product.name} 상세 보기`} onClick={() => openPanel('product', product.id)}><ProductVisual product={product} /></button><button className="sc-heart" aria-label={`${product.name} 찜`} aria-pressed={state.savedProductIds.includes(product.id)} onClick={() => toggleSaved(product.id)}><Icon name="heart" size={18} /></button></div><div className="sc-card-copy"><span className="sc-product-kind">{product.cate3_nm || product.cate2_nm}</span><button className="sc-card-name" onClick={() => openPanel('product', product.id)}>{product.name}</button><small className="catalog-source">{product.catalogSource === 'shared-products' ? '실상품 · 카탈로그 참고가' : '가상 예시 상품 · 예시 가격'}</small><strong className="sc-price">{money(product.price)}</strong><button className={`sc-cart-button ${inCart ? 'is-added' : ''}`} onClick={() => addCart(product)}><Icon name={inCart ? 'check' : 'bag'} size={15} />{inCart ? '담은 상품 보기' : '장바구니에 담기'}</button></div></article>;
-        })}</div>
-        {products.length === 0 && <div className="sc-empty"><p>표시할 상품이 아직 없어요.</p></div>}
-      </section>
-      <p className="sc-demo-note">가상 고객의 구매·보유를 실상품에 연결한 데모예요.<br />추가 탐색 상품은 별도 표시한 가상 예시이며 실제 주문은 진행되지 않아요.</p>
+      <RecommendationPanel domain={category} userId={data.user.id} anchorProductId={anchor?.id} anchorProductName={anchor?.name} purchasedProductIds={purchases.map(product => product.id)} cartProductIds={state.cart.map(line => line.productId)} />
+      <p className="sc-demo-note">가상 고객의 구매·보유를 실상품에 연결한 데모예요. 실제 주문은 진행되지 않아요.</p>
       {storageNotice && <p className="sc-demo-note" role="status">이 브라우저에서는 저장할 수 없어 이번 방문 동안만 유지돼요.</p>}
     </>}
     {!data && error && <RecommendationPanel domain={category} />}

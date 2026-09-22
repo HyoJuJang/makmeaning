@@ -45,20 +45,21 @@ export function recommendForUser(
   const relevant = [...history.values()];
   const strong = relevant.filter(item => item.orderCount > 0 || item.cartCount > 0);
   const ordered = (items: UserItem[]) => [...items].sort((a, b) => strength(b) - strength(a) || b.lastAt.localeCompare(a.lastAt) || compareIds(a.productId, b.productId));
-  const selected = request.anchorProductId ? byId.get(request.anchorProductId) : null;
+  const hasSelection = Boolean(request.anchorProductId);
+  const selected = hasSelection ? byId.get(request.anchorProductId!) : null;
   const selectedProduct = selected?.domain === request.domain ? selected : null;
   const anchors: RecommendationResponse['anchors'] = [];
   if (selectedProduct) anchors.push({ product: selectedProduct, source: 'selected' });
   const primary = mode === 'metadata'
     ? [...strong].sort((a, b) => compareIds(a.productId, b.productId))
     : ordered(strong);
-  for (const item of primary.slice(0, 8)) {
-    if (item.productId === selectedProduct?.prd_id) continue;
+  // An explicit selection is the only recommendation seed. Other history still excludes owned/cart items.
+  for (const item of hasSelection ? [] : primary.slice(0, 8)) {
     anchors.push({ product: byId.get(item.productId)!, source: item.orderCount > 0 ? 'order' : 'cart' });
   }
-  if (mode === 'behavior') {
+  if (!hasSelection && mode === 'behavior') {
     for (const item of ordered(relevant.filter(item => !item.orderCount && !item.cartCount)).slice(0, strong.length ? 3 : 8)) {
-      if (item.productId !== selectedProduct?.prd_id) anchors.push({ product: byId.get(item.productId)!, source: 'view' });
+      anchors.push({ product: byId.get(item.productId)!, source: 'view' });
     }
   }
   const excluded = new Set(strong.map(item => item.productId));
@@ -92,6 +93,8 @@ export function recommendForUser(
       const weight = anchor.source === 'selected' ? 8 : item ? strength(item) : 1;
       for (const neighbor of index.neighbors[anchor.product.prd_id] ?? []) {
         if (byId.get(neighbor.productId)?.domain !== request.domain || excluded.has(neighbor.productId) || neighbor.support < 2 || !Number.isFinite(neighbor.score) || neighbor.score <= 0) continue;
+        // Product browsing needs a category relationship as well as shared-user interest.
+        if (hasSelection && !metadata.has(neighbor.productId)) continue;
         const contribution = weight * neighbor.score;
         const previous = behavior.get(neighbor.productId);
         behavior.set(neighbor.productId, {
@@ -111,7 +114,7 @@ export function recommendForUser(
     return {
       product: byId.get(id)!, score: round(100 * (0.75 * affinity + 0.15 * relation + 0.1 * popular)),
       source: 'behavior' as const, anchorProductId: signal.anchorId, support: signal.support,
-      reason: `기준 상품과 이 상품에 관심을 보인 사용자들의 행동을 바탕으로 골랐어요.`,
+      reason: hasSelection ? '선택한 상품에 관심을 보인 사람들이 함께 살펴본 상품이에요.' : '기준 상품과 이 상품에 관심을 보인 사용자들의 행동을 바탕으로 골랐어요.',
       signals: { behavior: round(affinity), metadata: round(relation), popularity: round(popular) },
     };
   }).sort((a, b) => b.score - a.score || compareIds(a.product.prd_id, b.product.prd_id));
@@ -126,7 +129,7 @@ export function recommendForUser(
   };
   if (mode === 'behavior') append(behaviorRanked);
   append(metadataRanked);
-  if (mode === 'behavior') {
+  if (!hasSelection && mode === 'behavior') {
     append(candidates.filter(product => popularity(product.prd_id) > 0).sort((a, b) => popularity(b.prd_id) - popularity(a.prd_id) || compareIds(a.prd_id, b.prd_id)).map(product => ({
       product, score: round(100 * popularity(product.prd_id)), source: 'popularity',
       reason: '같은 카테고리의 3일 집계 인기도를 기준으로 골랐어요.',
@@ -150,16 +153,20 @@ export function recommendForUser(
     }
     if (!added) break;
   }
-  append(diverse);
+  // Never fill a selected-product result with unrelated popular or default catalog items.
+  if (!hasSelection) append(diverse);
   const sources = new Set(results.map(item => item.source));
-  const effectiveMode = sources.size > 1 ? 'mixed' : results[0]?.source ?? (mode === 'behavior' ? 'popularity' : 'catalog');
+  const effectiveMode = sources.size > 1 ? 'mixed' : results[0]?.source ?? (hasSelection ? mode : mode === 'behavior' ? 'popularity' : 'catalog');
   let fallbackReason: string | null = null;
   const labels = { metadata: '카테고리 연결', popularity: '인기도', catalog: '카테고리별 기본 상품', behavior: '행동 추천' };
   const backupLabels = [...sources].filter(source => source !== mode).map(source => labels[source]).join(' · ');
-  if (!candidates.length) fallbackReason = domainProducts.length
-    ? '이미 주문하거나 장바구니에 담은 상품을 제외하니 추천할 상품이 없습니다.'
+  if (hasSelection && !selectedProduct) fallbackReason = '선택한 상품의 추천용 정보를 아직 확인할 수 없어요. 다른 상품을 선택해 주세요.';
+  else if (!candidates.length) fallbackReason = domainProducts.length
+    ? '선택한 상품과 이미 주문하거나 장바구니에 담은 상품을 제외하니 추천할 상품이 없습니다.'
     : '이 카테고리에 추천할 상품이 없습니다.';
+  else if (hasSelection && !results.length) fallbackReason = '선택한 상품과 연결할 추천 상품이 아직 없어요. 다른 상품을 선택해 주세요.';
   else if (!anchors.length) fallbackReason = `이 카테고리에서 연결할 구매·장바구니 이력이 없어 ${backupLabels || labels[results[0]?.source ?? 'catalog']} 기준으로 보여드립니다.`;
+  else if (hasSelection && backupLabels) fallbackReason = '선택한 상품과 연결된 카테고리 상품을 함께 골랐어요.';
   else if (backupLabels) fallbackReason = mode === 'behavior'
     ? `행동 근거가 부족한 자리는 ${backupLabels} 기준으로 보충했습니다.`
     : `연결 규칙에 맞는 상품이 부족한 자리는 ${backupLabels} 기준으로 보충했습니다.`;

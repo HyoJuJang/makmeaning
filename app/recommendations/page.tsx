@@ -3,8 +3,8 @@ import type { RecommendationDomain } from '@/lib/recommendation/types';
 import RecommendationReview from '@/components/recommendation/RecommendationReview';
 
 export const metadata: Metadata = {
-  title: '추천 비교 — G:Scene',
-  description: '행동 기반 추천과 상품 메타데이터 백업을 같은 조건에서 비교합니다.',
+  title: '추천 검토 — G:Scene',
+  description: '사용자별 추천 상품과 추천 기준, 선정 근거를 확인합니다.',
 };
 
 export default async function RecommendationsPage({ searchParams }: { searchParams: Promise<{ domain?: string | string[] }> }) {

@@ -23,7 +23,9 @@ export interface RecommendationIndex {
 }
 export interface RecommendationRequest {
   userId?: string; sample?: RecommendationDomain; domain: RecommendationDomain;
-  mode?: RecommendationMode; limit?: number; anchorProductId?: string;
+  mode?: RecommendationMode; limit?: number;
+  /** When selected, use only this product as a seed and never fill with unrelated defaults. */
+  anchorProductId?: string;
   /** Explicit current screen context supplements the historical dump; it does not mutate it. */
   purchasedProductIds?: string[]; cartProductIds?: string[];
 }

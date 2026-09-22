@@ -83,7 +83,7 @@ test('single-user pairs and invalid similarities cannot become collaborative rec
 test('explicit screen context updates anchors/exclusions without mutating history and ignores fixture IDs', () => {
   const profile = { items: [item('anchor', 1)] };
   const copy = structuredClone(profile);
-  const result = recommendForUser(fixture(), profile, { ...request, cartProductIds: ['peer'], purchasedProductIds: ['cart'], anchorProductId: 'old-demo-serum' });
+  const result = recommendForUser(fixture(), profile, { ...request, cartProductIds: ['peer', 'old-demo-serum'], purchasedProductIds: ['cart'] });
   assert.deepEqual(profile, copy);
   assert.equal(result.excludedCount, 3);
   assert.ok(result.items.every(row => !['anchor', 'peer', 'cart'].includes(row.product.prd_id)));
@@ -141,4 +141,46 @@ test('fallback explanations describe actual sources when popularity is missing',
   assert.equal(selected.userState, 'unknown', 'A selected item alone is not a purchase history');
   assert.equal(selected.anchors[0].source, 'selected');
   assert.doesNotMatch(selected.fallbackReason, /인기도/);
+});
+
+test('selected product is the only seed in both modes while all owned and cart items stay excluded', () => {
+  const index = fixture();
+  index.products.push({ ...product('hair-anchor'), cate1_nm: '헤어케어', cate2_nm: '샴푸/린스' });
+  index.products.push({ ...product('hair-peer'), cate1_nm: '헤어케어', cate2_nm: '트리트먼트/헤어팩' });
+  index.neighbors['hair-anchor'] = [{ productId: 'hair-peer', score: 1, support: 100 }];
+  index.neighbors.anchor.push({ productId: 'hair-peer', score: 1, support: 100 });
+  index.popularity['hair-peer'] = 1000000;
+  const profile = { items: [item('anchor', 1), item('hair-anchor', 3, 3, 3), item('cart', 0, 1), item('hair-peer', 0, 0, 3)] };
+  const original = structuredClone(profile);
+  for (const mode of ['behavior', 'metadata']) {
+    const selected = recommendForUser(index, profile, { ...request, mode, anchorProductId: 'anchor', limit: 24 });
+    assert.deepEqual(selected.anchors.map(anchor => [anchor.product.prd_id, anchor.source]), [['anchor', 'selected']]);
+    assert.ok(selected.items.length > 0);
+    assert.ok(selected.items.every(row => row.anchorProductId === 'anchor'));
+    assert.ok(selected.items.every(row => !['anchor', 'cart', 'hair-anchor', 'hair-peer'].includes(row.product.prd_id)));
+    assert.ok(selected.items.every(row => ['behavior', 'metadata'].includes(row.source)));
+    const altered = { items: profile.items.map(row => ({ ...row, viewCount: 999, orderCount: row.orderCount ? 999 : 0, lastAt: '1999010100' })) };
+    assert.deepEqual(recommendForUser(index, altered, { ...request, mode, anchorProductId: 'anchor', limit: 24 }).items, selected.items);
+    const other = recommendForUser(index, profile, { ...request, mode, anchorProductId: 'hair-anchor', limit: 24 });
+    assert.deepEqual(other.items.map(row => row.product.prd_id), ['hair-peer']);
+    assert.ok(other.items.every(row => row.anchorProductId === 'hair-anchor'));
+  }
+  assert.deepEqual(profile, original);
+});
+
+test('selected products never fall through to unrelated popular or catalog recommendations', () => {
+  const index = fixture();
+  index.products.push({ ...product('isolated'), cate1_nm: '단독분류', cate2_nm: '' });
+  for (const mode of ['behavior', 'metadata']) {
+    const result = recommendForUser(index, { items: [item('anchor', 3)] }, { ...request, mode, anchorProductId: 'isolated' });
+    assert.equal(result.items.length, 0);
+    assert.deepEqual(result.anchors.map(anchor => anchor.product.prd_id), ['isolated']);
+    assert.match(result.fallbackReason, /선택한 상품과 연결할/);
+    for (const anchorProductId of ['missing', 'fashion']) {
+      const unknown = recommendForUser(index, { items: [item('anchor', 3)] }, { ...request, mode, anchorProductId });
+      assert.equal(unknown.items.length, 0);
+      assert.equal(unknown.anchors.length, 0);
+      assert.match(unknown.fallbackReason, /선택한 상품의 추천용 정보/);
+    }
+  }
 });

@@ -4,8 +4,6 @@ import { useEffect, useState } from 'react';
 import type { RecommendationDomain, RecommendationMode, RecommendationRequest, RecommendationResponse } from '@/lib/recommendation/types';
 
 export const DOMAIN_LABELS: Record<RecommendationDomain, string> = { fashion: '패션', living: '리빙', food: '푸드', beauty: '뷰티' };
-export const MODE_LABELS: Record<RecommendationMode, string> = { behavior: '본 추천', metadata: '메타데이터 백업' };
-const MODE_KEY = 'gscene-recommendation-mode-v1';
 const USER_KEY = 'gscene-recommendation-user-v1';
 const CHANGE_EVENT = 'gscene-recommendation-preference';
 
@@ -22,11 +20,6 @@ function readPreference(key: string) {
   try { return localStorage.getItem(key); } catch { return null; }
 }
 
-export function saveRecommendationMode(mode: RecommendationMode) {
-  try { localStorage.setItem(MODE_KEY, mode); } catch { /* The current page remains usable without persistent storage. */ }
-  window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { mode } }));
-}
-
 export function saveRecommendationUser(userId: string) {
   try {
     if (userId.trim()) localStorage.setItem(USER_KEY, userId.trim());
@@ -35,25 +28,24 @@ export function saveRecommendationUser(userId: string) {
   window.dispatchEvent(new CustomEvent(CHANGE_EVENT, { detail: { userId: userId.trim() } }));
 }
 
-export function useRecommendationPreferences(defaultMode: RecommendationMode = 'behavior') {
-  const [value, setValue] = useState({ ready: false, mode: defaultMode, userId: '' });
+export function useRecommendationPreferences() {
+  const [value, setValue] = useState({ ready: false, userId: '' });
   useEffect(() => {
     const read = () => {
-      const storedMode = readPreference(MODE_KEY);
-      setValue({ ready: true, mode: storedMode === 'behavior' || storedMode === 'metadata' ? storedMode : defaultMode, userId: readPreference(USER_KEY) || '' });
+      setValue({ ready: true, userId: readPreference(USER_KEY) || '' });
     };
     const changed = (event: Event) => {
-      const detail = (event as CustomEvent<{ mode?: RecommendationMode; userId?: string }>).detail;
+      const detail = (event as CustomEvent<{ userId?: string }>).detail;
       setValue(previous => ({ ...previous, ...detail, ready: true }));
     };
     const storageChanged = (event: StorageEvent) => {
-      if (!event.key || event.key === MODE_KEY || event.key === USER_KEY) read();
+      if (!event.key || event.key === USER_KEY) read();
     };
     read();
     window.addEventListener('storage', storageChanged);
     window.addEventListener(CHANGE_EVENT, changed);
     return () => { window.removeEventListener('storage', storageChanged); window.removeEventListener(CHANGE_EVENT, changed); };
-  }, [defaultMode]);
+  }, []);
   return value;
 }
 

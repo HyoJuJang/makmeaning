@@ -5,7 +5,7 @@
 **상품 탭·데이터 작업을 시작하는 팀원은 [공통 상품 DB·API 사용 가이드](docs/design/backend/README.md)를 먼저 확인하세요.** 공개 조회, 로컬 연결, `opt1~opt4` 수정, JSON 등록 예제를 제공합니다.
 식품·뷰티의 현재 구현 범위는 `docs/food/implementation.md`, 검증 결과는 `docs/food/review.md`, 추후 브랜치 통합 안내는 `docs/catalog/merge-preparation.md`입니다. `/food` 내 주방과 `/beauty` 내 화장대에서 같은 구매 상품·장바구니 경험을 제공합니다.
 
-**추천 기능 최신 상태:** `feat/recommendation`에서 실제 CSV와 userid 기반으로 네 카테고리의 본 추천·메타데이터 백업을 구현했습니다. `npm run recommendations:prepare` 후 `/recommendations`에서 비교하고 방 화면에 적용할 수 있습니다. [실행·추천 규칙 가이드](docs/recommendation/README.md)와 [검수 결과](docs/recommendation/review.md)를 참고하세요. 아래 과거 구현 기록의 “추천 미구현/준비 안내”는 새 추천 패널에 대해서는 이 내용으로 대체됩니다.
+**추천 기능 최신 상태:** `feat/recommendation`에서 실제 CSV와 userid 기반 추천을 구현했습니다. 구매·장바구니 상품을 선택하면 그 상품 하나와 카테고리로 연결된 상품만 추천합니다. 식품·뷰티의 별도 둘러보기 목록과 본/백업 전환 UI는 제거했습니다. `npm run recommendations:prepare` 후 `/recommendations`에서 사용자별 결과를 검토할 수 있으며 추천 전략은 서버 환경변수로 전환합니다. [실행·추천 규칙 가이드](docs/recommendation/README.md)와 [검수 결과](docs/recommendation/review.md)를 참고하세요. 아래 과거 기록의 추천 준비 안내는 이 내용으로 대체됩니다.
 
 ## 실행
 

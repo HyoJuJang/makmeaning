@@ -327,7 +327,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         </div>
 
         <div>
-        <RecommendationPanel domain={category} userId={home.user.id} anchorProductId={anchor?.id} purchasedProductIds={purchases.map(product => product.id)} cartProductIds={cartIds} />
+        <RecommendationPanel domain={category} userId={home.user.id} anchorProductId={anchor?.id} anchorProductName={anchor?.name} purchasedProductIds={purchases.map(product => product.id)} cartProductIds={cartIds} />
         <section className="sc-results" aria-labelledby="sc-results-title">
           <button ref={filterButtonRef} className="sc-filter-summary" onClick={openFilters} aria-haspopup="dialog" aria-label={`추천 조건 변경: ${filterSummary}`}><Icon name="sliders" size={17} /><span>{filterSummary}</span><b>{filterParts.length ? '조건 수정' : '조건 추가'}</b><span aria-hidden="true">＋</span></button>
           <div className="sc-results-heading"><h2 id="sc-results-title"><span className="sc-pixel-spark" aria-hidden="true">✦</span>{'공간 미리보기 예시 상품'} <span className="sc-result-count" aria-live="polite">{recommendations.length}</span></h2><label className="sc-sort"><span className="sr-only">상품 정렬</span><select value={filters.sort} onChange={event => { const sort = event.target.value as SceneFilters['sort']; setFilters(previous => ({ ...previous, sort })); setDraft(previous => ({ ...previous, sort })); }}><option value="recommended">추천순</option><option value="price-low">낮은 가격순</option></select></label></div>
