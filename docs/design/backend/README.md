@@ -2,6 +2,27 @@
 
 상품 탭 개발자는 조회 API를, 데이터 담당자는 SQL Editor 또는 JSON 등록 명령을 사용합니다. 원본 명세는 [tables.md](tables.md), 코드의 타입은 [Product](../../../src/types/product.ts)입니다.
 
+## 동료에게 전달할 URL과 환경변수
+
+- 앱: [https://makmeaning.vercel.app](https://makmeaning.vercel.app/)
+- 코드: [HyoJuJang/makmeaning](https://github.com/HyoJuJang/makmeaning)
+- 상품 조회: [GET /api/products](https://makmeaning.vercel.app/api/products)
+- 사용자·카테고리 보유 데이터: [GET /api/demo/home](https://makmeaning.vercel.app/api/demo/home)
+- Vercel 프로젝트: `ww-002-8351s-projects / makmeaning`
+
+| 하려는 일 | 환경변수 / 권한 |
+| --- | --- |
+| 배포 앱을 열거나 주소창·curl로 API 확인 | 환경변수 불필요 |
+| 이 저장소를 로컬에서 정상 실행 | 서버 전용 `DATABASE_URL`을 `.env.local`에 설정. Vercel Development 환경변수 조회 권한 또는 담당자의 안전한 비밀값 전달 필요 |
+| 같은 Vercel 프로젝트에 배포 | 기존 프로젝트 접근 권한 사용. 새 계정의 인증은 각자 수행 |
+| 별도 Vercel 프로젝트에 복제 배포 | 해당 프로젝트에도 승인된 `DATABASE_URL` 설정 필요. Git clone만으로 비밀값이 복사되지 않음 |
+
+현재 앱과 `db:*` 스크립트에 필요한 DB 설정은 `DATABASE_URL`입니다. 상품 조회 API는 `POSTGRES_URL`을 대체로 지원하지만, 통일된 설정으로 `DATABASE_URL`을 사용하세요. `NEXT_PUBLIC_*` API 주소·DB 비밀번호·OpenAI API key는 현재 실행에 필요하지 않습니다. 프런트엔드는 같은 서버의 상대 경로 API를 호출합니다.
+
+Vercel/Neon 연동이 `PG*`, `POSTGRES_*`, `DATABASE_URL_UNPOOLED` 등의 추가 변수를 내려줄 수 있지만 현재 코드용으로 하나씩 수동 전달할 필요는 없습니다. `.env.local` 전체나 개인 인증 토큰을 공유하지 마세요. 필요한 비밀값은 프로젝트 권한으로 각자 받거나, 권한 있는 담당자가 팀에서 사용하는 비밀 공유 수단으로 전달합니다. Markdown과 Git에는 변수 이름·예제만 둡니다.
+
+**현재 `/api/demo/home`도 DB를 조회합니다.** 과거의 ‘방 데모는 환경변수 없이 실행’ 안내는 초기 mock 버전에 해당합니다. build 성공과 실제 데이터 로딩 성공은 다르므로 아래 로컬 API 두 곳을 모두 확인하세요.
+
 ## 어떤 작업부터 할까요?
 
 | 하려는 일 | 시작 방법 | 필요한 권한 |
@@ -78,11 +99,11 @@ npm ci
 ```sh
 npx --yes vercel@59.23.2 login
 npx --yes vercel@59.23.2 link --yes --team ww-002-8351s-projects --project makmeaning
-npx --yes vercel@59.23.2 env pull .env.local --scope ww-002-8351s-projects
+npx --yes vercel@59.23.2 env pull .env.local --environment=development --scope ww-002-8351s-projects
 npm run dev
 ```
 
-[로컬 상품 API](http://127.0.0.1:3000/api/products)를 열어 JSON이 나오면 연결 완료입니다. 프로젝트가 보이지 않으면 프로젝트 담당자에게 접근 권한을 요청하세요. `.env.example`은 형식 예시이며 실제 접속 정보가 아닙니다.
+[로컬 상품 API](http://127.0.0.1:3000/api/products)와 [로컬 홈 API](http://127.0.0.1:3000/api/demo/home)가 모두 HTTP 200으로 상품 JSON을 반환하면 연결 완료입니다. 환경변수를 변경했다면 로컬 서버를 재시작하세요. 프로젝트가 보이지 않으면 프로젝트 담당자에게 접근 권한을 요청하세요. `.env.example`은 형식 예시이며 실제 접속 정보가 아닙니다.
 
 이 저장소의 프런트엔드에서는 **상대 경로**로 호출합니다.
 
@@ -102,7 +123,7 @@ export async function loadProducts(domain = 'fashion') {
 
 현재 API는 다른 출처의 브라우저 요청을 위한 CORS 허용 헤더를 보내지 않습니다. localhost 화면에서 배포 API의 절대 URL을 직접 `fetch`하면 브라우저가 차단하므로, 위처럼 로컬 API를 연결하세요. 별도 프로젝트에서는 자신의 서버에서 API를 호출해 전달할 수 있습니다. 주소창·curl·서버 측 조회에는 이 브라우저 제약이 적용되지 않습니다.
 
-방의 `/api/demo/home`은 가상 사용자·구매 상품 9건·공간 위치를 제공하고, `/api/products`는 공통 상품 카탈로그를 제공합니다. 상품 테이블에는 이미지 URL·`roomSlot`·구매 여부가 없으므로, 상품을 등록한다고 방에 자동 표시되지는 않습니다.
+`/api/demo/home`은 가상 사용자·카테고리별 보유 데이터와 그 Room 표현을 제공합니다. 상품 정보는 `/api/products`와 같은 공통 DB에서 ID로 조회하고, 가상의 구매 여부·초기 상태는 데모 설정으로 연결합니다. 상품 테이블에 새 상품을 등록하는 것만으로 사용자가 그 상품을 보유하게 되지는 않습니다.
 
 ## 3. 상품 데이터와 opt 컬럼 수정하기
 
@@ -203,7 +224,7 @@ npm run db:seed
 | 503 `DATABASE_UNAVAILABLE` | DB 연결·테이블 생성 상태를 담당자가 확인. 응답에는 접속 오류 상세를 노출하지 않음 |
 | 브라우저 CORS 오류 | 로컬 DB를 연결하고 상대 경로 `/api/products` 사용 |
 | Vercel 프로젝트가 안 보임 | 로그인 계정과 프로젝트 접근 권한 확인. 새 프로젝트를 만들 필요 없음 |
-| API는 바뀌었는데 방은 그대로 | 방은 별도 `/api/demo/home` 데이터 사용. 상품 테이블과 자동 연결되지 않음 |
+| API는 바뀌었는데 방은 그대로 | `/api/demo/home`에 연결된 보유 상품 ID인지 확인. 신규 카탈로그 등록만으로 구매·보유 상태가 생기지는 않음 |
 
 애플리케이션 오류 응답은 `{ "error": { "code": "...", "message": "..." } }`입니다. 405는 프레임워크 응답이므로 JSON 형식을 가정하지 않습니다.
 

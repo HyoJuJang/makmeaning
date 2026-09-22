@@ -7,6 +7,8 @@
 
 ## 실행
 
+[배포 앱](https://makmeaning.vercel.app/)은 환경변수 없이 바로 열 수 있습니다. **로컬에서 현재 방·카테고리를 정상 사용하려면 서버 전용 `DATABASE_URL`이 필요합니다.** 먼저 [팀 가이드의 환경 설정](docs/design/backend/README.md#2-로컬에서-상품-탭-개발하기)으로 기존 Vercel 프로젝트의 Development 환경을 `.env.local`에 받아오세요.
+
 Node.js 22.18 이상(배포는 Node.js 24 권장)에서 저장소 루트 기준:
 
 ```sh
@@ -40,7 +42,7 @@ node tests/release-smoke.mjs
 - Beauty 화장대: 의자에 앉아 세럼/크림을 손으로 가까이 가져온 뒤 꺼내둡니다. 상품을 선택한 후에도 계속 앉아 있으며 일어나기나 새 이동으로 나옵니다.
 - localStorage에 공간 상태를 보존하며, 하단 '데모 초기화'로 복원합니다.
 
-구매 상품 9종과 가격은 **가상 고객의 예시 데이터**입니다. 실제 GS SHOP 상품·실제 회원·현재 판매 가격을 의미하지 않습니다. 이 방 데모는 실제 로그인, 구매, 추천, DB를 사용하지 않습니다. 별도 팀 작업으로 추가된 상품 API/DB 코드는 방 데모와 분리되어 있으며, `/api/demo/home`과 방 실행에는 DB 설정이 필요 없습니다.
+구매 이력은 **가상 고객의 데모 상태**이며, 상품 정보는 공통 DB의 상품 ID로 조회합니다. 가격은 카탈로그 참고가이고 그림은 실상품의 정확한 외형이나 가상 피팅이 아닙니다. `/api/demo/home`도 DB를 읽으므로 로컬에서 `DATABASE_URL`을 설정해야 합니다. 실제 로그인·주문·결제는 수행하지 않습니다.
 
 ## 데이터와 구성
 
@@ -60,8 +62,8 @@ node tests/release-smoke.mjs
 ### 기존 홈
 
 - `src/types/home.ts`: 사용자·구매·카테고리·roomSlot의 API contract.
-- `src/data/demo-home.ts`: 가상 고객 1명과 Fashion 2 / Food 3 / Living 2 / Beauty 2개의 구매 데이터.
-- `app/api/demo/home/route.ts`: `GET /api/demo/home`. 별도 환경변수나 외부 서비스가 필요 없습니다.
+- `src/data/demo-purchases.ts`: 가상 사용자와 카테고리별 보유 상품 ID·초기 상태. `src/data/demo-home.ts`는 테스트용 카탈로그 fixture이며 런타임 DB 오류의 대체 데이터가 아닙니다.
+- `app/api/demo/home/route.ts`: `GET /api/demo/home`. 공통 상품 DB에서 상품을 읽어 가상 구매 상태와 연결합니다. 서버 DB 연결이 필요합니다.
 - `app/layout.tsx`, `app/page.tsx`: Next.js 호스트. 기존 HTML shell과 스타일을 재사용합니다.
 - `app/index.html`, `app/style.css`, `app/app.js`: 방 UI, API 로딩·오류·재시도, 구매 데이터의 공간 표시, 상태 보존.
 - `app/avatar.js`, `app/movement.js`, `app/interactions.js`, `app/object-art.js`: 기존 캐릭터·경로 탐색·동작 controller·공간 그림.
@@ -79,7 +81,7 @@ node tests/release-smoke.mjs
 
 ## Vercel
 
-기존 Vercel 프로젝트는 `ww-002-8351s-projects / makmeaning`입니다. Framework Preset은 **Next.js**, Root Directory는 저장소 루트(`.`), 빌드 명령은 `npm run build`입니다. 방 데모와 빌드는 DB 환경변수 없이 실행되며, `/api/products`에는 서버 전용 `DATABASE_URL`이 필요합니다. 기존 프로젝트에는 Neon 연결로 등록되어 있습니다. 기존 `app/` 폴더를 배포 루트로 선택하지 않습니다.
+기존 Vercel 프로젝트는 `ww-002-8351s-projects / makmeaning`입니다. Framework Preset은 **Next.js**, Root Directory는 저장소 루트(`.`), 빌드 명령은 `npm run build`입니다. 빌드 자체는 DB 환경변수 없이 가능하지만, 실행 중인 `/api/products`와 `/api/demo/home` 및 이를 사용하는 방·카테고리에는 서버 전용 `DATABASE_URL`이 필요합니다. 기존 프로젝트에는 Neon 연결로 등록되어 있습니다. 기존 `app/` 폴더를 배포 루트로 선택하지 않습니다.
 
 인증된 Vercel CLI에서도 저장소 루트에서 `vercel --prod`로 배포할 수 있습니다. `.vercel/`, `.env*`, token과 인증 파일은 Git에 포함하지 않습니다.
 
@@ -93,7 +95,7 @@ git switch -c feat/작업명
 npm run dev
 ```
 
-Node.js 24 LTS를 권장합니다. 저장소 접근 권한이 있는 GitHub 계정을 사용합니다. 기능 브랜치에서 작업하고 main으로 Pull Request를 보내면 GitHub Actions가 테스트·production build·HTTP smoke를 검사합니다. 방 데모 실행에는 인증 정보나 환경변수가 필요하지 않습니다. 로컬 상품 API·DB 작업은 [상품 DB·API 가이드](docs/design/backend/README.md)의 연결 절차를 추가로 따릅니다.
+Node.js 24 LTS를 권장합니다. 저장소 접근 권한이 있는 GitHub 계정을 사용합니다. 기능 브랜치에서 작업하고 main으로 Pull Request를 보내면 GitHub Actions가 테스트·production build·HTTP smoke를 검사합니다. 배포 앱 열람에는 환경변수가 필요 없지만, 로컬 앱 실행에는 DB 연결이 필요합니다. 환경 설정과 상품 API·DB 작업은 [상품 DB·API 가이드](docs/design/backend/README.md)의 연결 절차를 추가로 따릅니다.
 
 데이터 작업은 `src/data/`, `src/types/`, `app/api/`, 화면 작업은 `app/app.js`·`app/style.css`, 캐릭터·동작 작업은 `app/avatar.js`·`app/interactions.js`·`app/movement.js`를 중심으로 나눕니다. 같은 파일을 수정할 때는 담당자끼리 먼저 조율합니다. 현재 방 구현을 교체하지 않고 API contract를 유지하세요.
 
@@ -117,7 +119,7 @@ Node.js 24 LTS를 권장합니다. 저장소 접근 권한이 있는 GitHub 계�
 
 ## 2026-09-21 통합 데모 상태
 
-- 공통 상품 DB의 실상품 9개를 가상 고객 민서의 구매 이력에 연결합니다. 상품 ID와 공간용 그림 키는 분리합니다. 그림·착장은 상품의 정확한 외형이나 가상 피팅이 아니며, 가격은 카탈로그 참고가입니다.
+- 공통 상품 DB의 상품을 가상 고객 민서의 구매 이력에 연결합니다. 상품 ID와 공간용 그림 키는 분리합니다. 그림·착장은 상품의 정확한 외형이나 가상 피팅이 아니며, 가격은 카탈로그 참고가입니다.
 - 확정 착장·데모 식품 사용 횟수·화장대 선택·조명은 동일한 개인 상태로 저장됩니다. Fashion의 보유 의류는 미리보기 후 `내 착장으로 적용`할 수 있습니다. 미리보기 취소/이탈과 미보유 상품의 찜·장바구니는 보유 상태를 바꾸지 않습니다.
 - 기존 Fashion/Living 추천은 명시된 가상 상품 예시입니다. Food/Beauty는 동료의 기존 카탈로그를 보존하며 새로운 추천은 추가하지 않았습니다.
 - 기존 상품 DB 연결 설정이 필요하며 비밀값은 로컬 `.env.local` / 기존 Vercel 환경에만 둡니다. 연결 실패 시 오류를 표시하며 실상품을 가짜 데이터로 대체하지 않습니다.
