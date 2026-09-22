@@ -411,7 +411,7 @@
 .sc-fashion .sc-room-avatar{--sc-avatar-knit-x:var(--sc-preview-hanger-x,28);--sc-avatar-shirt-x:var(--sc-preview-hanger-x,46)}
 
 /* Keep saved items accessible while the bottom bar is dedicated to categories. */
-.sc-header{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:6px}
+.sc-header{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
 .sc-header .sc-back{width:auto;justify-self:start;white-space:nowrap}
 .sc-header-actions{display:flex;justify-content:flex-end;align-items:center;justify-self:end}
 .sc-header-actions .sc-bag{margin-left:0}

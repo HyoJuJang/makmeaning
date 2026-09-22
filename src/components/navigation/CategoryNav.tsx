@@ -1,3 +1,5 @@
+'use client';
+
 import { CATEGORY_ROUTES } from '../../../app/category-routes.js';
 import './category-nav.css';
 
@@ -29,21 +31,25 @@ export function CategoryIcon({ category }: { category: CategoryNavKey }) {
   return <svg className="gs-category-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">{shapes[category]}</svg>;
 }
 
-/** A small cutaway home: the room is the center of the same everyday-object family. */
+/** A flat room outline with a small window and a doorway, without a roof. */
 function RoomIcon() {
-  return <svg className="gs-category-icon gs-room-icon" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-    <path className="gs-category-icon-wash" d="M3.5 10 12 3.5 20.5 10v10h-17Z" />
-    <path d="M3.5 13h17M12 13v7M10.5 8.5h3v2.5h-3Z" />
+  return <svg className="gs-category-icon gs-room-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
+    <path d="M3.5 3.5h17v17h-17Z" />
+    <path d="M14 20.5v-7h4v7" />
+    <path fill="currentColor" stroke="none" d="M6.5 6.5h2v2h-2Zm3 0h2v2h-2Zm-3 3h2v2h-2Zm3 0h2v2h-2Z" />
   </svg>;
 }
 
 export default function CategoryNav({ activeCategory }: { activeCategory: NavigationKey }) {
-  return <nav className="gs-category-nav" aria-label="공간과 쇼핑">
+  // Main Room uses its objects as navigation, never the category-only bar.
+  if (activeCategory === 'room') return null;
+  return <nav className="gs-category-nav" aria-label="카테고리와 내 공간">
     {NAVIGATION_ORDER.map(destination => {
       const route = destination === 'room' ? { href: '/', label: '내 공간' } : CATEGORY_ROUTES[destination];
-      // Native document navigation boots/cleans up the vanilla room exactly once.
-      return <a key={destination} href={route.href} className={`gs-category-nav-item${destination === 'room' ? ' gs-room-nav-item' : ''}`} data-destination={destination} aria-current={activeCategory === destination ? 'page' : undefined}>
-        {destination === 'room' ? <span className="gs-room-nav-mark"><RoomIcon /></span> : <CategoryIcon category={destination} />}
+      // Preserve current-page filters, selection and scroll on a repeated tap.
+      // Other destinations retain native navigation and the room's normal lifecycle.
+      return <a key={destination} href={route.href} className={`gs-category-nav-item${destination === 'room' ? ' gs-room-nav-item' : ''}`} data-destination={destination} aria-label={destination === 'room' ? '내 공간으로 돌아가기' : undefined} aria-current={activeCategory === destination ? 'page' : undefined} onClick={event => { if (destination === activeCategory) event.preventDefault(); }}>
+        <span className="gs-category-nav-icon-slot">{destination === 'room' ? <span className="gs-room-nav-mark"><RoomIcon /></span> : <CategoryIcon category={destination} />}</span>
         <span className="gs-category-nav-label">{route.label}</span>
       </a>;
     })}

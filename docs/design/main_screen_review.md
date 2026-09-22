@@ -396,6 +396,8 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 캐릭터 sheet 열기/닫기와 옷장 접근→준비→Fashion 진입 실제 실행 PASS. build·typecheck·실제app input harness PASS. 하단 삭제 요소와 navigation은 유지. 추가 visual defect0.
 ## 2026-09-22 — Separate asset service / miniroom integration
 
+> 아래는 feat/game-asset-mapping 브랜치 작성 당시의 검증 기록이다. 최신 추천 persona 통합 결과는 game_asset_merge_review.md를 따른다.
+
 - 최신 main의 category → hero → Room 데이터 방향과 보유 ID·잔량 계약을 보존하고 상품 ID로 별도 에셋 API를 조회한다. 읽기 API는 별도로 전달한 에셋 API 주소 에 배포했다.
 - 검토 후 수정 2건: (1) floor_lamp가 일반 작은 램프와 같은 geometry로 표시되는 문제를 메인 방의 장스탠드 크기·hit area·glow 위치로 보정 (2) 기존 knit/shirt alias 밖의 검수된 스커트가 옷장에서 빠지는 조건을 제거. 관련 회귀검사 통과.
 - 실제 브라우저에서 메인 390px의 옷장 열림, 조명 끄기/켜기, 패션·리빙 320px의 셔츠/쿠션/장스탠드와 가로 넘침 없음 확인. 식품·뷰티는 1280px에서 우유·생수·세럼·크림 에셋과 기존 상태 표시 확인. 검수 폭을 넘어 모든 크기에서 테스트했다고 확대하지 않는다.
@@ -403,3 +405,12 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 전체 테스트 / typecheck / production build 통과. 공개 API 10건, 이미지 URL 1,219건, 재다운로드 원본 해시 표본 8건 모두 통과. 새 스커트 2종·러그 1종·소파패드 1종의 prd_id 매핑도 공개 API에서 확인.
 - 에셋 API만 배포했으며 원래 앱 배포·main 병합은 하지 않았다. 기존 추천 목록의 가상 예시 상품은 별도 범위다.
 - 상세: docs/design/backend/GAME_ASSETS.md. 로컬 검증 증거: ../outputs/game-asset-service/verification.json.
+
+
+## 2026-09-22 시안04 · 집 중심 navigation
+
+- Room 하단 nav와 예약 여백 제거, 오른쪽 `바닥을 눌러 걸어보세요`, 상단 원문 보존. category는5등분·72px+safe·40px icon slot·중앙48×40 사각방·12px label. header의 중복복귀도 제거해 중앙한곳으로 통일.
+- 실제 production build390×844/320×568 독립 screenshot QA PASS, 영향 큰 defect0. 320 터치59.2×64px, 다섯label y544동일, 가로넘침0.
+- 네 가구 첫tap→approach/open 또는seated→준비후두번째tap→맞는category→중앙복귀후Room nav0 PASS. wardrobe rapid doubletap은Room유지. production Fashion에서기준상품선택후현재tab재tap에도선택동일. context tray는320에서하단8px로nav빈자리없음.
+- npm test(Node+기존assertion+Python9), typecheck, production build, live release-contract/공통6036상품불변PASS. 개발N표시가재tap검사를방해해production으로같은scenario를재실행했다.
+- 동료660df5f의집계catalog를유지하고배포추적은recommendations/status두API의catalog.json만포함한다. 개인users/samples는포함하지않으며두nft파일을검사했다. 새상품·추천기능은추가하지않았다.

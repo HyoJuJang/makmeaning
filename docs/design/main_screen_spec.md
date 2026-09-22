@@ -170,3 +170,8 @@ QA는 (1) 메인 입구→무선택/상황만/예산만에서 CTA 비활성, (2)
 ## 상단 핵심 메시지 복원 — 2026-09-22
 
 최신 사용자 정정: compact 직전6b0c8de의 원문 `{이름}의 작은 일상.` / `내가 고른 물건으로 채워지는 집`을 정확히 복원한다. 로고와 제목 사이6px, 캐릭터 버튼44px, 한 줄 조작 안내, 제거한 MY SCENE 행·하단 설명·Scene 입구, 중앙 내 공간 탭은 유지한다. headline26px(320에서24px), 설명13px/1.5와30ch max-width, 설명 아래8px로 위계를 복원하며 예전 전체 spacing은 복구하지 않는다.
+
+
+## 집과 씬의 navigation 역할 — 2026-09-22
+
+최신 요청과 category-navigation-visuals/04-dark-room-aligned.png 기준: Room에는 하단 navigation을 렌더하지 않고 nav 예약 여백도 제거한다. 첫 가구 접근/생활 동작→준비 후 같은 가구 재탭→category의 기존 계약을 유지한다. 네 category만 하단 바를 표시하며 중앙 진녹색 사각 방 아이콘은 항상 내 공간 복귀 목적지다. 현재 category만 밑줄, 동등한5열·공통40px icon slot·12px label baseline으로 정렬한다. category 헤더의 중복 복귀 링크는 제거하고 찜/장바구니는 유지한다. Room 안내는 오른쪽의 `바닥을 눌러 걸어보세요`로 통일하며 앞서 복원한 상단 원문은 보존한다.
