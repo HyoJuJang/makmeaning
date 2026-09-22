@@ -293,8 +293,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
 
   return <main className={`sc-page sc-${category}`}>
     <header className="sc-header">
-      <a href="/" className="sc-back" aria-label="내 공간으로 돌아가기"><Icon name="back" /><span>내 공간</span></a>
-      <a href="/" className="sc-brand">G:Scene<span>.</span></a>
+      <span className="sc-brand">G:Scene<span>.</span></span>
       <div className="sc-header-actions">
         <button className="sc-icon-button" aria-label={`찜한 상품 ${savedIds.length}개`} onClick={() => setPanel('saved')}><Icon name="heart" /></button>
         <button className="sc-icon-button sc-bag" aria-label={`장바구니 ${cartIds.length}개`} onClick={() => setPanel('cart')}><Icon name="bag" /><span>{cartIds.length}</span></button>

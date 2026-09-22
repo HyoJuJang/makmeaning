@@ -394,3 +394,12 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 원문 근거: compact 직전6b0c8de의 app/index.html·app/app.js. `{이름}의 작은 일상.` / `내가 고른 물건으로 채워지는 집` 그대로 복원.
 - 실제390×844·320×568 before/after 독립 screenshot 검토 PASS. 제목26/24px와 설명13px가 각각 한 줄, 버튼 충돌·가로 넘침0. 방 시작은143.5/141.5px로 compact 대비27.5px만 증가(예전390은276px).
 - 캐릭터 sheet 열기/닫기와 옷장 접근→준비→Fashion 진입 실제 실행 PASS. build·typecheck·실제app input harness PASS. 하단 삭제 요소와 navigation은 유지. 추가 visual defect0.
+
+
+## 2026-09-22 시안04 · 집 중심 navigation
+
+- Room 하단 nav와 예약 여백 제거, 오른쪽 `바닥을 눌러 걸어보세요`, 상단 원문 보존. category는5등분·72px+safe·40px icon slot·중앙48×40 사각방·12px label. header의 중복복귀도 제거해 중앙한곳으로 통일.
+- 실제 production build390×844/320×568 독립 screenshot QA PASS, 영향 큰 defect0. 320 터치59.2×64px, 다섯label y544동일, 가로넘침0.
+- 네 가구 첫tap→approach/open 또는seated→준비후두번째tap→맞는category→중앙복귀후Room nav0 PASS. wardrobe rapid doubletap은Room유지. production Fashion에서기준상품선택후현재tab재tap에도선택동일. context tray는320에서하단8px로nav빈자리없음.
+- npm test(Node+기존assertion+Python9), typecheck, production build, live release-contract/공통6036상품불변PASS. 개발N표시가재tap검사를방해해production으로같은scenario를재실행했다.
+- 동료660df5f의집계catalog를유지하고배포추적은recommendations/status두API의catalog.json만포함한다. 개인users/samples는포함하지않으며두nft파일을검사했다. 새상품·추천기능은추가하지않았다.

@@ -1,4 +1,6 @@
-:root { --gs-nav-height: calc(70px + env(safe-area-inset-bottom, 0px)); }
+/* Reserved height exists only in category screens, never on Main Room. */
+.sc-page,
+.gs-category-nav { --gs-nav-height: calc(72px + env(safe-area-inset-bottom, 0px)); }
 .gs-category-nav {
   position: fixed;
   z-index: 6;
@@ -6,57 +8,68 @@
   bottom: 0;
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: 1fr 1fr 1.12fr 1fr 1fr;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   width: min(520px, 100%);
   height: var(--gs-nav-height);
-  padding: 4px 8px calc(4px + env(safe-area-inset-bottom, 0px));
-  border: 1px solid #dedfd4;
-  border-bottom: 0;
-  background: #fbfaf6fa;
-  box-shadow: 0 -3px 12px #354b3307;
-  backdrop-filter: blur(12px);
+  padding: 4px max(12px, env(safe-area-inset-right, 0px)) calc(4px + env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px));
+  border: 0;
+  background: #fbfaf6;
+  box-shadow: none;
+  backdrop-filter: none;
   box-sizing: border-box;
 }
+/* Paint the boundary without changing the 4 + 64 + 4px vertical layout. */
+.gs-category-nav::before { content: ''; position: absolute; inset: 0 0 auto; height: 1px; background: #e1e4db; pointer-events: none; }
 .gs-category-nav a.gs-category-nav-item {
   position: relative;
-  min-width: 44px;
-  min-height: 60px;
-  box-sizing: border-box;
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
   flex-direction: column;
-  gap: 3px;
-  padding: 3px 0 6px;
-  color: #7b8176;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 44px;
+  height: 64px;
+  min-height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  box-sizing: border-box;
+  color: #626a62;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
-  transition: color 160ms ease;
+  transition: color 120ms ease, background-color 120ms ease;
 }
-.gs-category-nav .gs-category-icon { display: block; flex-shrink: 0; width: 23px; height: 23px; }
-.gs-category-nav .gs-category-icon-wash { fill: transparent; transition: fill 160ms ease; }
-.gs-category-nav .gs-category-nav-label { font-family: inherit; font-size: 11px; font-weight: 500; line-height: 15px; letter-spacing: -.2px; }
-.gs-category-nav a[aria-current=page] { color: #305442; }
-.gs-category-nav a[aria-current=page] .gs-category-icon-wash { fill: #e0e7d9; }
-.gs-category-nav a[aria-current=page] .gs-category-nav-label { font-weight: 650; }
-.gs-category-nav a[aria-current=page]::after { content: ''; position: absolute; bottom: 1px; width: 18px; height: 2px; border-radius: 2px; background: currentColor; }
-.gs-category-nav a:focus-visible { outline: 2px solid #537465; outline-offset: -3px; border-radius: 4px; }
-@media (hover: hover) { .gs-category-nav a:hover { color: #305442; } }
-@media (prefers-reduced-motion: reduce) { .gs-category-nav a,.gs-category-nav .gs-category-icon-wash { transition: none; } }
+.gs-category-nav-icon-slot { display: grid; place-items: center; flex: 0 0 40px; width: 100%; height: 40px; }
+.gs-category-nav .gs-category-icon { display: block; flex-shrink: 0; width: 22px; height: 22px; }
+.gs-category-nav .gs-category-icon-wash { fill: transparent; transition: fill 120ms ease; }
+.gs-category-nav .gs-category-nav-label { margin-top: 4px; font-family: inherit; font-size: 12px; font-weight: 500; line-height: 16px; letter-spacing: -.2px; white-space: nowrap; }
+/* Every entry reserves the same two-pixel marker row below the label. */
+.gs-category-nav a.gs-category-nav-item::after { content: ''; position: absolute; bottom: 0; left: 50%; transform: translateX(-50%); width: 12px; height: 2px; border-radius: 2px; background: transparent; }
+.gs-category-nav a[aria-current=page] { color: #2f4f3e; }
+.gs-category-nav a[aria-current=page] .gs-category-icon-wash { fill: #e5ece2; }
+.gs-category-nav a[aria-current=page] .gs-category-nav-label { font-weight: 600; }
+.gs-category-nav a[aria-current=page]::after { background: currentColor; }
+.gs-category-nav a:focus-visible { outline: 2px solid #2f4f3e; outline-offset: -2px; }
+.gs-category-nav a:not(.gs-room-nav-item):active { background: #f0f1ea; }
 
-/* The room is the primary destination, while the underline alone tracks the current page. */
-.gs-category-nav a.gs-room-nav-item { gap: 2px; padding-top: 0; color: #46604c; }
-.gs-category-nav .gs-room-nav-mark { display: grid; place-items: center; width: 46px; height: 36px; flex-shrink: 0; border-radius: 12px; background: #486650; color: #f7f8ef; transition: background 160ms ease; }
-.gs-category-nav .gs-room-icon { width: 28px; height: 28px; }
-.gs-category-nav .gs-room-nav-mark .gs-category-icon-wash { fill: #f2f5e908; }
-.gs-category-nav .gs-room-nav-item .gs-category-nav-label { font-weight: 650; }
-.gs-category-nav a.gs-room-nav-item[aria-current=page] { color: #294f3b; }
-.gs-category-nav a.gs-room-nav-item[aria-current=page] .gs-room-nav-mark { background: #294f3b; }
-.gs-category-nav a.gs-room-nav-item[aria-current=page] .gs-category-icon-wash { fill: #f2f5e91a; }
-@media (hover: hover) { .gs-category-nav a.gs-room-nav-item:hover .gs-room-nav-mark { background: #355941; } }
-@media (prefers-reduced-motion: reduce) { .gs-category-nav .gs-room-nav-mark { transition: none; } }
-html { scroll-padding-bottom: calc(var(--gs-nav-height) + 20px); }
-body .sc-page { padding-bottom: calc(var(--gs-nav-height) + 22px); }
-/* A room sheet owns focus and the entire viewport until it closes. */
-body:has(#modal-root .overlay) .gs-category-nav { visibility: hidden; }
+/* Fixed return destination: primary emphasis without current-page treatment. */
+.gs-category-nav a.gs-room-nav-item { color: #46604c; }
+.gs-category-nav .gs-room-nav-mark { display: grid; place-items: center; width: 48px; height: 40px; border-radius: 12px; background: #486650; color: #fff; transition: background-color 120ms ease; }
+.gs-category-nav .gs-room-icon { width: 24px; height: 24px; }
+.gs-category-nav .gs-room-nav-item .gs-category-nav-label { font-weight: 600; }
+.gs-category-nav a.gs-room-nav-item::after { background: transparent; }
+.gs-category-nav a.gs-room-nav-item:active .gs-room-nav-mark { background: #355941; }
+@media (hover: hover) {
+  .gs-category-nav a:not(.gs-room-nav-item):hover { color: #2f4f3e; }
+  .gs-category-nav a.gs-room-nav-item:hover .gs-room-nav-mark { background: #355941; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gs-category-nav a,
+  .gs-category-nav .gs-category-icon-wash,
+  .gs-category-nav .gs-room-nav-mark { transition: none; }
+}
+
+body .sc-page:has(.gs-category-nav) { padding-bottom: calc(var(--gs-nav-height) + 16px); }
+/* The document scroll inset applies only while a category bar is present. */
+html:has(.sc-page .gs-category-nav) { scroll-padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px) + 16px); }
+.sc-page:has(dialog[open]) .gs-category-nav,
+.sc-page:has(input:not([type=checkbox]):not([type=radio]):focus, textarea:focus, [contenteditable=true]:focus) .gs-category-nav { visibility: hidden; }
