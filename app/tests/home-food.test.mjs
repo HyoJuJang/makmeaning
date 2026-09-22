@@ -216,3 +216,58 @@ for(const [id,mode] of [[milk,'drink'],[owned('vitamin').id,'eat']]){
  assert.equal(app.context.appTest.controller.phase,'engaged');
 }
 console.log('PASS: direct owned-food action selects exact item, resolves eat/drink and ignores busy repeat.');
+
+// Reproduce tray reflow: the action button disappears before a second click at
+// the same screen coordinates reaches the floor, exit or another object control.
+// Run real capture + target handlers, including pointer detail 1 and mouse detail 2.
+function clickAt(app,target,handler,{time=1000,detail=1,x=movement.START.x,y=movement.START.y}={}){
+ let stopped=false;
+ const event={target,clientX:x,clientY:y,timeStamp:time,detail,preventDefault(){},stopPropagation(){},stopImmediatePropagation(){stopped=true;}};
+ for(const capture of app.events.get('click')||[])capture(event);
+ if(!stopped)handler(event);
+ return stopped;
+}
+async function startByPointer(){
+ const app=await bootAt('pantry');enter(app,'pantry');
+ const button={dataset:{action:milk},disabled:false,closest(selector){return selector==='[data-action]'||selector==='button,a'?this:null;}};
+ assert.equal(clickAt(app,button,app.element('#tray-root').click),false);
+ assert.equal(app.context.appTest.controller.action.productId,milk);
+ const floor=app.element('.house-wrap');floor.closest=()=>null;
+ return {app,floor};
+}
+for(const detail of [1,2])for(const landing of ['floor','exit','object']){
+ const {app,floor}=await startByPointer();
+ assert.ok(app.captureEvents.has('click'),'Guard runs before the room target handler');
+ let target=floor,handler=floor.click;
+ if(landing==='exit'){
+  target={dataset:{tray:'exit'},closest(selector){return selector==='[data-tray]'||selector==='button,a'?this:null;}};
+  handler=app.element('#tray-root').click;
+ }
+ if(landing==='object'){
+  target={closest(){return this;}};
+  handler=event=>app.element('button.bed-target').click({...event,currentTarget:target});
+ }
+ assert.equal(clickAt(app,target,handler,{time:1200,detail}),true,`Reflowed repeated tap cannot activate ${landing}`);
+ assert.equal(app.context.appTest.controller.step,'eat');
+ advance(app,EATING_DURATION);
+ assert.equal(current(app).foodQuantity[milk],2,'The original gesture completes exactly once');
+ assert.equal(current(app).foodQuantity[water],3);
+}
+for(const cancellation of ['later-floor','different-floor','exit','later-exit','keyboard-exit','escape','other-object']){
+ const {app,floor}=await startByPointer();
+ if(cancellation==='later-floor')assert.equal(clickAt(app,floor,floor.click,{time:1351}),false);
+ if(cancellation==='different-floor')assert.equal(clickAt(app,floor,floor.click,{time:1100,x:movement.APPROACHES.pantry.x,y:movement.APPROACHES.pantry.y}),false);
+ if(['exit','later-exit','keyboard-exit'].includes(cancellation)){
+  const exit={dataset:{tray:'exit'},closest(selector){return selector==='[data-tray]'||selector==='button,a'?this:null;}};
+  const gesture=cancellation==='exit'?{time:1100,x:movement.START.x+40}:cancellation==='later-exit'?{time:1351}:{time:1100,detail:0};
+  assert.equal(clickAt(app,exit,app.element('#tray-root').click,gesture),false);
+ }
+ if(cancellation==='escape')for(const handler of app.events.get('keydown')||[])handler({key:'Escape',target:floor,preventDefault(){}});
+ if(cancellation==='other-object'){
+  const button={closest:()=>button};
+  assert.equal(clickAt(app,button,event=>app.element('button.bed-target').click({...event,currentTarget:button}),{time:1100,x:movement.START.x+40}),false);
+ }
+ assert.equal(app.context.appTest.controller.phase,'exiting',`${cancellation} still cancels immediately`);
+ advance(app,1000);assert.equal(current(app).foodQuantity[milk],3,`${cancellation} never consumes`);
+}
+console.log('PASS: food double-click survives tray reflow; deliberate floor, exit, Escape and other-object cancellations remain available.');

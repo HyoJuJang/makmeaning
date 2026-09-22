@@ -459,3 +459,12 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - Integrated the handed-off floor-lamp remote and flat tabletop repair; desktop/mobile toggle and existing outfit state remain intact.
 - Actual browser: 1280px viewport Home and four scenes share 520px width; all four scenes/nav fit 390px and 320px without horizontal overflow. Owned wear, Room return, photo toggle, Beauty approach/entry, food consumption/reset tested. Independent critic found early screenshot loading artifacts; repeated fully loaded states and closed all three concerns, no remaining important visual defect.
 - Full npm test, production build and typecheck PASS. Evidence: Codex outputs/scene-shell-20260922.
+
+
+## 2026-09-22 — Pantry eating/drinking release integration
+
+- Integrated f2a7081: four rear-view meal atlases, exact owned food action, shared eat/drink classification, confirmed outfit masks; existing movement/layout/API contracts retained.
+- Actual 390x844 browser: direct oat eat and milk drink consume only their canonical IDs; 3/3/3 becomes 2/2/3. Cancelled nuts stay at 3. Reload and Food category show the same balances; 320px Room return has no horizontal overflow.
+- Review/fix/retest: collapsing the tray could send the second click of a double-click onto the floor or its relocated exit button, cancelling the meal. Added a current-action-bound 350ms/24px repeat guard before target handlers. Same browser milk double-click now stays drinking and commits exactly once. Deliberate separately targeted exit remains available. Regression cases cover floor/exit/object reflow, touch-style detail=1 and desktop detail=2, delayed/distant input, keyboard exit and Escape.
+- The shared EatingAvatar component remains compatible but has no current live consumer; no Food-category eating UI is claimed in this release. Food category state/readback and Room return were checked.
+- Evidence: Codex outputs/room-meals-20260922 (actual mobile screenshots, release/build/test logs).
