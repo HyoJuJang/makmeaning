@@ -136,3 +136,46 @@ test('a deliberate repeat of the same outfit can replay the complete interaction
   clock.advance(8000);
   assert.deepEqual(clock.last, restingAvatar(positions.home, 'knit'));
 });
+
+
+test('owned wear uses the selected hanger location and commits only after the complete sequence', () => {
+  const clock = setup(); let committed = 0;
+  const target = { x: 65, bottom: 3 };
+  clock.runner.run(restingAvatar(positions.home, 'base'), request({ preview: 'mapped:shirt:white:solid', garmentTarget: target }), () => committed++);
+  clock.advance(500);
+  assert.equal(clock.last.motion, 'changing');
+  assert.equal(clock.last.x, target.x);
+  assert.equal(committed, 0);
+  clock.advance(900);
+  assert.equal(clock.last.outfit, 'mapped:shirt:white:solid');
+  assert.equal(committed, 0);
+  const stale = clock.latestId;
+  clock.advance(4000);
+  assert.equal(committed, 1);
+  clock.deliverStale(stale, 9000);
+  assert.equal(committed, 1);
+});
+
+test('cancel and rapid reselection never commit a superseded owned garment', () => {
+  const clock = setup(); const committed = [];
+  clock.runner.run(restingAvatar(positions.home, 'base'), request(), () => committed.push('first'));
+  clock.advance(400);
+  const stale = clock.latestId;
+  clock.runner.run(clock.last, request({ preview: 'shirt' }), () => committed.push('latest'));
+  clock.deliverStale(stale, 8000);
+  clock.advance(4000);
+  assert.deepEqual(committed, ['latest']);
+  clock.runner.run(clock.last, request(), () => committed.push('cancelled'));
+  clock.advance(4300);
+  const cancelled = clock.latestId;
+  clock.runner.cancel();
+  clock.deliverStale(cancelled, 9000);
+  assert.deepEqual(committed, ['latest']);
+});
+
+test('reduced-motion explicit wear completes exactly once', () => {
+  const clock = setup(); let committed = 0;
+  clock.runner.run(restingAvatar(positions.home, 'base'), request({ reduced: true }), () => committed++);
+  assert.equal(committed, 1);
+  assert.equal(clock.pending.size, 0);
+});

@@ -1,4 +1,5 @@
 // Approved A / Slouch raster artwork. Motion remains owned by InteractionController.
+import {appearanceFromKey} from './outfit-rendering.js';
 import {FRAMES} from './avatar-frames.js';
 import {VANITY_FRAMES} from './vanity-frames.js';
 import {EATING_FRAMES} from './eating-frames.js';
@@ -14,6 +15,8 @@ const unit=n=>Number.isFinite(n)?Math.max(0,Math.min(1,n)):0;
 const fmt=n=>Number(n.toFixed(3));
 
 export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
+ const appearance=appearanceFromKey(outfit);
+ if(outfit!=='base'&&!appearance)outfit='base';
  const a=avatarById(id),pose=options.pose||'idle',p=unit(options.progress),seat=unit(options.seatProgress),reduced=Boolean(options.reduced);
  const facing=['up','left','right','down'].includes(direction)?direction:'down';
  const index={down:0,up:1,left:2,right:3}[facing];
@@ -24,7 +27,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const px=20-(data.anchorX??bw/2)*scale+x,py=61-bh*scale+y;
   const uid=key+'-'+i+'-'+part;
   const href=`/assets/avatars/${a.id}-states.png`;
-  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*scale)}" height="${fmt(bh*scale)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href)}</svg>`;
+  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*scale)}" height="${fmt(bh*scale)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href,i===1||i===7?'up':i===2?'left':i===3?'right':'down')}</svg>`;
   return `<g opacity="${fmt(opacity)}" transform="${transform}" data-sprite-frame="${i}">${picture}</g>`;
  };
  const clip=(name,shape,content)=>`<defs><clipPath id="${key}-${name}">${shape}</clipPath></defs><g clip-path="url(#${key}-${name})">${content}</g>`;
@@ -41,7 +44,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const eatingScale=height/bh;
   const px=20-data.anchorX*eatingScale,py=61-height;
   const href=`/assets/avatars/${a.id}-eating-states.png`,uid=key+'-eat-'+i;
-  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*eatingScale)}" height="${fmt(height)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href)}</svg>`;
+  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*eatingScale)}" height="${fmt(height)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href,eatingFacing)}</svg>`;
   return `<g data-eating-state="${state}" data-held-food="${['milk','water','vitamin'].includes(options.heldProductId)?options.heldProductId:'food'}" transform="${eatingFacing==='left'?'translate(40 0) scale(-1 1)':''}">${picture}</g>`;
  };
  const sofaSeat=()=>source(6);
@@ -56,7 +59,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   const legY=40-data.hipY*data.scale;
   const image=`<image href="${href}" width="${data.width}" height="${data.height}" image-rendering="pixelated"/>`;
   const uid=key+'-vanity';
-  const color=outfit==='shirt'?[.56,.69,.77]:[.91,.875,.79];
+  const color=appearance?appearance.hex.match(/\w\w/g).map(v=>parseInt(v,16)/255):[.91,.875,.79];
   const bias=color.map(c=>fmt(c-data.luma*.65));
   const defs=`<defs><clipPath id="${uid}-body"><path d="${data.bodyMask}"/></clipPath><clipPath id="${uid}-legs"><path d="${data.legMask}"/></clipPath><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs>`;
   const garment=outfit==='base'?'':`<g clip-path="url(#${uid}-cloth)" filter="url(#${uid}-tint)">${image}</g>`;
@@ -129,12 +132,36 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   }
  }else body=standing();
  const shadow=seat>.4||bed>.1?'':`<ellipse cx="20" cy="61" rx="10" ry="2.1" fill="#45483a" opacity=".18"/>`;
- return `${shadow}<g class="pixel-avatar" data-avatar-art="${a.id}" data-pose="${pose}">${body}</g>`;
+ return `${shadow}<g class="pixel-avatar" data-avatar-art="${a.id}" data-pose="${pose}" data-outfit-key="${outfit}">${body}</g>`;
 
- function tinted(data,uid,href){
+ // Details stay inside the native garment mask; rear views never show front closures.
+ function details(w,h,view){
+  if(!appearance||appearance.style==='legacy')return '';
+  const style=appearance.style,back=view==='up',side=view==='left'||view==='right';
+  const cx=w*(view==='left'?.43:view==='right'?.57:.5),y=h*.39,wide=w*(side?.10:.17),bottom=h*.68;
+  const ink=appearance.color==='black'||appearance.color==='navy'?'#b5bdc4':'#596775';
+  const seam=(path,width=2)=>`<path d="${path}" fill="none" stroke="${ink}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  let art='';
+  if(!back){
+   if(style==='shirt')art+=`<path d="M${cx-wide} ${y}L${cx} ${y+7}L${cx-wide*.55} ${y+15}ZM${cx+wide} ${y}L${cx} ${y+7}L${cx+wide*.55} ${y+15}Z" fill="#e5e8df" stroke="${ink}" stroke-width="1.8"/>`;
+   else if(style==='cardigan-v')art+=seam(`M${cx-wide} ${y-3}L${cx} ${y+20}L${cx+wide} ${y-3}`,3);
+   else if(style==='cardigan-zip')art+=seam(`M${cx-wide*.65} ${y+10}V${y-4}H${cx+wide*.65}V${y+10}`,4);
+   else art+=seam(`M${cx-wide} ${y}Q${cx} ${y+18} ${cx+wide} ${y}`,style==='sweatshirt'?4:2.5);
+   if(style!=='sweatshirt'){
+    const start=y+(style==='cardigan-v'?20:10);
+    art+=seam(`M${cx} ${start}V${bottom}`,style==='cardigan-zip'?3:2);
+    if(style!=='cardigan-zip')for(let n=0;n<4;n++)art+=`<circle cx="${cx+3}" cy="${start+8+n*(bottom-start-12)/4}" r="1.8" fill="${ink}"/>`;
+   }
+  }
+  if(style==='sweatshirt'||style==='cardigan-zip')art+=seam(`M${cx-wide*1.35} ${bottom-3}H${cx+wide*1.35}`,3);
+  if(style==='cardigan-zip')art+=`<path d="M0 ${bottom-1}H${cx-wide*1.45}M${cx+wide*1.45} ${bottom-1}H${w}" stroke="#e9e8df" stroke-width="4"/>`;
+  if(appearance.pattern==='cable')for(const dx of [-wide*.7,wide*.7])art+=seam(`M${cx+dx} ${y+24}l-2 5 4 6-4 6 4 6-2 5`,1.7);
+  return `<g data-garment-detail="${style}" opacity=".8">${art}</g>`;
+ }
+ function tinted(data,uid,href,view){
   const [bx,by,bw,bh]=data.box;
-  const color=outfit==='shirt'?[.56,.69,.77]:[.91,.875,.79];
+  const color=appearance?appearance.hex.match(/\w\w/g).map(v=>parseInt(v,16)/255):[.91,.875,.79];
   const bias=color.map(c=>fmt(c-data.luma*.65));
-  return `<defs><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs><g clip-path="url(#${uid}-cloth)"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated" filter="url(#${uid}-tint)"/></svg></g>`;
+  return `<defs><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><filter id="${uid}-tint" color-interpolation-filters="sRGB"><feColorMatrix type="matrix" values=".138 .465 .047 0 ${bias[0]} .138 .465 .047 0 ${bias[1]} .138 .465 .047 0 ${bias[2]} 0 0 0 1 0"/></filter></defs><g clip-path="url(#${uid}-cloth)"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated" filter="url(#${uid}-tint)"/></svg>${details(bw,bh,view)}</g>`;
  }
 }

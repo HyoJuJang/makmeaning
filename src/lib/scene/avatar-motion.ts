@@ -14,7 +14,8 @@ export type AvatarMotionState = AvatarPoint & {
 export type AvatarMotionRequest = {
   category: 'fashion' | 'living';
   outfit: AvatarOutfit;
-  preview: 'knit' | 'shirt' | null;
+  preview: AvatarOutfit | null;
+  garmentTarget?: AvatarPoint;
   seated: boolean;
   reduced: boolean;
   positions: AvatarPositions;
@@ -81,7 +82,7 @@ function planMotion(from: AvatarMotionState, request: AvatarMotionRequest) {
   } else {
     sit(0);
     if (request.category === 'fashion' && request.preview) {
-      walk(request.positions[request.preview]);
+      walk(request.garmentTarget ?? (request.preview === 'shirt' ? request.positions.shirt : request.positions.knit));
       const start = { ...cursor };
       segments.push({
         duration: 660,
@@ -111,14 +112,21 @@ export function createAvatarMotionRunner(scheduler: AvatarScheduler, onFrame: (s
   };
   return {
     cancel,
-    run(from: AvatarMotionState, request: AvatarMotionRequest) {
+    run(from: AvatarMotionState, request: AvatarMotionRequest, onComplete?: () => void) {
       cancel();
       const currentGeneration = generation;
+      let completed = false;
       const { segments, finish } = planMotion(from, request);
-      if (request.reduced || segments.length === 0) { onFrame(finish); return; }
+      const complete = () => {
+        if (completed || currentGeneration !== generation) return;
+        completed = true;
+        onFrame(finish);
+        if (currentGeneration === generation) onComplete?.();
+      };
+      if (request.reduced || segments.length === 0) { complete(); return; }
       const started = scheduler.now();
       const tick = (now: number) => {
-        if (currentGeneration !== generation) return;
+        if (completed || currentGeneration !== generation) return;
         pending = null;
         let elapsed = Math.max(0, now - started);
         for (const segment of segments) {
@@ -129,7 +137,7 @@ export function createAvatarMotionRunner(scheduler: AvatarScheduler, onFrame: (s
           }
           elapsed -= segment.duration;
         }
-        onFrame(finish);
+        complete();
       };
       tick(started);
     },

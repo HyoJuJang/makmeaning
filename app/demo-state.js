@@ -1,10 +1,10 @@
+import {appearanceFromKey,getOutfitAppearance,supportsFitting} from './outfit-rendering.js';
 import {getHeroProducts} from './category-products.js';
 // One confirmed state for the fictional user. Rendering keys never identify products.
 export const DEMO_STATE_KEY='gscene-main-v1';
 export const DEMO_PERSONAL_KEYS=['gscene-scene-fashion-v1','gscene-scene-living-v1','gscene-catalog-food-v1','gscene-catalog-beauty-v1','gscene-food-v1','gscene-room-return-v1'];
 const failedStoreSnapshots=new WeakMap();
 const avatarId=value=>({short:'m01',wave:'m02',bob:'f01'}[value]||(['m01','m02','f01','f02'].includes(value)?value:'m01'));
-const supportsFitting=product=>product&&product.imageKind!=='product-photo'&&['knit','shirt'].includes(product.illustrationKey);
 const isPersonaHome=home=>['demo-f01','demo-f02','demo-m01','demo-m02'].includes(home.user.id);
 export function personalStateKey(baseKey,homeOrUserId){const id=typeof homeOrUserId==='string'?homeOrUserId:homeOrUserId.user.id;return id==='demo-user'?baseKey:`${baseKey}:${id}`;}
 export function demoStateKey(home){return personalStateKey(DEMO_STATE_KEY,home);}
@@ -13,8 +13,14 @@ export function initialDemoState(home){return {version:2,userId:home.user.id,out
 export function normalizeDemoState(home,saved){
  const state=initialDemoState(home);
  if(!saved||typeof saved!=='object'||Array.isArray(saved)||(saved.userId&&saved.userId!==home.user.id))return state;
- const outfit=home.purchases.find(p=>p.id===productId(home,saved.outfitId,'fashion'));
- state.outfitId=saved.outfitId==='base'?'base':supportsFitting(outfit)?outfit.id:state.outfitId;
+ const exact=home.purchases.find(p=>p.category==='fashion'&&p.id===saved.outfitId);
+ // Legacy aliases migrate only illustration fixtures, never a photograph slot.
+ const outfit=exact||home.purchases.find(p=>p.category==='fashion'&&p.imageKind!=='product-photo'&&p.illustrationKey===saved.outfitId);
+ const mapped=getOutfitAppearance(outfit);
+ const cached=outfit&&!outfit.gameAsset&&saved.outfitAppearance?.productId===outfit.id&&typeof saved.outfitAppearance?.key==='string'&&saved.outfitAppearance.key.startsWith('mapped:')?appearanceFromKey(saved.outfitAppearance.key):null;
+ const appearance=mapped||cached;
+ state.outfitId=saved.outfitId==='base'?'base':appearance?outfit.id:state.outfitId;
+ if(state.outfitId!=='base'&&appearance?.key.startsWith('mapped:'))state.outfitAppearance={productId:state.outfitId,key:appearance.key};
  state.featuredBeautyId=productId(home,saved.featuredBeautyId,'beauty')||state.featuredBeautyId;
  if(typeof saved.lampOn==='boolean')state.lampOn=saved.lampOn;
  if(['fashion','food','living','beauty'].includes(saved.avatarRoom))state.avatarRoom=saved.avatarRoom;
@@ -43,7 +49,7 @@ export function updateDemoState(home,current,patchOrUpdater,storage){
  return {state,saved};
 }
 export function resetDemoState(home,storage){const state=initialDemoState(home);try{const store=storage||globalThis.localStorage;for(const key of DEMO_PERSONAL_KEYS)store.removeItem(personalStateKey(key,home));saveDemoState(home,state,store);}catch{}return state;}
-export function outfitArtKey(home,state){const product=home.purchases.find(p=>p.id===state.outfitId);return supportsFitting(product)?product.illustrationKey:'base';}
+export function outfitArtKey(home,state){const product=home.purchases.find(p=>p.id===state.outfitId);return getOutfitAppearance(product)?.key||(!product?.gameAsset&&state.outfitAppearance?.productId===product?.id&&typeof state.outfitAppearance?.key==='string'&&state.outfitAppearance.key.startsWith('mapped:')?appearanceFromKey(state.outfitAppearance.key)?.key:null)||'base';}
 // The legacy room renderer/controller accepts a small allowlisted set of poses/art keys.
 export function toRoomVisualState(home,state){return {...state,outfitId:outfitArtKey(home,state),featuredBeautyId:home.purchases.find(p=>p.id===state.featuredBeautyId)?.illustrationKey||'serum',foodQuantity:{...state.foodQuantity}};}
 export function applyOwnedOutfit(home,state,id){const p=home.purchases.find(p=>p.id===id&&p.category==='fashion'&&supportsFitting(p));return p?normalizeDemoState(home,{...state,outfitId:p.id}):normalizeDemoState(home,state);}

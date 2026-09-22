@@ -51,7 +51,7 @@ test('fictional food illustrations retain their SVG crop',()=>{
  const markup=mirrorImage(entry,{x:2,y:3,w:20,h:30});
  assert.match(markup,/href="\/products\/milk.svg"/);assert.match(markup,/viewBox="17 2 33 53"/);assert.doesNotMatch(markup,/data-artwork-state/);
 });
-test('reviewed sprites render by exact owned product without replacing photo metadata or applying an outfit',async()=>{
+test('reviewed sprites do not apply outfits implicitly; an explicit supported wear retains exact identity',async()=>{
  const home=await homeFor(),before=JSON.stringify(home),state=initialDemoState(home);
  const foods=getHeroProducts(home.categories.food,state),wardrobe=getHeroProducts(home.categories.fashion,state);
  for(const entry of foods){
@@ -68,7 +68,8 @@ test('reviewed sprites render by exact owned product without replacing photo met
   assert.ok(markup.includes(`data-game-asset="${entry.product.gameAsset.id}"`));
   assert.ok(markup.includes(`data-product-image="${entry.productId}"`));
  }
- assert.equal(applyOwnedOutfit(home,state,wardrobe[0].id).outfitId,'base');
+ assert.equal(state.outfitId,'base');
+ assert.equal(applyOwnedOutfit(home,state,wardrobe[0].id).outfitId,wardrobe[0].id);
  assert.equal(JSON.stringify(home),before);
 });
 test('all home routes require ready re-tap and finish exit once',()=>{

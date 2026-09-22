@@ -421,3 +421,13 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 실제 UI: 390×844 Food 구매 목록/선택/상세에서 생성 파스타 이미지 확인. 320×568 Beauty 목록/추천 카드에서 생성 화장품과 미매핑 안내 확인, 가로 넘침0. Food·Beauty DOM의 실상품 사진 호스트 img/image 참조0.
 - 전체 npm test, 타입 검사, 프로덕션 빌드 PASS. 네 영역 추천 API 각각 200/6개 유지. metadata 기본 샘플의 에셋 연결 수는 fashion4/6, food3/6, living1/6, beauty6/6. 추천 결과를 매핑된 상품만으로 필터링하거나 순서를 바꾸지 않았다.
 - 한계: 미매핑/장애 상품의 새 에셋을 생성한 작업은 아니다. 공통 목록/상세 renderer는 이미지 로딩 실패도 준비 중으로 표시하지만 기존 공간 renderer는 PNG 자체가 404이면 빈 그림이 될 수 있다(실사로 복귀하지 않음).
+
+
+## 2026-09-22 — Owned Fashion wear restoration
+
+- Restored explicit owned `입기`: selected hanger approach → change → return → exact product-ID commit. Cancel/Escape/leave/reselection cannot commit stale actions. Cart/recommendation previews stay unowned.
+- Reviewed game-asset appearance supports 8/12 current owned garments (F01 3, F02 1, M01 2, M02 2). Unsupported garments clearly remain `착장 준비 중`; no arbitrary generic replacement. Confirmed appearance restores across Room, all categories, refresh, another open Room tab, and isolated personas.
+- Review/fix: baseline click changed recommendation only (High). After repair, 320px applied-first rail retained its horizontal offset and clipped the active card (Medium). Reset offset after reorder; same 320px scenario and independent rendered screenshot review PASS, no additional selected visual defects.
+- Actual browser: 390×844 and 320×568; wardrobe first interaction/ready re-tap navigation, three F01 garment appearances, M01/M02/F02 wear, cancel, Escape, rapid selection, leave before completion, refresh, Room return, category appearance, Living sit, cart isolation and unsupported selection PASS. Runtime screenshots captured by Main; independent critic reviewed screenshots because its browser provider was unavailable.
+- npm test, typecheck, production build and release API contract PASS. Shared catalog unchanged: 6,036 products, SHA256 d2caaf9ed958d13c724c87aff849cb7427b3f25514128db5082c4564e19a8dbe. Local preview 3452. No push/deploy in this scope.
+- Evidence: Codex outputs/owned-outfit-20260922/qa-results.json; final 13-fixed-owned-card-320.jpg and 14-final-cardigan-320.jpg. Stylized appearance does not assert exact product fit.

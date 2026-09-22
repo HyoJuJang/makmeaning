@@ -440,3 +440,9 @@
 .sc-light-on .sc-living-owned-art--lamp{filter:drop-shadow(0 0 6px #ffc257)}
 .sc-room-pin.sc-living-owned-pin{z-index:5}
 .sc-living-owned-target{z-index:3;pointer-events:none}
+
+/* Owned Wear is a cancelable life action; completion persists the exact product ID. */
+.sc-outfit-status{display:flex;align-items:center;gap:10px;padding:9px 12px;background:#f2f0e7;color:#58604f;font-size:11px;line-height:1.5}
+.sc-outfit-status>span{min-width:0;flex:1;overflow-wrap:anywhere}
+.sc-outfit-status b{color:#344d3d;margin-right:5px;white-space:nowrap}
+.sc-outfit-status button{flex:none;min-height:36px;padding:4px 9px;border:1px solid #d5d9cc;border-radius:8px;background:#faf9f3;color:#405744;font:inherit}

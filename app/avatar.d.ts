@@ -1,5 +1,5 @@
 export type AvatarId = 'm01' | 'm02' | 'f01' | 'f02';
-export type AvatarOutfit = 'base' | 'knit' | 'shirt';
+export type AvatarOutfit = 'base' | 'knit' | 'shirt' | import('./outfit-rendering').MappedOutfitKey;
 export type AvatarDirection = 'up' | 'left' | 'right' | 'down';
 
 export interface AvatarDefinition {
