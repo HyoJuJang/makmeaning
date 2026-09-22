@@ -54,6 +54,7 @@ for(const [object,category] of [['fridge','food'],['pantry','food'],['vanity','b
  const original={position:approach,direction:'up',window:'open',savedAt:Date.now()};
  const app=await boot(JSON.stringify(original));
  assert.equal(app.element('.walker').dataset.x,approach.x.toFixed(2));
+ assert.equal(app.element('.walker').style.clipPath==='none',object!=='pantry','Only the actor behind the vanity mirror is occluded; fridge and vanity-front remain visible');
  assert.equal(app.storage.has(RETURN_KEY),false);
  const {controller,requestIntent,handleEffects}=app.context.appTest;
  requestIntent({type:'object',id:object});

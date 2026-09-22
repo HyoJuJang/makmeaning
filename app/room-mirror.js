@@ -74,3 +74,13 @@ export function roomMerchandiseRepairs(){
  </g>
  </g>`;
 }
+
+// Mirror silhouette in the existing 400×600 room art. Reveal the already-painted
+// mirror through the actor, retaining merchandise repairs and exact product art.
+// The final .walker CSS box is 40×64 room units, anchored at its feet.
+const vanityMirrorOutline=[[319.5,232],[319.5,163],[321.5,159],[332.5,159],[332.5,156],[336,156],[336,153],[354,153],[354,155],[358,155],[358,158],[360,158],[360,232]];
+export function vanityMirrorClip({x,y}){
+ if(y>=235||y<153||x+20<319.5||x-20>360)return 'none';
+ const contour=vanityMirrorOutline.map(([px,py])=>`${((px-x+20)/40*100).toFixed(2)}% ${((py-y+64)/64*100).toFixed(2)}%`);
+ return `polygon(evenodd, -200% -200%, 300% -200%, 300% 300%, -200% 300%, -200% -200%, ${contour.join(', ')}, ${contour[0]}, -200% -200%)`;
+}

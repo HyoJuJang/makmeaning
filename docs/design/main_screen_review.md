@@ -468,3 +468,10 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - Review/fix/retest: collapsing the tray could send the second click of a double-click onto the floor or its relocated exit button, cancelling the meal. Added a current-action-bound 350ms/24px repeat guard before target handlers. Same browser milk double-click now stays drinking and commits exactly once. Deliberate separately targeted exit remains available. Regression cases cover floor/exit/object reflow, touch-style detail=1 and desktop detail=2, delayed/distant input, keyboard exit and Escape.
 - The shared EatingAvatar component remains compatible but has no current live consumer; no Food-category eating UI is claimed in this release. Food category state/readback and Room return were checked.
 - Evidence: Codex outputs/room-meals-20260922 (actual mobile screenshots, release/build/test logs).
+
+
+## 2026-09-22 — Vanity mirror depth
+
+- The pantry actor previously painted over the mirror's upper-left frame and reflective panel. Added silhouette-shaped actor occlusion behind the existing mirror, using the actual 40×64 foot-anchored character box. No furniture relocation, new bitmap or changes to movement/state/product data. Existing repaired background and purchased Beauty artwork remain the visible source.
+- Same-state 390px drinking screenshot now shows the frame/panel in front of the overlapping arm/body; adjacent character pixels remain intact. Independent visual critic PASS, no broad rectangular cutout or displaced furniture. Front-side vanity seating remains unmasked.
+- Regression exercises the real app at pantry, fridge and vanity approach points, including consumption and cancellation. Evidence: Codex outputs/mirror-depth-20260922.
