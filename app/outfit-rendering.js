@@ -1,9 +1,13 @@
-// A deliberately small renderer contract, not a guess from catalog photographs.
-const PALETTE={white:'#f2f1e9',ivory:'#ddd2b9',light_blue:'#93bbd1',burgundy:'#863f51',navy:'#30465c',gray:'#8c9296',blue:'#557fa9',black:'#30363d'};
+// Reviewed against the representative product photos of all 12 demo purchases.
+// These render-only colors do not identify a purchased size/color option.
+const PALETTE={white:'#f2f1ef',ivory:'#e7e4d7',light_blue:'#b8c9dc',burgundy:'#632e39',navy:'#242632',gray:'#b8bab9',blue:'#294466',black:'#25262f',green:'#328064'};
 const FAMILIES={shirt:['white'],cardigan_round_solid:['light_blue','burgundy'],cardigan_vneck_solid:['navy'],sweatshirt:['ivory','gray']};
 const SPECIAL={
  'cardigan_unspecified--fashion-cardigan-vneck-relaxed-blue-cable':{family:'cardigan_unspecified',color:'blue',pattern:'cable',style:'cardigan-v'},
- 'cardigan_unspecified--fashion-cardigan-zip-standcollar-black-contrast-trim':{family:'cardigan_unspecified',color:'black',pattern:'contrast_trim',style:'cardigan-zip'}
+ 'cardigan_unspecified--fashion-cardigan-zip-standcollar-black-contrast-trim':{family:'cardigan_unspecified',color:'black',pattern:'contrast_trim',style:'cardigan-zip'},
+ 'cardigan_unspecified--fashion-cardigan-collared-green-contrast-trim':{family:'cardigan_unspecified',color:'green',pattern:'contrast_trim',style:'cardigan-collared'},
+ 'hoodie--fashion-hoodie-pullover-gray':{family:'hoodie',color:'gray',pattern:'solid',style:'hoodie'},
+ 'tee_short--fashion-tee-short-round-white':{family:'tee_short',color:'white',pattern:'solid',style:'tee-short'}
 };
 const APPEARANCES=new Map();
 for(const [family,colors] of Object.entries(FAMILIES)) for(const color of colors){const key=`mapped:${family}:${color}:solid`;APPEARANCES.set(key,Object.freeze({key,family,color,pattern:'solid',style:family==='cardigan_round_solid'?'cardigan-round':family==='cardigan_vneck_solid'?'cardigan-v':family,hex:PALETTE[color]}));}

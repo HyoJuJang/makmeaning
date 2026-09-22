@@ -446,3 +446,5 @@
 .sc-outfit-status>span{min-width:0;flex:1;overflow-wrap:anywhere}
 .sc-outfit-status b{color:#344d3d;margin-right:5px;white-space:nowrap}
 .sc-outfit-status button{flex:none;min-height:36px;padding:4px 9px;border:1px solid #d5d9cc;border-radius:8px;background:#faf9f3;color:#405744;font:inherit}
+
+.sc-cart-quantity{display:flex;align-items:center;gap:2px;border:1px solid #ced6c4;width:max-content;margin-top:8px;border-radius:5px;overflow:hidden}.sc-cart-quantity button{min-width:44px;min-height:44px;background:transparent;padding:4px;font-size:16px!important}.sc-cart-quantity output{min-width:24px;text-align:center;font-size:12px}.sc-cart-quantity button:disabled{opacity:.4}.sc-commerce-status{font-size:11px;line-height:1.7;color:#7d684a}.sc-commerce-status p{padding:8px 0}.sc-commerce-status:empty{display:none}.sc-dialog-item>.sc-icon-button{min-width:44px;min-height:44px}.sc-cart-save{margin-top:10px;width:100%;min-height:44px}

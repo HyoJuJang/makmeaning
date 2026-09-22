@@ -35,19 +35,10 @@ const assets = new Map();
 const image = path => assets.set(path.split('#')[0], /image\//);
 for (const category of ['fashion', 'living']) {
   const scene = await json(`/api/demo/scenes?category=${category}`, 200);
-  assert.equal(scene.category, category);
-  assert.ok(scene.products.length >= 6);
-  const ids = new Set(scene.products.map(product => product.id));
-  assert.equal(ids.size, scene.products.length);
-  assert.ok(scene.cartIds.every(id => ids.has(id)));
-  for (const product of scene.products) {
-    assert.equal(product.brand, 'G:Scene sample');
-    assert.equal(product.category, category);
-    image(product.imageUrl);
-  }
+  assert.deepEqual(scene, { category, products: [], cartIds: [] });
 }
 assert.deepEqual(await json('/api/demo/scenes?category=food', 400), { error: 'category must be fashion or living' });
-console.log('PASS: both preserved fictional Scene APIs run without a DB; invalid category remains 400');
+console.log('PASS: both legacy Scene APIs contain no fictional products or seeded carts; invalid category remains 400');
 
 for (const path of ['/', '/fashion', '/food', '/living', '/beauty']) {
   const response = await request(path);

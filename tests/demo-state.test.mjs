@@ -170,3 +170,16 @@ test('client profile watcher and server source selection agree for encoded, malf
  assert.equal(selectedPersona('gscene-persona=demo%2Dm02'),'demo-m02');
  assert.equal(selectedPersona('gscene-persona=demo-m02; gscene-persona=demo-m02'),'demo-f01');
 });
+
+test('reset clears all four real commerce collections only for the current persona',()=>{
+ const store=storage(),profile=structuredClone(home);profile.user.id='demo-f01';
+ for(const category of ['fashion','food','living','beauty']){
+  store.setItem(`gscene-commerce-${category}-v2:demo-f01`,'current');
+  store.setItem(`gscene-commerce-${category}-v2:demo-m01`,'other');
+ }
+ resetDemoState(profile,store);
+ for(const category of ['fashion','food','living','beauty']){
+  assert.equal(store.getItem(`gscene-commerce-${category}-v2:demo-f01`),null);
+  assert.equal(store.getItem(`gscene-commerce-${category}-v2:demo-m01`),'other');
+ }
+});

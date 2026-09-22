@@ -439,3 +439,14 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - Browser review: all four categories default OFF, ON/OFF restores original imagery, matching hero/list IDs. Fashion photo-mode wear completes and survives toggle; Food selection/quantity and Living seated pose survive toggling. Food detail displays the same actual image. Beauty keyboard Space works and refresh restores OFF. Reviewed 390×844 and 320×568 with no horizontal overflow.
 - Independent visual review: no required geometry/layout fixes. One copy mismatch found in photo mode (`공간 그림은…`); changed to distinguish actual product photography from the illustrated room background, then rechecked Living.
 - Validation: production build, typecheck and full npm test pass. Evidence: projectless outputs/scene-image-toggle-20260922 (screenshots and logs). Production release QA is recorded there separately.
+
+
+## 2026-09-22 — Complete owned outfits and canonical carts
+
+- All four personas' 12 owned Fashion entries (11 unique prd_id values) now support explicit wear. Checked canonical source photographs, all 12 rendered mobile selections, new short sleeves and hoodie details, Room return and refresh. Source colors remain render-only, never purchased size/color options or exact fitting.
+- Removed 22 legacy sample products, seeded Fashion loafers/Living rug carts, and unused sample placement renderer. Old saved carts migrate to ID-only storage and drop aliases; every retained/additional item is revalidated against the shared catalog/category. No DB writes.
+- All four categories now support recommendation-to-cart, quantity, removal, catalog totals, persona persistence and real-photo toggle. Owned state/food balance does not change on cart addition. Personal reset includes each category cart.
+- Inspect/fix/retest: React key spread warning removed; external reset cancels in-flight additions; walking garment masks no longer recolor hair/trousers. Replayed actual browser add/double-tap/quantity/delete/refresh/reset and Room interaction at 390x844 and 320x568 without overflow.
+- Independent critic viewed all 12 screenshots and source photographs. No blocking clothing/limb/clipping defects. External M02 blue-cardigan hanger artwork remains more saturated than its source photo; the avatar palette is muted dark blue matching the photo family. No new external image generation in this scope.
+- Full npm test, typecheck, production build and local release API contract PASS. Canonical cart API rejects legacy aliases, validates matching prd_id/domain, and tolerates unavailable artwork without erasing real cart products.
+- Evidence: Codex outputs/real-commerce-20260922 (12 wardrobe screenshots, Room hoodie, mobile carts, QA logs). Production validation appended after release.

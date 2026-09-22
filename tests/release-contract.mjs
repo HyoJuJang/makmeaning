@@ -112,30 +112,18 @@ if (!options.catalogOnly) {
       assert.equal(product.catalogSource, 'shared-products');
       assert.equal(product.priceKind, 'catalog-reference');
     }
-    const examples = catalog.products.filter(p => p.catalogSource === 'fictional-example');
-    assert.equal(examples.length, category === 'food' ? 6 : 2, 'Existing examples preserved without expanding the catalog');
-    assert.ok(examples.every(p => p.priceKind === 'fictional-example' && !home.purchases.some(h => h.id === p.id)));
-    assert.ok(catalog.products.every(p => p.imageKind === (p.catalogSource === 'shared-products' ? 'product-photo' : 'illustration')));
+    assert.deepEqual(catalog.products.map(p => p.prd_id), owned.map(p => p.id), 'Only canonical category-owned products are returned');
+    assert.ok(catalog.products.every(p => p.catalogSource === 'shared-products' && p.priceKind === 'catalog-reference' && p.imageKind === 'product-photo'));
+    assert.deepEqual(catalog.initialCart, [], 'No fictional products seed a cart');
     catalog.products.forEach(p => addImage(p.imageUrl));
     addImage(`/catalog-art/${category}-room.svg`);
-    console.log(`PASS: ${category} shares home/user/purchases and separates ${examples.length} fictional examples`);
+    console.log(`PASS: ${category} shares home/user/purchases and contains only ${owned.length} canonical products`);
   }
 
   for (const category of ['fashion', 'living']) {
     const scene = await json(`/api/demo/scenes?category=${category}`);
-    assert.equal(scene.category, category);
-    assert.ok(scene.products.length >= 6);
-    const ids = new Set(scene.products.map(p => p.id));
-    assert.equal(ids.size, scene.products.length);
-    assert.ok(scene.cartIds.every(id => ids.has(id)));
-    for (const product of scene.products) {
-      assert.equal(product.brand, 'G:Scene sample');
-      assert.equal(product.category, category);
-      assert.ok(product.id.startsWith(`${category}-`));
-      assert.ok(!home.purchases.some(p => p.id === product.id), 'Scene examples do not become owned real products');
-      addImage(product.imageUrl);
-    }
-    console.log(`PASS: ${category} Scene preserves ${scene.products.length} fictional recommendations and valid cart references`);
+    assert.deepEqual(scene, { category, products: [], cartIds: [] });
+    console.log(`PASS: ${category} legacy Scene has no fictional products or seeded cart`);
   }
 
   if (!options.apiOnly) {

@@ -10,9 +10,10 @@ export interface AvatarDefinition {
 }
 
 export interface AvatarRenderOptions {
-  pose?: 'eat' | 'idle' | 'sit-down' | 'stand-up' | 'seated-idle' | 'use-cosmetic' | 'browse' | 'reach' | 'change-clothes';
+  pose?: 'eat' | 'idle' | 'sit-down' | 'stand-up' | 'seated-idle' | 'use-cosmetic' | 'browse' | 'reach' | 'change-clothes' | 'lie-down' | 'lying-idle' | 'get-up';
   progress?: number;
   seatProgress?: number;
+  bedProgress?: number;
   reduced?: boolean;
   objectId?: string;
   heldProductId?: string;

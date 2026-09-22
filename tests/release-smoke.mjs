@@ -40,12 +40,7 @@ for (const category of ['fashion', 'living']) {
   const sceneResponse = await fetch(`${base}/api/demo/scenes?category=${category}`);
   assert.equal(sceneResponse.status, 200);
   const scene = await sceneResponse.json();
-  assert.equal(scene.category, category);
-  for (const imageUrl of new Set(scene.products.map(product => product.imageUrl.split('#')[0]))) {
-    const asset = await fetch(new URL(imageUrl, base));
-    assert.equal(asset.status, 200, 'Scene product image must load');
-    assert.match(asset.headers.get('content-type'), /image\//);
-  }
+  assert.deepEqual(scene, { category, products: [], cartIds: [] }, 'Legacy Scene does not seed fictional products or carts');
 }
 for (const room of ['wardrobe-room.png', 'living-room.png']) {
   assert.equal((await fetch(`${base}/scene-art/${room}`)).status, 200);
@@ -68,10 +63,15 @@ for (const category of ['food', 'beauty']) {
   assert.equal(catalog.user.id, data.user.id);
   assert.equal(catalog.user.avatarId, data.user.avatarId);
   assert.ok(catalog.products.length > 0);
+  assert.deepEqual(catalog.products.map(product => product.prd_id), data.purchases.filter(purchase => purchase.category === category).map(purchase => purchase.id));
+  assert.deepEqual(catalog.initialCart, []);
   for (const field of ['scenarios', 'recipes', 'profiles', 'intents']) {
     assert.equal(field in catalog, false, `Obsolete ${field} is absent`);
   }
   for (const product of catalog.products) {
+    assert.equal(product.catalogSource, 'shared-products');
+    assert.equal(product.imageKind, 'product-photo');
+    assert.equal(product.priceKind, 'catalog-reference');
     for (const field of ['prd_id', 'view_name', 'price', 'cate1_nm', 'cate2_nm', 'cate3_nm', 'cate4_m', 'brd_mn', 'domain']) {
       assert.ok(field in product, `${product.id} preserves ${field}`);
     }
@@ -80,13 +80,15 @@ for (const category of ['food', 'beauty']) {
     }
   }
   assert.deepEqual(catalog.purchases.map(p => p.productId), data.purchases.filter(p => p.category === category).map(p => p.id));
-  const artwork = new Set([...catalog.products.map(p => p.imageUrl), `/catalog-art/${category}-room.svg`]);
-  for (const path of artwork) {
-    assert.match(path, /^\/.*\.svg$/);
-    const asset = await fetch(new URL(path, base));
-    assert.equal(asset.status, 200, `${path} artwork must load`);
-    assert.match(asset.headers.get('content-type'), /image\/svg\+xml/);
-    assert.match(await asset.text(), /<svg\b/);
+  for (const product of catalog.products) {
+    assert.equal(product.imageUrl, `https://asset.m-gs.kr/prod/${product.prd_id}/1/550`);
+    const asset = await fetch(product.imageUrl);
+    assert.equal(asset.status, 200, `${product.prd_id} product photo must load`);
+    assert.match(asset.headers.get('content-type'), /image\//);
   }
-  console.log(`${category} release smoke PASS: page, catalog API, source columns, home purchases, ${artwork.size} artwork assets (${base})`);
+  const room = await fetch(new URL(`/catalog-art/${category}-room.svg`, base));
+  assert.equal(room.status, 200, `${category} room artwork must load`);
+  assert.match(room.headers.get('content-type'), /image\/svg\+xml/);
+  assert.match(await room.text(), /<svg\b/);
+  console.log(`${category} release smoke PASS: page, catalog API, canonical source columns, home purchases and real product photos (${base})`);
 }

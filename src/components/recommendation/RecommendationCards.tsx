@@ -12,7 +12,15 @@ function ProductPhoto({ product }: { product: RecommendationItem['product'] }) {
   </div>;
 }
 
-export function RecommendationProducts({ items, diagnostic = false }: { items: RecommendationItem[]; diagnostic?: boolean }) {
+export interface RecommendationCartActions {
+  cartProductIds?: string[];
+  onAddToCart?: (productId: string) => void;
+  onViewCart?: () => void;
+  pendingProductId?: string | null;
+  cartReady?: boolean;
+}
+
+export function RecommendationProducts({ items, diagnostic = false, cartProductIds = [], onAddToCart, onViewCart, pendingProductId, cartReady = true }: { items: RecommendationItem[]; diagnostic?: boolean } & RecommendationCartActions) {
   if (!items.length) return <p className="rec-empty">현재 조건으로 추천할 상품이 없어요. 다른 상품이나 카테고리를 선택해 주세요.</p>;
   return <ol className="rec-products">{items.map((item, index) => <li key={item.product.prd_id} className="rec-product">
     <div className="rec-product-top"><span className="rec-rank">{String(index + 1).padStart(2, '0')}</span><span className="rec-category">{item.product.cate2_nm || item.product.cate1_nm}</span></div>
@@ -21,6 +29,7 @@ export function RecommendationProducts({ items, diagnostic = false }: { items: R
     <h3>{item.product.view_name}</h3>
     <strong className="rec-price">{price(item.product.discprice)}<small>원</small></strong>
     <p className="rec-reason">{item.reason}</p>
+    {onAddToCart && <button className="rec-cart-button" type="button" disabled={!cartReady || !!pendingProductId} onClick={() => cartProductIds.includes(item.product.prd_id) ? onViewCart?.() : onAddToCart(item.product.prd_id)}>{pendingProductId === item.product.prd_id ? '상품 확인 중…' : cartProductIds.includes(item.product.prd_id) ? '담은 상품 보기' : '장바구니 담기'}</button>}
     {diagnostic && <details className="rec-diagnostic"><summary>선정 근거 상세</summary><dl>
       <div><dt>상품 코드</dt><dd>{item.product.prd_id}</dd></div>
       <div><dt>추천 출처</dt><dd>{SOURCES[item.source]}</dd></div>

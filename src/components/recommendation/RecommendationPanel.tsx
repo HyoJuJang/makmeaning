@@ -3,10 +3,10 @@
 import { useState } from 'react';
 import type { RecommendationDomain } from '@/lib/recommendation/types';
 import { DOMAIN_LABELS, useRecommendationResult, useRecommendationStatus } from './client';
-import { RecommendationFallback, RecommendationProducts } from './RecommendationCards';
+import { RecommendationFallback, RecommendationProducts, type RecommendationCartActions } from './RecommendationCards';
 import './recommendation.css';
 
-export interface RecommendationPanelProps {
+export interface RecommendationPanelProps extends RecommendationCartActions {
   domain: RecommendationDomain;
   userId?: string;
   anchorProductId?: string;
@@ -15,7 +15,7 @@ export interface RecommendationPanelProps {
   cartProductIds?: string[];
 }
 
-export default function RecommendationPanel({ domain, userId, anchorProductId, anchorProductName, purchasedProductIds, cartProductIds }: RecommendationPanelProps) {
+export default function RecommendationPanel({ domain, userId, anchorProductId, anchorProductName, purchasedProductIds, cartProductIds, onAddToCart, onViewCart, pendingProductId, cartReady }: RecommendationPanelProps) {
   const [retry, setRetry] = useState(0);
   const status = useRecommendationStatus(retry);
   const state = useRecommendationResult(status.data?.ready ? {
@@ -36,7 +36,7 @@ export default function RecommendationPanel({ domain, userId, anchorProductId, a
       {unavailable ? <div className="rec-empty"><p>추천 데이터를 준비하고 있어요.</p><button className="rec-text-button" type="button" onClick={() => setRetry(value => value + 1)}>다시 확인</button></div>
         : error ? <div className="rec-empty" role="alert"><p>{error}</p><button className="rec-text-button" type="button" onClick={() => setRetry(value => value + 1)}>다시 시도</button></div>
         : status.loading || state.loading ? <p className="rec-empty">어울리는 상품을 찾고 있어요…</p>
-        : state.result && <><RecommendationFallback result={state.result} compact /><RecommendationProducts items={state.result.items} /></>}
+        : state.result && <><RecommendationFallback result={state.result} compact /><RecommendationProducts items={state.result.items} cartProductIds={cartProductIds} onAddToCart={onAddToCart} onViewCart={onViewCart} pendingProductId={pendingProductId} cartReady={cartReady} /></>}
     </div>
   </section>;
 }

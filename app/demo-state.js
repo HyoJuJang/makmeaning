@@ -2,7 +2,7 @@ import {appearanceFromKey,getOutfitAppearance,supportsFitting} from './outfit-re
 import {getHeroProducts} from './category-products.js';
 // One confirmed state for the fictional user. Rendering keys never identify products.
 export const DEMO_STATE_KEY='gscene-main-v1';
-export const DEMO_PERSONAL_KEYS=['gscene-scene-fashion-v1','gscene-scene-living-v1','gscene-catalog-food-v1','gscene-catalog-beauty-v1','gscene-food-v1','gscene-room-return-v1'];
+export const DEMO_PERSONAL_KEYS=['gscene-scene-fashion-v1','gscene-scene-living-v1','gscene-catalog-food-v1','gscene-catalog-beauty-v1','gscene-food-v1','gscene-room-return-v1',...['fashion','food','living','beauty'].map(category=>`gscene-commerce-${category}-v2`)];
 const failedStoreSnapshots=new WeakMap();
 const avatarId=value=>({short:'m01',wave:'m02',bob:'f01'}[value]||(['m01','m02','f01','f02'].includes(value)?value:'m01'));
 const isPersonaHome=home=>['demo-f01','demo-f02','demo-m01','demo-m02'].includes(home.user.id);

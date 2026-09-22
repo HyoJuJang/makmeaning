@@ -1,6 +1,5 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { demoScenes } from '../src/data/demo-scenes.ts';
 import { recommend } from '../src/lib/scene/recommend.ts';
 
 const filters = overrides => ({
@@ -12,17 +11,30 @@ const sample = overrides => ({
   situations: [], tastes: [], description: '차분한 색감의 예시 상품이에요.', pairsWith: [], reasons: {}, ...overrides,
 });
 
+// Algorithm fixtures stay local to tests; none of these products ships in the app.
+const scenes = {
+  fashion: { products: [
+    sample({ id: 'test-trousers', price: 39000 }),
+    sample({ id: 'test-denim', price: 42000 }),
+    sample({ id: 'test-jacket', price: 79000, kind: '아우터' }),
+  ] },
+  living: { products: [
+    sample({ id: 'test-table', category: 'living', price: 89000, kind: '가구' }),
+    sample({ id: 'test-lamp', category: 'living', price: 45000, kind: '조명' }),
+  ] },
+};
+
 test('price and kind are hard limits, including exact budget boundaries', () => {
-  const products = demoScenes.fashion.products;
+  const products = scenes.fashion.products;
   const results = recommend(products, filters({ budget: 39000, kind: '하의' }), null);
-  assert.deepEqual(results.map(({ product }) => product.id), ['fashion-trousers']);
+  assert.deepEqual(results.map(({ product }) => product.id), ['test-trousers']);
   assert.ok(results.every(({ product }) => product.price <= 39000 && product.kind === '하의'));
   assert.equal(recommend(products, filters({ budget: 0 }), null).length, products.length);
 });
 
 test('empty results never substitute products over budget or from another kind', () => {
-  assert.deepEqual(recommend(demoScenes.living.products, filters({ budget: 10000 }), null), []);
-  assert.deepEqual(recommend(demoScenes.fashion.products, filters({ budget: 50000, kind: '조명' }), null), []);
+  assert.deepEqual(recommend(scenes.living.products, filters({ budget: 10000 }), null), []);
+  assert.deepEqual(recommend(scenes.fashion.products, filters({ budget: 50000, kind: '조명' }), null), []);
 });
 
 test('the selected item is excluded while owned-item reasons come only from a declared pair', () => {
@@ -118,7 +130,7 @@ test('no conditions and no selected product show the complete category without i
   const blankTag = recommend([sample({ situations: [''] })], unrestricted, null)[0];
   assert.deepEqual(blankTag.matches, []);
   assert.equal(blankTag.reason, blankTag.product.description);
-  for (const scene of Object.values(demoScenes)) {
+  for (const scene of Object.values(scenes)) {
     const results = recommend(scene.products, unrestricted, null);
     assert.equal(results.length, scene.products.length);
     assert.deepEqual(new Set(results.map(({ product }) => product.id)), new Set(scene.products.map(product => product.id)));

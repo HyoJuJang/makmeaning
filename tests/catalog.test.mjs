@@ -5,6 +5,7 @@ import { demoCatalogResponse } from '../src/lib/demo-catalog.ts';
 import { resolveDemoHome } from '../src/lib/demo-home.ts';
 import { demoCatalogRows, demoCatalogs } from '../src/data/demo-catalog.ts';
 import { demoHome } from '../src/data/demo-home.ts';
+import { DEMO_PERSONA_COOKIE } from '../src/data/demo-personas.ts';
 import { catalogRoomItems, catalogRoomPlacement } from '../src/lib/catalog-room.ts';
 import { roomArtworkIsVisible, repeatedEatingPointer } from '../src/lib/catalog-eating-input.ts';
 import {
@@ -54,7 +55,7 @@ const legacy = (cart, version = 2) => ({
   version, profileId: 'cart',
   contexts: {
     home: { cart, savedIds: ['daily-food', 'milk'], scenarioId: 'daily-food' },
-    cart: { cart: [line('egg', 8)], savedIds: ['tomato-pasta'] },
+    cart: { cart: [line('water', 8)], savedIds: ['tomato-pasta'] },
     new: { cart: [line('water', 9)] },
   },
 });
@@ -68,8 +69,8 @@ function assertNoRemovedFields(value) {
 }
 
 test('both raw catalogs contain exactly the promised nine source columns', () => {
-  assert.equal(demoCatalogRows.food.length, 9);
-  assert.equal(demoCatalogRows.beauty.length, 4);
+  assert.equal(demoCatalogRows.food.length, 3);
+  assert.equal(demoCatalogRows.beauty.length, 2);
   for (const category of ['food', 'beauty']) {
     const rows = demoCatalogRows[category];
     assert.equal(new Set(rows.map(product => product.prd_id)).size, rows.length);
@@ -112,6 +113,7 @@ for (const [category, get] of [['food', getFood], ['beauty', getBeauty]]) {
     assert.deepEqual(result.user, currentHome.user);
     assert.equal(result.initialOutfitId, undefined, 'Selected display clothing does not imply virtual fitting');
     const purchases = currentHome.purchases.filter(purchase => purchase.category === category);
+    assert.deepEqual(result.products.map(product => product.prd_id), purchases.map(purchase => purchase.id));
     assert.deepEqual(result.purchases, purchases.map(purchase => ({ productId: purchase.id, purchaseId: purchase.purchaseId, purchasedAt: purchase.purchasedAt })));
     assert.deepEqual(result.home, currentHome);
     assert.deepEqual(result.initialCart, []);
@@ -140,16 +142,16 @@ test('current version 1 state is authoritative and restores only known unique pr
     savedProductIds: ['vitamin', 'vitamin', 'tomato-pasta', 'serum', null, 17],
     savedIds: ['daily-food'],
   };
-  const result = restoreCatalogState(food, JSON.stringify(stored), JSON.stringify(legacy([line('egg', 7)])));
+  const result = restoreCatalogState(food, JSON.stringify(stored), JSON.stringify(legacy([line('water', 7)])));
   assert.deepEqual(result, { cart: [line('milk', 5)], savedProductIds: [productId('vitamin')] });
-  assert.deepEqual(restoreCatalogState(food, { version: 1, cart: [], savedProductIds: [] }, legacy([line('egg', 7)])), {
+  assert.deepEqual(restoreCatalogState(food, { version: 1, cart: [], savedProductIds: [] }, legacy([line('water', 7)])), {
     cart: [], savedProductIds: [],
   }, 'an intentionally emptied current cart does not revive the legacy cart');
 });
 
 test('invalid entries in a valid current state are sanitized instead of reviving legacy choices', () => {
   const result = restoreCatalogState(food, {
-    version: 1, cart: [null, line('missing'), line('milk', -1), line('egg', 1.5)],
+    version: 1, cart: [null, line('missing'), line('milk', -1), line('vitamin', 1.5)],
     savedProductIds: [null, 'daily-food', 'missing'],
   }, legacy([line('milk', 4)]));
   assert.deepEqual(result, { cart: [], savedProductIds: [] });
@@ -187,9 +189,9 @@ test('malformed storage cannot stop browsing; invalid current state can fall bac
 });
 
 test('initial cart is sanitized and copied when no usable state exists', () => {
-  const fixture = { ...food, initialCart: [line('tomato', 2), line('unknown')] };
+  const fixture = { ...food, initialCart: [line('water', 2), line('unknown')] };
   const restored = restoreCatalogState(fixture, null);
-  assert.deepEqual(restored, { cart: [line('tomato', 2)], savedProductIds: [] });
+  assert.deepEqual(restored, { cart: [line('water', 2)], savedProductIds: [] });
   restored.cart[0].quantity = 8;
   assert.equal(fixture.initialCart[0].quantity, 2);
 });
@@ -197,37 +199,67 @@ test('initial cart is sanitized and copied when no usable state exists', () => {
 test('cart normalization rejects unknown products, invalid counts and non-array payloads', () => {
   for (const value of [null, undefined, 'cart', {}, 3, true]) assert.deepEqual(normalizeCart(food, value), []);
   const result = normalizeCart(food, [null, true, {}, [],
-    line('pasta', 2), line('pasta', 3), line('tomato', 999), line('unknown'), line('serum'),
-    line('milk', -1), line('water', 1.5), line('vitamin', '2'), line('egg', Infinity), line('rice', NaN),
+    line('milk', 2), line('milk', 3), line('water', 999), line('unknown'), line('serum'),
+    line('milk', -1), line('water', 1.5), line('vitamin', '2'), line('milk', Infinity), line('water', NaN),
     line('', 1), line('  ', 1), line('milk', Number.MAX_SAFE_INTEGER + 1),
   ]);
-  assert.deepEqual(result, [line('pasta', 5), line('tomato', 99)]);
-  assert.equal(cartTotal(food, result), 464500);
+  assert.deepEqual(result, [line('milk', 5), line('water', 99)]);
+  assert.equal(cartTotal(food, result), 627500);
 });
 
 test('cart additions aggregate user-selected quantities, cap at 99, and do not mutate inputs', () => {
-  const original = [line('tomato', 98)];
-  const additions = [line('tomato', 4), line('milk', 2), line('milk', 3)];
+  const original = [line('water', 98)];
+  const additions = [line('water', 4), line('milk', 2), line('milk', 3)];
   const next = addToCart(original, additions);
-  assert.deepEqual(next, [line('tomato', 99), line('milk', 5)]);
-  assert.deepEqual(original, [line('tomato', 98)]);
-  assert.deepEqual(additions, [line('tomato', 4), line('milk', 2), line('milk', 3)]);
-  assert.equal(cartTotal(food, next), 578000);
+  assert.deepEqual(next, [line('water', 99), line('milk', 5)]);
+  assert.deepEqual(original, [line('water', 98)]);
+  assert.deepEqual(additions, [line('water', 4), line('milk', 2), line('milk', 3)]);
+  assert.equal(cartTotal(food, next), 627500);
   assert.equal(cartTotal(beauty, [line('milk'), line('serum', 2)]), 56000, 'totals stay scoped to the current category');
 });
 
 
-test('existing fictional examples remain explicitly distinct from owned shared products', () => {
+test('catalog fixtures contain only category-owned canonical products', () => {
   for (const catalog of [food, beauty]) {
     const owned = new Set(catalog.purchases.map(p => p.productId));
     for (const product of catalog.products) {
-      assert.equal(product.catalogSource, owned.has(product.id) ? 'shared-products' : 'fictional-example');
-      assert.equal(product.priceKind, owned.has(product.id) ? 'catalog-reference' : 'fictional-example');
+      assert.ok(owned.has(product.id));
+      assert.match(product.prd_id, /^\d+$/);
+      assert.equal(product.catalogSource, 'shared-products');
+      assert.equal(product.priceKind, 'catalog-reference');
       assert.equal(product.imageKind, 'illustration');
     }
   }
-  assert.equal(food.products.filter(p => p.catalogSource === 'fictional-example').length, 6);
-  assert.equal(beauty.products.filter(p => p.catalogSource === 'fictional-example').length, 2);
+  assert.equal(food.products.length, food.purchases.length);
+  assert.equal(beauty.products.length, beauty.purchases.length);
+});
+
+test('every persona catalog resolves only its category-owned shared product IDs', async () => {
+  for (const persona of personaSource.personas) {
+    const rows = persona.purchases.map((purchase, index) => ({
+      ...sharedRows[0], prd_id: purchase.productId, view_name: purchase.productName, domain: purchase.category, discprice: 10000 + index,
+    }));
+    const getRepository = () => ({ async find(id) { return rows.find(row => row.prd_id === id) ?? null; } });
+    for (const category of ['food', 'beauty']) {
+      const request = new Request(`http://localhost/api/demo/${category}`, { headers: { Cookie: `${DEMO_PERSONA_COOKIE}=${persona.id}` } });
+      const response = await demoCatalogResponse(category, getRepository, request);
+      assert.equal(response.status, 200);
+      const catalog = await response.json();
+      assert.equal(catalog.user.id, persona.id);
+      assert.deepEqual(catalog.products.map(product => product.prd_id), persona.purchases.filter(purchase => purchase.category === category).map(purchase => purchase.productId));
+      assert.ok(catalog.products.every(product => product.catalogSource === 'shared-products' && product.imageKind === 'product-photo'));
+      assert.deepEqual(catalog.initialCart, []);
+    }
+  }
+});
+
+test('removed fictional IDs are discarded from current and legacy saved carts', () => {
+  const removedIds = ['pasta', 'tomato', 'mushroom', 'olive-oil', 'rice', 'egg', 'cleanser', 'sunscreen'];
+  for (const catalog of [food, beauty]) {
+    const removed = removedIds.map(id => ({ productId: id, quantity: 1 }));
+    assert.deepEqual(restoreCatalogState(catalog, { version: 1, cart: removed, savedProductIds: removedIds }), { cart: [], savedProductIds: [] });
+    assert.deepEqual(restoreCatalogState(catalog, null, legacy(removed)), { cart: [], savedProductIds: [] });
+  }
 });
 
 test('prior alias IDs migrate to the same canonical purchases without losing cart or saved choices', () => {
@@ -292,7 +324,9 @@ test('room objects use confirmed remaining/beauty state without inventing posses
   assert.equal(depleted.length,3,'Empty goods retain an inspectable purchase marker');
   const beautyItems=catalogRoomItems(beauty,{featuredBeautyId:productId('cream')});
   assert.equal(beautyItems.length,2);assert.deepEqual(beautyItems.filter(item=>item.featured).map(item=>item.purchase.id),[productId('cream')]);
-  const bogus=structuredClone(food);bogus.purchases.push({productId:food.products.find(item=>item.catalogSource==='fictional-example').id,purchaseId:'fake',purchasedAt:'never'});
+  const bogus=structuredClone(food);
+  bogus.products.push({...bogus.products[0],id:'fictional-test-only',prd_id:'fictional-test-only',catalogSource:'fictional-example'});
+  bogus.purchases.push({productId:'fictional-test-only',purchaseId:'fake',purchasedAt:'never'});
   assert.equal(catalogRoomItems(bogus,null).length,3,'Fictional catalog examples cannot appear as owned room objects');
   assert.equal(catalogRoomPlacement(undefined),null);
   assert.equal(catalogRoomPlacement({category:'fashion',presentationRole:'wardrobe'}),null);
