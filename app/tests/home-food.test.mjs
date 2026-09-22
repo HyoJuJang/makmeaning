@@ -1,3 +1,4 @@
+import * as foodActions from '../food-action.js';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
@@ -37,7 +38,7 @@ async function boot(saved,blockedStorage=false,{confirmed,reduced=false,blockedL
  const document={hidden:false,body:element('body'),activeElement:null,querySelector:element,querySelectorAll(){return[];},
   addEventListener(type,fn,capture){if(!events.has(type))events.set(type,[]);events.get(type).push(fn);if(capture===true)captureEvents.add(type);}};
  document.activeElement=element('.house-wrap');
- const context=vm.createContext({...movement,...avatars,...scenes,...interactions,...objects,...gameItems,...routes,...demoState,...personas,...categoryProducts,...roomMirror,document,
+ const context=vm.createContext({...foodActions,...movement,...avatars,...scenes,...interactions,...objects,...gameItems,...routes,...demoState,...personas,...categoryProducts,...roomMirror,document,
   window:{location:{assign(url){navigations.push(url);}},innerHeight:844,scrollY:246,scrollTo({top}){scrolledTo=top;},addEventListener(type,fn){windowEvents.set(type,fn);}},
   sessionStorage:{getItem(key){if(blockedStorage)throw new Error('blocked');return storage.get(key)||null;},setItem(key,value){if(blockedStorage)throw new Error('blocked');storage.set(key,value);},removeItem(key){if(blockedStorage)throw new Error('blocked');storage.delete(key);}},
   localStorage:{getItem(key){if(blockedLocal)throw Error('blocked');return local.get(key)||null;},setItem(key,value){if(blockedLocal)throw Error('blocked');local.set(key,value);},removeItem(key){if(blockedLocal)throw Error('blocked');local.delete(key);}},
@@ -197,3 +198,21 @@ for(const interruption of ['exit','blur','hide','storage','reset']){
  eat(app,milk);advance(app,EATING_DURATION);assert.equal(current(app).foodQuantity[milk],0);
 }
 console.log('PASS: canonical O1/O2/O3 wardrobe/state preservation; F1/F4 completion, duplicate, reload, interruption, reset, zero and blocked-storage consumption.');
+
+// One explicit product button selects and consumes that exact food, without a
+// separate name-selection click. Rapid repeats cannot change the action identity.
+for(const [id,mode] of [[milk,'drink'],[owned('vitamin').id,'eat']]){
+ const app=await bootAt('pantry');enter(app,'pantry');dispatch(app,{type:'EXPAND'});
+ const before={...current(app).foodQuantity};
+ eat(app,id);
+ assert.equal(app.context.appTest.controller.step,'eat');
+ assert.equal(app.context.appTest.controller.action.productId,id);
+ assert.equal(app.context.appTest.controller.view().consumptionMode,mode);
+ assert.match(app.element('#tray-root').innerHTML,mode==='drink'?/한 모금 마시는 중/:/한입 먹는 중/);
+ eat(app,id===milk?water:milk);
+ assert.equal(app.context.appTest.controller.action.productId,id,'Second tap cannot replace in-flight food');
+ advance(app,EATING_DURATION);
+ for(const key of Object.keys(before))assert.equal(current(app).foodQuantity[key],before[key]-(key===id?1:0));
+ assert.equal(app.context.appTest.controller.phase,'engaged');
+}
+console.log('PASS: direct owned-food action selects exact item, resolves eat/drink and ignores busy repeat.');

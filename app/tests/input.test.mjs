@@ -1,3 +1,4 @@
+import * as foodActions from '../food-action.js';
 import vm from 'node:vm';
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
@@ -46,7 +47,7 @@ const fetchHome=async(url,options)=>{
   assert.equal(url,'/api/demo/home');assert.equal(options.cache,'no-store');fetchCount++;
   return {ok:true,json:async()=>structuredClone(apiHome)};
 };
-const context=vm.createContext({
+const context=vm.createContext({...foodActions,
   ...movement,...avatars,...scenes,...interactions,...objects,...gameItems,...categoryRoutes,...demoState,...personas,...categoryProducts,...roomMirror,document,
   window:{addEventListener(type,fn){windowEvents.set(type,fn);},location:{assign(href){routeRequests.push(href);}},innerHeight:844,scrollBy(){}},
   sessionStorage:{getItem(key){return sessionState.get(key)||null;},setItem(key,value){sessionState.set(key,value);},removeItem(key){sessionState.delete(key);}},

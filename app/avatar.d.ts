@@ -17,6 +17,7 @@ export interface AvatarRenderOptions {
   reduced?: boolean;
   objectId?: string;
   heldProductId?: string;
+  consumptionMode?: 'eat' | 'drink';
 }
 
 export const AVATARS: AvatarDefinition[];

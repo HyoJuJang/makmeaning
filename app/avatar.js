@@ -2,7 +2,7 @@
 import {appearanceFromKey} from './outfit-rendering.js';
 import {FRAMES} from './avatar-frames.js';
 import {VANITY_FRAMES} from './vanity-frames.js';
-import {EATING_FRAMES} from './eating-frames.js';
+import {MEAL_FRAMES} from './meal-frames.js';
 export const AVATARS=[
  {id:'m01',name:'M01 · 네이비',note:'헝클머리 · 남성',pants:'#353b43'},
  {id:'m02',name:'M02 · 세이지',note:'가르마 · 남성',pants:'#303944'},
@@ -33,19 +33,19 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
  const clip=(name,shape,content)=>`<defs><clipPath id="${key}-${name}">${shape}</clipPath></defs><g clip-path="url(#${key}-${name})">${content}</g>`;
  const standing=(i=index)=>source(i);
  const eating=()=>{
-  // Each state is an intact generated pose. Only a uniform artwork scale is
-  // applied; no body part is stretched, detached, or re-positioned in code.
-  const eatingFacing=facing==='left'?'left':'right';
-  const state=reduced?'sip':p<.08||p>=.94?'idle':p<.34?'hold':p<.73?'sip':'satisfied';
-  if(state==='idle')return source(eatingFacing==='left'?2:3);
-  const i={hold:0,sip:1,satisfied:2}[state];
-  const data=EATING_FRAMES[a.id][i], [bx,by,bw,bh]=data.box;
-  const height=FRAMES[a.id][3].box[3]*scale;
+  // Complete rear-view poses keep hands/food in front of the body. No limb morphs.
+  const mode=options.consumptionMode||(['milk','water'].includes(options.heldProductId)?'drink':'eat');
+  const state=reduced?(mode==='drink'?'sip':'bite'):p<.08||p>=.94?'idle':p<.27?'hold':p<.76?(mode==='drink'?'sip':'bite'):'satisfied';
+  if(state==='idle')return source(1);
+  const raised=state==='sip'||state==='bite';
+  const i=(mode==='drink'?2:0)+(raised?1:0);
+  const data=MEAL_FRAMES[a.id][i], [bx,by,bw,bh]=data.box;
+  const height=FRAMES[a.id][1].box[3]*scale;
   const eatingScale=height/bh;
   const px=20-data.anchorX*eatingScale,py=61-height;
-  const href=`/assets/avatars/${a.id}-eating-states.png`,uid=key+'-eat-'+i;
-  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*eatingScale)}" height="${fmt(height)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href,'right','eating',i)}</svg>`;
-  return `<g data-eating-state="${state}" data-held-food="${['milk','water','vitamin'].includes(options.heldProductId)?options.heldProductId:'food'}" transform="${eatingFacing==='left'?'translate(40 0) scale(-1 1)':''}">${picture}</g>`;
+  const href=`/assets/avatars/${a.id}-meal-back.png`,uid=key+'-meal-'+i;
+  const picture=`<svg x="${fmt(px)}" y="${fmt(py)}" width="${fmt(bw*eatingScale)}" height="${fmt(height)}" viewBox="0 0 ${bw} ${bh}" overflow="visible"><svg width="${bw}" height="${bh}" viewBox="${bx} ${by} ${bw} ${bh}" overflow="hidden" style="overflow:hidden"><image href="${href}" width="1536" height="1024" image-rendering="pixelated"/></svg>${outfit==='base'?'':tinted(data,uid,href,'up','meal',i)}</svg>`;
+  return `<g data-eating-state="${state}" data-consumption-mode="${mode}" data-meal-frame="${i}" data-meal-facing="back">${picture}</g>`;
  };
  const sofaSeat=()=>source(6);
  const vanitySeat=()=>{
@@ -172,6 +172,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   if(appearance?.style!=='tee-short')return '';
   const polygon=points=>`<polygon points="${points.map(([x,y])=>`${fmt(x*w)},${fmt(y*h)}`).join(' ')}"/>`;
   if(kind==='vanity')return polygon([[.32,.485],[.414,.485],[.397,.568],[.32,.568]])+polygon([[.586,.485],[.68,.485],[.68,.568],[.602,.568]]);
+  if(kind==='meal')return polygon([[.02,.57],[.24,.57],[.24,.73],[.02,.73]])+polygon([[.67,.43],[.98,.43],[.98,.59],[.69,.59]]);
   if(kind==='eating')return frameIndex===1
    ?polygon([[.49,.515],[.89,.405],[1,.46],[.7,.59],[.49,.57]])
    :polygon([[.25,.535],[.75,.515],[.77,.615],[.29,.637]])+polygon([[.81,.6],[.95,.6],[.95,.7],[.84,.7]]);
@@ -195,7 +196,7 @@ export function avatarSVG(id,outfit='base',direction='down',frame=0,options={}){
   // Intersect with the pose's clothing envelope before any color operation.
   const box=(x,y,w,h)=>`<rect x="${x*bw}" y="${y*bh}" width="${w*bw}" height="${h*bh}"/>`;
   const polygon=points=>`<polygon points="${points.map(([x,y])=>`${x*bw},${y*bh}`).join(' ')}"/>`;
-  const envelope=kind==='vanity'?box(.32,.385,.36,.28):kind==='eating'?box(.12,.37,.88,.35):frameIndex===6?polygon([[.26,.46],[.62,.46],[.8,.64],[.64,.70],[.43,.70],[.35,.91],[.03,.91],[.08,.74]]):frameIndex===7?box(.05,.39,.81,.34)+polygon([[.5,.44],[.7,.17],[.99,.17],[.92,.47],[.7,.58]]):box(0,.375,1,frameIndex===4||frameIndex===5?.325:.335);
+  const envelope=kind==='vanity'?box(.32,.385,.36,.28):kind==='meal'?box(0,.36,1,.40):kind==='eating'?box(.12,.37,.88,.35):frameIndex===6?polygon([[.26,.46],[.62,.46],[.8,.64],[.64,.70],[.43,.70],[.35,.91],[.03,.91],[.08,.74]]):frameIndex===7?box(.05,.39,.81,.34)+polygon([[.5,.44],[.7,.17],[.99,.17],[.92,.47],[.7,.58]]):box(0,.375,1,frameIndex===4||frameIndex===5?.325:.335);
   const detail=['torso-strip','moving-arm'].includes(part)?'':details(bw,bh,view,kind,frameIndex);
   return `<defs><clipPath id="${uid}-cloth"><path d="${data.shirtMask}"/></clipPath><clipPath id="${uid}-envelope">${envelope}</clipPath>${filter('tint',matrix(color))}${skin}</defs><g data-garment-color="${appearance.hex}" clip-path="url(#${uid}-envelope)"><g clip-path="url(#${uid}-cloth)">${picture('tint')}${exposed?`<g data-short-sleeves="true" clip-path="url(#${uid}-forearms)">${picture('skin')}</g>`:''}${detail}</g></g>`;
  }
