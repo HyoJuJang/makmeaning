@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { avatarSVG, type AvatarId, type AvatarOutfit } from '../../../app/avatar.js';
-import { DEMO_STATE_KEY, outfitArtKey, readDemoState, type DemoState } from '../../../app/demo-state.js';
+import { demoStateKey, outfitArtKey, readDemoState, type DemoState } from '../../../app/demo-state.js';
 import type { DemoHome } from '../../types/home';
 import { createAvatarMotionRunner, restingAvatar, type AvatarPositions } from '../../lib/scene/avatar-motion';
 
@@ -67,7 +67,7 @@ export default function RoomAvatar({ home, confirmedState, fallbackAvatarId, fal
   useEffect(() => {
     const restore = () => { setAppearance(readAppearance(home, confirmedState, fallback, fallbackOutfit)); setReady(true); };
     const onStorage = (event: StorageEvent) => {
-      if (event.key === DEMO_STATE_KEY || event.key === null) restore();
+      if ((home && event.key === demoStateKey(home)) || event.key === null) restore();
     };
     restore();
     window.addEventListener('storage', onStorage);

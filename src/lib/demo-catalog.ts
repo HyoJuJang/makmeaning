@@ -1,13 +1,14 @@
 import { buildDemoCatalog } from '../data/demo-catalog.ts';
+import { demoPersonaIdFromRequest } from '../data/demo-personas.ts';
 import type { CatalogCategory } from '../types/catalog.ts';
 import { resolveDemoHome } from './demo-home.ts';
 import { ProductApiError } from './products/contracts.ts';
 import type { ProductRepository } from './products/contracts.ts';
 
 /** Home and category resolve the same read-only ownership/catalog join, with no fixture fallback. */
-export async function demoCatalogResponse(category: CatalogCategory, getRepository: () => Pick<ProductRepository, 'find'>): Promise<Response> {
+export async function demoCatalogResponse(category: CatalogCategory, getRepository: () => Pick<ProductRepository, 'find'>, request?: Request): Promise<Response> {
   try {
-    const home = await resolveDemoHome(getRepository());
+    const home = await resolveDemoHome(getRepository(), demoPersonaIdFromRequest(request));
     return Response.json(buildDemoCatalog(category, home), { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const known = error instanceof ProductApiError;

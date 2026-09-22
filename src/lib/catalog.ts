@@ -18,7 +18,7 @@ export function adaptCatalogProducts(
     shortName: presentation[row.prd_id]?.shortName || row.view_name,
     imageUrl: presentation[row.prd_id]?.imageUrl || FALLBACK_IMAGE,
     illustrationKey: presentation[row.prd_id]?.illustrationKey || row.prd_id,
-    imageKind: 'illustration',
+    imageKind: presentation[row.prd_id]?.imageKind ?? 'illustration',
     catalogSource: presentation[row.prd_id]?.catalogSource || 'fictional-example',
     priceKind: presentation[row.prd_id]?.catalogSource === 'shared-products' ? 'catalog-reference' : 'fictional-example',
   }));

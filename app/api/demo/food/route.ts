@@ -3,6 +3,6 @@ import { getProductRepository } from '../../../../src/lib/products/database.ts';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(): Promise<Response> {
-  return demoCatalogResponse('food', getProductRepository);
+export async function GET(request: Request): Promise<Response> {
+  return demoCatalogResponse('food', getProductRepository, request);
 }

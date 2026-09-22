@@ -3,6 +3,8 @@ export interface DemoState { version:2; userId:string; outfitId:string; foodQuan
 export interface DemoStorage { getItem(key:string):string|null; setItem(key:string,value:string):void; removeItem(key:string):void; }
 export const DEMO_STATE_KEY:string;
 export const DEMO_PERSONAL_KEYS:string[];
+export function personalStateKey(baseKey:string,homeOrUserId:DemoHome|string):string;
+export function demoStateKey(home:DemoHome):string;
 export function initialDemoState(home:DemoHome):DemoState;
 export function normalizeDemoState(home:DemoHome,saved:unknown):DemoState;
 export function readDemoState(home:DemoHome,storage?:DemoStorage):DemoState;

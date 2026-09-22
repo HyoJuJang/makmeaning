@@ -20,7 +20,7 @@ function wardrobe(open, browse, purchases) {
     <path d="M44 47h96v104H44Z" fill="#6b5b44"/>
     <path d="M48 51h88v73H48Z" fill="#514c3e"/>
     <path d="M47 53h91" stroke="#d3c4a7" stroke-width="2"/>
-    ${purchases.filter(p=>p.category==='fashion'&&['wardrobe-1','wardrobe-2'].includes(p.roomSlot)).map(p=>purchasedArt(p,garment(p.roomSlot==='wardrobe-1'?70:111,p.illustrationKey==='shirt',p.roomSlot==='wardrobe-1'?sway:-sway))).join('')}
+    ${purchases.filter(p=>p.category==='fashion'&&['wardrobe-1','wardrobe-2','wardrobe-3'].includes(p.roomSlot)).map((p,index,items)=>purchasedArt(p,items.length===3?`<g transform="translate(${61+index*29} 20) scale(.65 .8)">${garment(0,p.illustrationKey==='shirt',index%2?sway:-sway)}</g>`:garment(p.roomSlot==='wardrobe-1'?70:111,p.illustrationKey==='shirt',p.roomSlot==='wardrobe-1'?sway:-sway))).join('')}
     <path d="M47 124h91v24H47Z" fill="#aa9070" stroke="#665944"/>
     <path d="M49 127h42v18H49Zm46 0h41v18H95Z" fill="#87745a"/>
     <path d="M63 135h14M109 135h14" stroke="#d2c8af" stroke-width="2.6"/>
@@ -71,7 +71,7 @@ function fridge(open, quantity, selected, purchases) {
     <path d="M230 158h59" stroke="#777e72" stroke-width="2"/>
     <g data-purchased-food="vitamin"><rect x="325" y="127" width="20" height="23" fill="#b39466"/>${food('vitamin','pantry-1',328,128) || '<path d="M326 148h18" stroke="#795f43"/>'}</g>
     <rect x="215" y="203" width="96" height="15" rx="4" fill="#f8f4e9" fill-opacity=".95"/>
-    <text x="263" y="214" text-anchor="middle" font-size="8.4" font-weight="600" fill="#365947">우유 ${quantity.milk} · 물 ${quantity.water} · 영양제 ${quantity.vitamin}</text>
+    <text x="263" y="214" text-anchor="middle" font-size="8.4" font-weight="600" fill="#365947">${purchases.some(p=>p.imageKind==='product-photo')?`식품 데모 잔량 ${quantity.milk+quantity.water+quantity.vitamin}회`:`우유 ${quantity.milk} · 물 ${quantity.water} · 영양제 ${quantity.vitamin}`}</text>
   </g>`;
 }
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {demoHome} from '../src/data/demo-home.ts';
-import {DEMO_STATE_KEY,DEMO_PERSONAL_KEYS,initialDemoState,normalizeDemoState,readDemoState,saveDemoState,resetDemoState,applyOwnedOutfit,outfitArtKey,toRoomVisualState,fromRoomVisualState} from '../app/demo-state.js';
+import {DEMO_STATE_KEY,DEMO_PERSONAL_KEYS,demoStateKey,personalStateKey,initialDemoState,normalizeDemoState,readDemoState,saveDemoState,resetDemoState,applyOwnedOutfit,outfitArtKey,toRoomVisualState,fromRoomVisualState} from '../app/demo-state.js';
 const home=structuredClone(demoHome);
 for(const p of home.purchases) p.id='catalog-'+p.illustrationKey;
 const id=key=>home.purchases.find(p=>p.illustrationKey===key).id;
@@ -27,4 +27,65 @@ test('invalid or another user state is bounded; reset clears only personal demo 
  assert.deepEqual(normalizeDemoState(home,{outfitId:'unowned',foodQuantity:{[id('milk')]:99,[id('water')]:-1}}).foodQuantity,initial.foodQuantity);
  for(const key of DEMO_PERSONAL_KEYS)s.setItem(key,'saved');s.setItem('unrelated-preference','keep');saveDemoState(home,{...initial,lampOn:false},s);
  assert.deepEqual(resetDemoState(home,s),initial);assert.deepEqual(readDemoState(home,s),initial);for(const key of DEMO_PERSONAL_KEYS)assert.equal(s.getItem(key),null);assert.equal(s.getItem('unrelated-preference'),'keep');assert.equal(JSON.stringify(home),before);
+});
+
+const personaHomes=['f01','f02','m01','m02'].map(avatarId=>({
+ ...structuredClone(home),user:{id:`demo-${avatarId}`,name:avatarId,avatarId},
+ purchases:home.purchases.map(product=>({...structuredClone(product),imageKind:'product-photo'})),
+}));
+test('four character states restore independently and never inherit the old demo user',()=>{
+ const s=storage();
+ saveDemoState(home,{...initialDemoState(home),lampOn:false,foodQuantity:{[id('milk')]:0}},s);
+ for(const [index,persona] of personaHomes.entries()){
+  const initial=initialDemoState(persona);
+  assert.deepEqual(readDemoState(persona,s),initial);
+  const next={...initial,avatarRoom:['fashion','food','living','beauty'][index],lampOn:index%2===0};
+  assert(saveDemoState(persona,next,s));
+  assert.equal(demoStateKey(persona),`${DEMO_STATE_KEY}:${persona.user.id}`);
+ }
+ for(const [index,persona] of personaHomes.entries()){
+  const restored=readDemoState(persona,s);
+  assert.equal(restored.avatarRoom,['fashion','food','living','beauty'][index]);
+  assert.equal(restored.lampOn,index%2===0);
+  assert.equal(restored.userId,persona.user.id);
+  assert.equal(restored.foodQuantity[id('milk')],initialDemoState(persona).foodQuantity[id('milk')]);
+ }
+ assert.equal(readDemoState(home,s).foodQuantity[id('milk')],0);
+});
+test('selected character identity cannot be overwritten by persisted appearance or another persona',()=>{
+ for(const persona of personaHomes){
+  assert.equal(normalizeDemoState(persona,{...initialDemoState(persona),avatarId:'wave'}).avatarId,persona.user.avatarId);
+  assert.deepEqual(normalizeDemoState(persona,{...initialDemoState(persona),userId:'another-persona',lampOn:false}),initialDemoState(persona));
+ }
+});
+test('reset clears only the active character cart, saved products and room state',()=>{
+ const s=storage();
+ for(const persona of personaHomes){
+  for(const key of DEMO_PERSONAL_KEYS)s.setItem(personalStateKey(key,persona),'saved');
+  saveDemoState(persona,{...initialDemoState(persona),avatarRoom:'food'},s);
+ }
+ for(const key of DEMO_PERSONAL_KEYS)s.setItem(key,'legacy-kept');
+ s.setItem('unrelated-preference','keep');
+ const active=personaHomes[0];
+ resetDemoState(active,s);
+ for(const key of DEMO_PERSONAL_KEYS)assert.equal(s.getItem(personalStateKey(key,active)),null);
+ assert.deepEqual(readDemoState(active,s),initialDemoState(active));
+ for(const persona of personaHomes.slice(1)){
+  assert.equal(readDemoState(persona,s).avatarRoom,'food');
+  for(const key of DEMO_PERSONAL_KEYS)assert.equal(s.getItem(personalStateKey(key,persona)),'saved');
+ }
+ for(const key of DEMO_PERSONAL_KEYS)assert.equal(s.getItem(key),'legacy-kept');
+ assert.equal(s.getItem('unrelated-preference'),'keep');
+ assert.equal(personalStateKey('cart','demo-user'),'cart');
+ assert.equal(personalStateKey('cart',active.user.id),personalStateKey('cart',active));
+});
+test('real product photos never activate clothing animation by a legacy placement alias',()=>{
+ for(const persona of personaHomes){
+  const initial=initialDemoState(persona);
+  assert.equal(initial.outfitId,'base');
+  assert.equal(outfitArtKey(persona,{...initial,outfitId:id('shirt')}),'base');
+  assert.deepEqual(applyOwnedOutfit(persona,initial,id('shirt')),initial);
+  assert.equal(normalizeDemoState(persona,{...initial,outfitId:id('knit')}).outfitId,'base');
+  assert.equal(fromRoomVisualState(persona,{...toRoomVisualState(persona,initial),outfitId:'shirt'}).outfitId,'base');
+ }
 });

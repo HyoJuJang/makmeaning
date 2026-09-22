@@ -1,15 +1,19 @@
 export type Category = 'fashion' | 'food' | 'living' | 'beauty';
 
 export type RoomSlot =
-  | 'wardrobe-1' | 'wardrobe-2' | 'fridge-1' | 'fridge-2' | 'pantry-1'
+  | 'wardrobe-1' | 'wardrobe-2' | 'wardrobe-3' | 'fridge-1' | 'fridge-2' | 'pantry-1'
   | 'sofa-1' | 'lamp-1' | 'vanity-1' | 'vanity-2';
 
-export type IllustrationKey = 'knit' | 'shirt' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';
+export type IllustrationKey = 'knit' | 'shirt' | 'garment' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';
 
 export interface DemoUser {
   id: string;
   name: string;
   avatarId: string;
+}
+
+export interface DemoPersonaSummary extends DemoUser {
+  theme: string;
 }
 
 /** A fictional customer's confirmed state, never a mutation of catalog data. */
@@ -35,12 +39,21 @@ export interface Purchase {
   illustrationKey: IllustrationKey;
   state: PurchaseState;
   catalogSource: 'shared-products';
-  imageKind: 'illustration';
+  imageKind: 'illustration' | 'product-photo';
   priceKind: 'catalog-reference';
+  /** Catalog facts must never be inferred from a generic room illustration. */
+  catalogMetadata?: {
+    cate1_nm: string;
+    cate2_nm: string;
+    cate3_nm: string;
+    cate4_m: string;
+    brd_mn: string;
+  };
 }
 
 export interface DemoHome {
   user: DemoUser;
+  personas?: DemoPersonaSummary[];
   purchases: Purchase[];
   demo: {
     isDemo: true;

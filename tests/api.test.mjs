@@ -1,26 +1,29 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import personaSource from '../data/demo-persona-purchases.json' with { type: 'json' };
 import { demoHome } from '../src/data/demo-home.ts';
 import { demoPurchaseSeeds } from '../src/data/demo-purchases.ts';
 import { demoHomeResponse, resolveDemoHome } from '../src/lib/demo-home.ts';
 import { ProductApiError } from '../src/lib/products/contracts.ts';
 
-const catalog = demoHome.purchases.map(item => ({
-  prd_id: item.id, view_name: item.name, discprice: item.price, domain: item.category,
+const selected = personaSource.personas.find(persona => persona.id === 'demo-f01');
+const catalog = selected.purchases.map((item, index) => ({
+  prd_id: item.productId, view_name: item.productName, discprice: 10000 + index * 100, domain: item.category,
   cate1_nm: null, cate2_nm: null, cate3_nm: null, cate4_nm: null,
   brand_name: null, opt1: null, opt2: null, opt3: null, opt4: null,
 }));
 const repository = (rows = catalog) => ({ async find(id) { return rows.find(item => item.prd_id === id) ?? null; } });
 const GET = () => demoHomeResponse(() => repository());
 
-test('home joins one fictional user to real catalog IDs in all four room areas', async () => {
+test('home joins the default selected persona to real catalog IDs in all four room areas', async () => {
   const response = await GET();
   assert.equal(response.status, 200);
   assert.match(response.headers.get('content-type'), /application\/json/);
   assert.equal(response.headers.get('cache-control'), 'no-store');
-  const { user, purchases, demo } = await response.json();
-  assert.deepEqual(user, { id: 'demo-user', name: '민서', avatarId: 'short' });
-  assert.equal(purchases.length, 9);
+  const { user, purchases, demo, personas } = await response.json();
+  assert.deepEqual(user, { id: 'demo-f01', name: '민서', avatarId: 'f01' });
+  assert.equal(purchases.length, 10);
+  assert.equal(personas.length, 4);
   for (const key of ['id', 'purchaseId', 'roomSlot', 'illustrationKey']) {
     assert.equal(new Set(purchases.map(item => item[key])).size, purchases.length, key);
   }
@@ -31,7 +34,7 @@ test('home joins one fictional user to real catalog IDs in all four room areas',
   assert.match(demo.notice, /실제 상품 외형이나 가상 피팅을 재현하지 않습니다/);
 
   const expectedSlots = {
-    knit: ['fashion', 'wardrobe-1'], shirt: ['fashion', 'wardrobe-2'],
+    knit: ['fashion', 'wardrobe-1'], shirt: ['fashion', 'wardrobe-2'], garment: ['fashion', 'wardrobe-3'],
     milk: ['food', 'fridge-1'], water: ['food', 'fridge-2'], vitamin: ['food', 'pantry-1'],
     cushion: ['living', 'sofa-1'], lamp: ['living', 'lamp-1'],
     serum: ['beauty', 'vanity-1'], cream: ['beauty', 'vanity-2'],
@@ -42,12 +45,12 @@ test('home joins one fictional user to real catalog IDs in all four room areas',
     assert.equal(purchase.name, item.view_name);
     assert.equal(purchase.price, item.discprice);
     assert.equal(purchase.category, item.domain);
-    assert.equal(purchase.purchaseId, `demo-purchase-${purchase.illustrationKey}`);
+    assert.equal(purchase.purchaseId, selected.purchases.find(item => item.productId === purchase.id).purchaseId);
     assert.notEqual(purchase.id, purchase.illustrationKey);
     assert.deepEqual([purchase.category, purchase.roomSlot], expectedSlots[purchase.illustrationKey]);
-    assert.equal(purchase.imageUrl, `/products/${purchase.illustrationKey}.svg`);
+    assert.equal(purchase.imageUrl, `https://asset.m-gs.kr/prod/${purchase.id}/1/550`);
     assert.equal(purchase.catalogSource, 'shared-products');
-    assert.equal(purchase.imageKind, 'illustration');
+    assert.equal(purchase.imageKind, 'product-photo');
     assert.equal(purchase.priceKind, 'catalog-reference');
     assert.match(purchase.purchasedAt, /^\d{4}\.\d{2}\.\d{2}$/);
     if (purchase.category === 'food') assert.equal(purchase.state.quantity, 3);
@@ -55,7 +58,7 @@ test('home joins one fictional user to real catalog IDs in all four room areas',
   for (const category of ['fashion', 'food', 'living', 'beauty']) {
     assert.ok(purchases.filter(item => item.category === category).length >= 2);
   }
-  assert.equal(purchases.filter(item => item.state.wearing).length, 1);
+  assert.equal(purchases.filter(item => item.state.wearing).length, 0);
   assert.equal(purchases.filter(item => item.state.featured).length, 1);
   assert.equal(purchases.find(item => item.illustrationKey === 'lamp').state.on, true);
 });
@@ -67,7 +70,7 @@ test('runtime catalog values are joined on every request rather than replaced by
     seen.push(id);
     return updated.find(item => item.prd_id === id);
   } });
-  assert.deepEqual(seen, demoPurchaseSeeds.map(item => item.id));
+  assert.deepEqual(seen, selected.purchases.map(item => item.productId));
   for (const item of home.purchases) {
     const product = updated.find(row => row.prd_id === item.id);
     assert.equal(item.name, product.view_name);
@@ -80,7 +83,7 @@ test('personal state changes and reset cannot mutate the catalog or another home
   const rows = catalog.map(item => Object.freeze({ ...item }));
   Object.freeze(rows);
   const beforeCatalog = JSON.stringify(rows);
-  const beforeSeeds = JSON.stringify(demoPurchaseSeeds);
+  const beforeSeeds = JSON.stringify(personaSource);
   const first = await resolveDemoHome(repository(rows));
   first.user.name = 'changed';
   first.purchases.find(item => item.illustrationKey === 'milk').state.quantity = 0;
@@ -94,7 +97,14 @@ test('personal state changes and reset cannot mutate the catalog or another home
   assert.equal(reset.purchases.find(item => item.illustrationKey === 'lamp').state.on, true);
   assert.equal(reset.purchases[0].name, rows[0].view_name);
   assert.equal(JSON.stringify(rows), beforeCatalog);
-  assert.equal(JSON.stringify(demoPurchaseSeeds), beforeSeeds);
+  assert.equal(JSON.stringify(personaSource), beforeSeeds);
+});
+
+test('legacy nine-product fixture remains deterministic for historical state and artwork regression tests', () => {
+  assert.equal(demoHome.user.id, 'demo-user');
+  assert.equal(demoHome.purchases.length, 9);
+  assert.deepEqual(demoHome.purchases.map(item => item.id), demoPurchaseSeeds.map(item => item.id));
+  assert.ok(demoHome.purchases.every(item => item.imageKind === 'illustration'));
 });
 
 test('missing, misidentified or recategorized purchased products fail closed without fictional replacements', async () => {

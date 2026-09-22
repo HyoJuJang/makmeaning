@@ -11,8 +11,11 @@ const homeCategories: Record<string, [string, string]> = {
 function homeRows(category: CatalogCategory, home: DemoHome): CatalogProduct[] {
   return home.purchases.filter(purchase => purchase.category === category).map(purchase => ({
     prd_id: purchase.id, view_name: purchase.name, price: purchase.price,
-    cate1_nm: category === 'food' ? '식품' : '뷰티', cate2_nm: homeCategories[purchase.illustrationKey][0],
-    cate3_nm: homeCategories[purchase.illustrationKey][1], cate4_m: '', brd_mn: '', domain: category === 'food' ? '푸드' : '뷰티',
+    ...(purchase.catalogMetadata ?? {
+      cate1_nm: category === 'food' ? '식품' : '뷰티', cate2_nm: homeCategories[purchase.illustrationKey]?.[0] ?? '',
+      cate3_nm: homeCategories[purchase.illustrationKey]?.[1] ?? '', cate4_m: '', brd_mn: '',
+    }),
+    domain: category === 'food' ? '푸드' : '뷰티',
   }));
 }
 
@@ -54,8 +57,10 @@ export function buildDemoCatalog(category: CatalogCategory, home: DemoHome): Dem
   const purchased = home.purchases.filter(purchase => purchase.category === category);
   const ownedPresentation = Object.fromEntries(purchased.map(purchase => [purchase.id, {
     ...presentation[purchase.illustrationKey],
+    ...(purchase.imageKind === 'product-photo' ? { shortName: purchase.name } : {}),
     illustrationKey: purchase.illustrationKey,
     imageUrl: purchase.imageUrl,
+    imageKind: purchase.imageKind,
     catalogSource: 'shared-products' as const,
   }]));
   const examplePresentation = Object.fromEntries(fictionalRows[category].map(row => [row.prd_id, {

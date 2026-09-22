@@ -7,6 +7,7 @@ import * as scenes from '../scene-entry.js';
 import * as interactions from '../interactions.js';
 import * as objects from '../object-art.js';
 import * as demoState from '../demo-state.js';
+import * as demoPersona from '../demo-persona.js';
 import * as routes from '../category-routes.js';
 import {demoHome} from '../../src/data/demo-home.ts';
 
@@ -29,7 +30,7 @@ async function boot(saved,blockedStorage=false){
  const document={body:element('body'),activeElement:null,querySelector:element,querySelectorAll(){return[];},
   addEventListener(type,fn,capture){if(!events.has(type))events.set(type,[]);events.get(type).push(fn);if(capture===true)captureEvents.add(type);}};
  document.activeElement=element('.house-wrap');
- const context=vm.createContext({...movement,...avatars,...scenes,...interactions,...objects,...routes,...demoState,document,
+ const context=vm.createContext({...movement,...avatars,...scenes,...interactions,...objects,...routes,...demoState,...demoPersona,document,
   window:{location:{assign(url){navigations.push(url);}},innerHeight:844,scrollY:246,scrollTo({top}){scrolledTo=top;},addEventListener(type,fn){windowEvents.set(type,fn);}},
   sessionStorage:{getItem(key){if(blockedStorage)throw new Error('blocked');return storage.get(key)||null;},setItem(key,value){if(blockedStorage)throw new Error('blocked');storage.set(key,value);},removeItem(key){if(blockedStorage)throw new Error('blocked');storage.delete(key);}},
   localStorage:{getItem(key){return local.get(key)||null;},setItem(key,value){local.set(key,value);},removeItem(key){local.delete(key);}},

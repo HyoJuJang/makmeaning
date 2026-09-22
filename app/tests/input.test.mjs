@@ -6,8 +6,11 @@ import * as avatars from '../avatar.js';
 import * as scenes from '../scene-entry.js';
 import * as interactions from '../interactions.js';
 import * as demoState from '../demo-state.js';
+import * as demoPersona from '../demo-persona.js';
 import * as categoryRoutes from '../category-routes.js';
 import * as objects from '../object-art.js';
+import {resolveDemoHome} from '../../src/lib/demo-home.ts';
+import personaSource from '../../data/demo-persona-purchases.json' with { type: 'json' };
 import {demoHome} from '../../src/data/demo-home.ts';
 
 // Execute actual app event handlers/frame loop with a minimal DOM and virtual clock.
@@ -42,7 +45,7 @@ const fetchHome=async(url,options)=>{
   return {ok:true,json:async()=>structuredClone(apiHome)};
 };
 const context=vm.createContext({
-  ...movement,...avatars,...scenes,...interactions,...objects,...categoryRoutes,...demoState,document,
+  ...movement,...avatars,...scenes,...interactions,...objects,...categoryRoutes,...demoState,...demoPersona,document,
   window:{addEventListener(type,fn){windowEvents.set(type,fn);},location:{assign(href){routeRequests.push(href);}},innerHeight:844,scrollBy(){}},
   sessionStorage:{getItem(key){return sessionState.get(key)||null;},setItem(key,value){sessionState.set(key,value);},removeItem(key){sessionState.delete(key);}},
   localStorage:{removeItem(key){if(key==='gscene-main-v1')savedState=null;},getItem(){return savedState;},setItem(key,value){assert.equal(key,'gscene-main-v1');savedState=value;}},
@@ -51,7 +54,7 @@ const context=vm.createContext({
   fetch:fetchHome,AbortController,clearTimeout(){},setTimeout(){},console
 });
 const source=fs.readFileSync(new URL('../app.js',import.meta.url),'utf8').replace(/^import .*?;\n/gm,'');
-const bootstrapSource=`(async()=>{${source}\n globalThis.appTest={loadHome,requestIntent,controller,getState(){return JSON.parse(JSON.stringify(state));},renderProductsFor(category){active=category;renderProducts();active=null;}};})()`;
+const bootstrapSource=`(async()=>{${source}\n globalThis.appTest={validateHome,showAvatarPicker,loadHome,requestIntent,controller,getState(){return JSON.parse(JSON.stringify(state));},renderProductsFor(category){active=category;renderProducts();active=null;}};})()`;
 const bootstrap=vm.runInContext(bootstrapSource,context);
 assert.equal(element('#app').dataset.homeState,'loading');
 await bootstrap;
@@ -174,3 +177,36 @@ assert.equal(afterLamp.lampOn,true,'Actual lamp interaction commits after cached
 assert.equal(afterLamp.outfitId,canonicalShirt,'A later room commit cannot overwrite the externally confirmed outfit');
 assert.equal(afterLamp.avatarId,'f02');assert.equal(afterLamp.featuredBeautyId,canonicalCream);assert.equal(afterLamp.foodQuantity[canonicalMilk],1);
 console.log('PASS: persisted pageshow restores canonical appearance/purchases; subsequent actual lamp commit preserves them.');
+
+// Boot the actual controller with each JSON-backed API home, then apply a different character.
+const personaProducts=new Map(personaSource.personas.flatMap(p=>p.purchases).map(p=>[p.productId,p]));
+const personaRepo={async find(id){const p=personaProducts.get(id);return p?{prd_id:id,view_name:p.productName,domain:p.category,discprice:10000,cate1_nm:'',cate2_nm:'',cate3_nm:'',cate4_nm:'',brand_name:''}:null;}};
+const personaStates=new Map();
+context.localStorage={getItem:key=>personaStates.get(key)||null,setItem:(key,value)=>personaStates.set(key,value),removeItem:key=>personaStates.delete(key)};
+let personaReloads=0;context.window.location.reload=()=>personaReloads++;
+for(let i=0;i<personaSource.personas.length;i++){
+ const persona=personaSource.personas[i];
+ Object.assign(apiHome,await resolveDemoHome(personaRepo,persona.id));
+ document.cookie='gscene-persona='+persona.id;
+ await vm.runInContext(bootstrapSource,context);frames(1);
+ assert.equal(element('#app').dataset.homeState,'ready');
+ assert(element('h1').innerHTML.includes(persona.name));
+ assert(element('#purchase-summary').textContent.includes('10개'));
+ assert.equal(element('.walker').dataset.avatar,persona.avatarLabel.toLowerCase());
+ context.appTest.renderProductsFor('fashion');
+ for(const p of persona.purchases.filter(p=>p.category==='fashion'))assert(element('.product-list').innerHTML.includes('data-product="'+p.productId+'"'));
+ assert(!element('.product-list').innerHTML.includes('data-action='),'Display assets do not imply fitting support');
+ const incomplete=structuredClone(apiHome);incomplete.purchases.pop();
+ assert.throws(()=>context.appTest.validateHome(incomplete),/Incomplete demo home/);
+ context.appTest.showAvatarPicker();
+ for(const p of personaSource.personas)assert(element('.avatar-choices').innerHTML.includes(p.name));
+ const next=personaSource.personas[(i+1)%4];
+ element('#modal-root').click({target:{classList:{contains:()=>false},closest:selector=>selector==='[data-avatar]'?{dataset:{avatar:next.avatarLabel.toLowerCase()}}:null}});
+ element('#modal-root').click({target:{classList:{contains:()=>false},closest:selector=>selector==='.apply-avatar'?{}:null}});
+ assert.equal(demoPersona.activePersonaId(document.cookie),next.id);
+ assert.equal(routeRequests.at(-1),'/');
+ assert.equal(JSON.parse(personaStates.get(demoState.demoStateKey(apiHome))).userId,persona.id);
+ windowEvents.get('pageshow')({persisted:true});
+ assert.equal(personaReloads,i+1,'A cached previous persona must reload');
+}
+console.log('PASS: all four JSON purchase homes boot with ten items; picker changes persona cookie and stale cached homes reload.');
