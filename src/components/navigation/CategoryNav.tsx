@@ -43,7 +43,7 @@ export default function CategoryNav({ activeCategory }: { activeCategory: Naviga
       const route = destination === 'room' ? { href: '/', label: '내 공간' } : CATEGORY_ROUTES[destination];
       // Native document navigation boots/cleans up the vanilla room exactly once.
       return <a key={destination} href={route.href} className={`gs-category-nav-item${destination === 'room' ? ' gs-room-nav-item' : ''}`} data-destination={destination} aria-current={activeCategory === destination ? 'page' : undefined}>
-        {destination === 'room' ? <RoomIcon /> : <CategoryIcon category={destination} />}
+        {destination === 'room' ? <span className="gs-room-nav-mark"><RoomIcon /></span> : <CategoryIcon category={destination} />}
         <span className="gs-category-nav-label">{route.label}</span>
       </a>;
     })}

@@ -60,7 +60,7 @@ assert.equal(element('#app').dataset.homeState,'loading');
 await bootstrap;
 assert.equal(fetchCount,1);
 assert.equal(element('#app').dataset.homeState,'ready');
-assert(element('h1').innerHTML.includes('API 민서'),'The visible user must come from the API');
+assert(element('h1').textContent.includes('API 민서'),'The visible user must come from the API');
 assert.equal(context.appTest.getState().outfitId,purchaseId('knit'),'Initial outfit must honor the API wearing purchase');
 const position=()=>({x:Number(element('.walker').dataset.x),y:Number(element('.walker').dataset.y)});
 function emit(type,key){

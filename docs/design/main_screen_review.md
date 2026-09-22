@@ -379,3 +379,11 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - I1–I6: 실제 production screenshot에서 custom SVG 4종의 24px/1.65px 선·56px 터치 높이·11px label·subtle active 표시 확인. 가로 overflow/깨진 image/브라우저 console 오류 없음. 기존 찜 기능 유지 확인.
 - 검증: 전체 npm test, typecheck, production build PASS. 기존 미커밋 변경과 분리한 commit 후보에서도 input/controller 검사 PASS.
 - 범위 제한: Food/Beauty는 기존 구매 상품 landing만 제공하며 추천 기능은 이번 작업에 추가하지 않음.
+
+
+## 2026-09-22 Room chrome 최종 정리
+
+- 실제 390×844 / 320×568 화면과 옷장·냉장고 준비 상태, Fashion tab을 검토했다. 방 시작 높이는 390px에서 276→116px, 320px에서114px. MY SCENE·영문 eyebrow·소개·방 아래 두 문장·Scene 입구는 제거됐다.
+- 시각 review: 주요 결함0. 작은 화면의 낮은 우선순위 안내 가독성을 보강해 안내10→11px, footer9→10px로 수정하고 동일320 화면을 재검토했다. 가로 넘침0, 캐릭터61×44px와 모든 tab59×61px 이상. 중앙 집은 primary, 실제 current category만 밑줄로 구별된다.
+- 기능: 캐릭터 sheet 열기/닫기, 연속 옷장 tap 시 Room 유지→준비 후 Fashion 이동→Room 복귀, 냉장고 준비 후 Food 이동, 바닥 tap 연속 이동/멈춤을 실제 브라우저에서 확인했다. 기존83개 Node tests+이동/입력/interaction/assertion suites, build, typecheck PASS. API release contract와6036개 공통 catalog 불변 PASS.
+- 동료 담당 의상 그림·카테고리 hero·상품 데이터는 변경하지 않았다.
