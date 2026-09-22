@@ -37,14 +37,19 @@ test('stale patch preserves outfit and independent same-art food IDs',async()=>{
  assert.equal(result.saved,true);assert.equal(result.state.outfitId,garment.id);assert.equal(result.state.foodQuantity[first.id],2);assert.equal(result.state.foodQuantity[second.id],2);
  assert.deepEqual(toRoomVisualState(home,result.state).foodQuantity,result.state.foodQuantity);
 });
-test('food photos bypass SVG crop and third wardrobe photo is represented',async()=>{
+test('unmapped real food uses neutral artwork while photo metadata remains unchanged',async()=>{
  const home=await homeFor();
  for(const purchase of home.purchases)purchase.gameAsset=null;
  const state=initialDemoState(home),foods=getHeroProducts(home.categories.food,state),wardrobe=getHeroProducts(home.categories.fashion,state);
- for(const entry of foods){const markup=mirrorImage(entry,roomMirrorPlacement(entry,foods));assert.match(markup,/^<image /);assert.ok(markup.includes(entry.imageUrl));assert.doesNotMatch(markup,/viewBox=/);}
+ for(const entry of foods){const markup=mirrorImage(entry,roomMirrorPlacement(entry,foods));assert.match(markup,/data-artwork-state="unavailable"/);assert.ok(!markup.includes(entry.imageUrl));assert.match(markup,/공간 이미지 준비 중/);}
  assert.equal(wardrobe.length,3);assert.equal(wardrobe[2].productId,home.categories.fashion.ownedProducts[2].id);assert.deepEqual(garmentPresentation(wardrobe[2]),{source:wardrobe[2].imageUrl,number:3});
- const markup=objectArt({wardrobeOpen:1,mirrorProducts:[...wardrobe,...foods]});for(const entry of wardrobe)assert.ok(markup.includes(`data-garment-source="${entry.imageUrl}"`));
+ const markup=objectArt({wardrobeOpen:1,mirrorProducts:[...wardrobe,...foods]});for(const entry of wardrobe){assert.ok(!markup.includes(`href="${entry.imageUrl}"`));assert.ok(markup.includes(`data-garment-number="${entry.displayIndex}"`));}
  assert.equal(applyOwnedOutfit(home,state,wardrobe[0].id).outfitId,'base');
+});
+test('fictional food illustrations retain their SVG crop',()=>{
+ const entry={artVisible:true,category:'food',illustrationKey:'milk',productId:'fictional-milk',imageUrl:'/products/milk.svg',product:{name:'예시 우유',imageKind:'illustration'}};
+ const markup=mirrorImage(entry,{x:2,y:3,w:20,h:30});
+ assert.match(markup,/href="\/products\/milk.svg"/);assert.match(markup,/viewBox="17 2 33 53"/);assert.doesNotMatch(markup,/data-artwork-state/);
 });
 test('reviewed sprites render by exact owned product without replacing photo metadata or applying an outfit',async()=>{
  const home=await homeFor(),before=JSON.stringify(home),state=initialDemoState(home);

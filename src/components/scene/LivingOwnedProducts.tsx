@@ -1,6 +1,6 @@
 import { useId, type CSSProperties } from 'react';
 import type { CategoryProductEntry, Purchase } from '../../types/home';
-import { GameItemSprite } from '../GameItemSprite';
+import ProductArtwork from '../ProductArtwork';
 import { livingHeroPlacement } from '../../../app/living-hero-placement.js';
 
 export default function LivingOwnedProducts({ entries, selectedId, lit, onSelect }: {
@@ -20,7 +20,7 @@ export default function LivingOwnedProducts({ entries, selectedId, lit, onSelect
     {entries.map(entry => {
       const position = livingHeroPlacement(entry, entries);
       return <span className="sc-living-owned-product" key={entry.id} data-hero-product-id={entry.id} data-hero-status={entry.status} data-hero-role={entry.presentationRole} data-hero-source-image={entry.imageUrl} data-hero-on={entry.on ?? undefined}>
-        {entry.artVisible && (entry.product.gameAsset ? <GameItemSprite asset={entry.product.gameAsset} productId={entry.id} className={`sc-living-owned-art${entry.presentationRole === 'lamp' ? ' sc-living-owned-art--lamp' : ''}`} style={{ ...position.art, '--hero-lamp-on': lit ? 1 : 0 } as CSSProperties} /> : <img className={`sc-living-owned-art${entry.presentationRole === 'lamp' ? ' sc-living-owned-art--lamp' : ''}`} src={entry.imageUrl} alt="" aria-hidden="true" data-hero-art-product-id={entry.id} style={{ ...position.art, '--hero-lamp-on': lit ? 1 : 0 } as CSSProperties} />)}
+        {entry.artVisible && <ProductArtwork asset={entry.product.gameAsset} name={entry.product.name} productId={entry.id} className={`sc-living-owned-art${entry.presentationRole === 'lamp' ? ' sc-living-owned-art--lamp' : ''}`} style={{ ...position.art, '--hero-lamp-on': lit ? 1 : 0 } as CSSProperties} />}
         {selectedId === entry.id && <span className="sc-room-target sc-living-owned-target" style={position.art} aria-hidden="true" />}
         <button className="sc-room-pin sc-living-owned-pin" style={position.pin} data-hero-control-product-id={entry.id} aria-label={`${entry.product.name} 기준으로 추천받기`} aria-pressed={selectedId === entry.id} onClick={() => onSelect(entry.product)}><span>{entry.displayIndex}</span></button>
       </span>;

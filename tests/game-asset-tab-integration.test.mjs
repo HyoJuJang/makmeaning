@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const source = path => readFileSync(new URL(path, import.meta.url), 'utf8');
-test('game asset integration preserves recommendation panels and product photos in both tab families', () => {
+test('game asset integration preserves recommendation panels and uses mood artwork for real product lists', () => {
   for (const path of ['../src/components/scene/ScenePage.tsx', '../src/components/catalog/CatalogScenePage.tsx']) {
     const page = source(path);
     assert.match(page, /<RecommendationPanel domain=\{category\}/);
-    assert.match(page, /src=\{(?:item|product)\.imageUrl\}/);
-    assert.match(page, /gameAsset\?\.status === 'ready'/);
+    assert.match(page, /<ProductArtwork asset=\{(?:item|product)\.gameAsset\}/);
+    assert.match(page, /ProductArtwork/);
     assert.doesNotMatch(page, /PersonaSwitcher/);
   }
 });

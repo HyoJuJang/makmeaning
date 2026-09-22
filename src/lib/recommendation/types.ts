@@ -1,3 +1,4 @@
+import type { GameAsset } from '../game-asset-types.ts';
 export type RecommendationDomain = 'fashion' | 'living' | 'food' | 'beauty';
 export type RecommendationMode = 'behavior' | 'metadata';
 export type RecommendationSource = RecommendationMode | 'popularity' | 'catalog';
@@ -5,6 +6,8 @@ export interface RecommendationProduct {
   prd_id: string; view_name: string; cate1_nm: string; cate2_nm: string;
   cate3_nm: string; cate4_nm: string; brand_name: string; discprice: number;
   domain: RecommendationDomain;
+  /** Exact-ID generated artwork; absence never licenses another product's image. */
+  gameAsset?: GameAsset | null;
 }
 export interface UserItem {
   productId: string; viewCount: number; cartCount: number; orderCount: number; lastAt: string;
@@ -35,6 +38,7 @@ export interface RecommendationItem {
   signals: { behavior: number; metadata: number; popularity: number };
 }
 export interface RecommendationResponse {
+  assets?: { status: 'ready' | 'partial' | 'unavailable'; mapped: number; total: number };
   domain: RecommendationDomain; requestedMode: RecommendationMode;
   effectiveMode: RecommendationSource | 'mixed'; fallbackReason: string | null;
   userState: 'history' | 'views-only' | 'no-domain-history' | 'unknown';

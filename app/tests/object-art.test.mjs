@@ -14,7 +14,7 @@ const ids=markup=>[...markup.matchAll(/data-room-mirror-product-id="([^"]+)"/g)]
 const entries=mirror(demoHome,state),markup=draw(entries);
 assert.deepEqual(ids(markup),entries.map(entry=>entry.id),'Room consumes the category representative chain for all four categories');
 for(const entry of entries){
- assert(markup.includes(`data-product-image="${entry.id}"`)||markup.includes(`data-garment-source="${entry.imageUrl}"`));
+ assert(markup.includes(`data-product-image="${entry.id}"`)||markup.includes(`data-artwork-product-id="${entry.id}"`)||markup.includes(`data-garment-source="${entry.imageUrl}"`));
  assert(markup.includes(`data-product-state="${entry.status}"`));
 }
 assert.deepEqual(ids(draw([])),[],'Empty category sources cannot invent a purchase');
@@ -37,7 +37,7 @@ const remaining={...initialDemoState(changed),foodQuantity:{...initialDemoState(
 const foods=mirror(changed,remaining),after=draw(foods);
 assert(after.includes(`data-room-mirror-product-id="${milk.id}"`),'Consumed ID remains auditable while its physical artwork disappears');
 assert(!after.includes(`data-product-image="${milk.id}"`));
-assert(after.includes('data-product-image="another-milk"'),'Another ID with the same art remains independently visible');
+assert(after.includes('data-artwork-product-id="another-milk"'),'Another unmapped ID remains independently visible as a placeholder');
 assert.deepEqual(toRoomVisualState(changed,remaining).foodQuantity,remaining.foodQuantity,'Visual adapter never collapses canonical quantities to art keys');
 const moved=structuredClone(changed);
 for(const p of moved.categories.food.ownedProducts)p.roomSlot='arbitrary-room-geometry';
@@ -69,6 +69,7 @@ for(const gameAsset of [null,{...asset,status:'pending_generation'},{...asset,do
  shirt.gameAsset=gameAsset;
  const fallback=draw(mirror(mappedHome,mappedState));
  assert(!fallback.includes('data-game-asset="shirt--white"'));
- assert(fallback.includes(`data-garment-source="${shirt.imageUrl}"`));
+ assert(fallback.includes(`data-artwork-product-id="${shirt.id}"`));
+ assert(!fallback.includes(`href="${shirt.imageUrl}"`),'Unmapped real products never fall back to photos');
 }
 console.log('PASS: category → hero → Room IDs/art/state, applied order, duplicate artwork quantities, depletion, source removal and geometry independence.');

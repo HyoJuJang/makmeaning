@@ -8,7 +8,7 @@ import type { DemoScene, SceneCategory, SceneProduct } from '../../types/scene';
 import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
 import LivingOwnedProducts from './LivingOwnedProducts';
-import { GameItemSprite } from '../GameItemSprite';
+import ProductArtwork from '../ProductArtwork';
 import { getCategoryProducts, getHeroProducts } from '../../../app/category-products.js';
 import { restoreSceneCollection } from '../../lib/scene/collection-state';
 import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
@@ -56,9 +56,10 @@ function Icon({ name, size = 20 }: { name: 'back' | 'bag' | 'heart' | 'home' | '
   return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;
 }
 
-function ProductVisual({ item }: { item: Pick<Item, 'imageUrl' | 'name'> & Partial<Pick<Purchase, 'illustrationKey' | 'imageKind'>> }) {
+function ProductVisual({ item }: { item: Pick<Item, 'imageUrl' | 'name'> & Partial<Pick<Purchase, 'id' | 'illustrationKey' | 'imageKind' | 'gameAsset'>> }) {
   const [failedUrl, setFailedUrl] = useState<string | null>(null);
-  const visualLabel = item.illustrationKey && item.imageKind !== 'product-photo' ? `${item.name} 공간용 예시 그림` : item.name;
+  if (item.gameAsset || item.imageKind === 'product-photo') return <ProductArtwork asset={item.gameAsset} name={item.name} productId={item.id} />;
+  const visualLabel = item.illustrationKey ? `${item.name} 공간용 예시 그림` : item.name;
   const sprite = item.imageUrl.startsWith('/scene-art/products.png#') ? SPRITES[item.imageUrl.split('#')[1]] : undefined;
   if (sprite !== undefined) {
     return <span className="sc-product-visual sc-sprite" role="img" aria-label={visualLabel} style={{ backgroundPosition: `${(sprite % 4) * 100 / 3}% ${Math.floor(sprite / 4) * 100 / 3}%` }} />;
@@ -315,7 +316,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
               {category === 'living' && heroEntries.some(entry => entry.presentationRole === 'lamp') && <span className="sc-room-light" aria-hidden="true" />}
               {category === 'fashion' && <div className="sc-wardrobe-owned" aria-label="내가 보유한 의류 옷걸이">
                 {heroEntries.map(entry => <button key={entry.id} className="sc-wardrobe-garment" data-hero-product-id={entry.id} data-wearing={entry.status === 'applied'} aria-label={`${entry.product.name} 기준으로 추천받기`} aria-pressed={selectedId === entry.id && tab === 'owned'} onClick={() => choose(entry.product, 'owned')}>
-                  {entry.artVisible && (entry.product.gameAsset?.status === 'ready' ? <GameItemSprite asset={entry.product.gameAsset} className="sc-wardrobe-asset" productId={entry.id} /> : <img src={entry.imageUrl} alt="" aria-hidden="true" />)}
+                  {entry.artVisible && <ProductArtwork asset={entry.product.gameAsset} name={entry.product.name} className="sc-wardrobe-asset" productId={entry.id} />}
                   <span>{entry.displayIndex}{entry.status === 'applied' && <i aria-hidden="true">✓</i>}</span>
                 </button>)}
               </div>}
@@ -372,7 +373,7 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
             {dirty && <p className="sc-pending" role="status">선택한 조건을 적용하면 추천이 바뀌어요.</p>}
           </section>
       ) : panel === 'product' && detail ? <><div className="sc-detail-image"><ProductVisual item={detail} /></div><div className="sc-detail-copy"><span className="sc-kicker">{detail.kind} / SCENE SAMPLE</span><h3>{detail.name}</h3><strong className="sc-detail-price">{money(detail.price)}원</strong><p>{detail.description}</p><div className="sc-detail-reason"><span>이 상품을 발견한 이유</span><p>{detailMatch?.reason || detail.description}</p></div><p className="sc-demo-note">실제 판매 상품이 아닌 예시예요. 결제는 진행되지 않아요.</p>{canPreview(detail) && <button className="sc-preview-button" onClick={() => previewProduct(detail)}>＋ {category === 'fashion' ? '코디에 더하기' : '내 공간에 놓아보기'}</button>}<button className="sc-primary" onClick={() => addCart(detail.id)}>{cartIds.includes(detail.id) ? '장바구니에서 보기' : '장바구니에 담기'}<Icon name="bag" size={18} /></button></div></> : <>
-        <p className="sc-dialog-description">{panel === 'owned' ? '선택한 캐릭터의 가상 구매 이력이에요. 이름·참고가·대표사진은 실상품 카탈로그 기준이에요.' : panel === 'cart' ? '아직 구매하지 않은 물건이에요. 함께 어울릴 상품도 찾아보세요.' : '마음에 든 상품을 모아뒀어요.'}</p>
+        <p className="sc-dialog-description">{panel === 'owned' ? '선택한 캐릭터의 가상 구매 이력이에요. 이름·참고가는 실상품 기준이며 이미지는 공간의 무드에 맞춘 그림이에요.' : panel === 'cart' ? '아직 구매하지 않은 물건이에요. 함께 어울릴 상품도 찾아보세요.' : '마음에 든 상품을 모아뒀어요.'}</p>
         {(panel === 'owned' ? purchases : panel === 'cart' ? cart : saved).length === 0 && <div className="sc-empty"><Icon name={panel === 'saved' ? 'heart' : 'bag'} size={32} /><h3>{panel === 'saved' ? '마음에 드는 상품을 찜해보세요' : '아직 담아둔 상품이 없어요'}</h3><button className="sc-outline" onClick={() => setPanel(null)}>상품 둘러보기</button></div>}
         <div className="sc-dialog-list">{(panel === 'owned' ? purchases : panel === 'cart' ? cart : saved).map(product => <div className="sc-dialog-item" key={product.id}><div className="sc-dialog-thumb"><ProductVisual item={product} /></div><div><h3>{product.name}</h3><p>{'purchasedAt' in product ? `${product.purchasedAt} 가상 구매 · 카탈로그 참고가 ${money(product.price)}원` : `예시 가격 ${money(product.price)}원`}</p><button className="sc-text-button" onClick={() => { if (panel === 'saved') { setDetailId(product.id); setPanel('product'); } else { choose(product, panel === 'owned' ? 'owned' : 'cart'); setPanel(null); } }}>{panel === 'saved' ? '상품 자세히 보기 ↗' : '이 상품과 조합하기 ↗'}</button></div>{panel !== 'owned' && <button className="sc-icon-button" aria-label={`${product.name} ${panel === 'cart' ? '장바구니에서 삭제' : '찜 해제'}`} onClick={() => removeDialogItem(product.id)}><Icon name="close" size={16} /></button>}</div>)}</div>
         {panel === 'cart' && cart.length > 0 && <div className="sc-cart-total"><span>새로 담은 상품 합계</span><strong>{money(cart.reduce((sum, product) => sum + product.price, 0))}원</strong><small>선택한 예산은 상품 1개 기준이며, 합계에는 적용되지 않아요.</small></div>}

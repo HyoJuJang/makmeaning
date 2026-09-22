@@ -39,6 +39,7 @@ export function mirrorImage(entry,placement){
  const mapped=gameItemArt(entry.product,placement);
  if(mapped)return mapped;
  const {x,y,w,h}=placement;
+ if(entry.product.catalogSource==='shared-products'||entry.product.imageKind==='product-photo')return `<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="0 0 60 60" data-artwork-state="unavailable" data-artwork-product-id="${escapeAttribute(entry.productId)}" role="img" aria-label="${escapeAttribute(entry.product.name)} 공간 이미지 준비 중"><rect x="3" y="3" width="54" height="54" rx="4" fill="#edf0e4" stroke="#9ca990" stroke-dasharray="3 3"/><text x="30" y="28" text-anchor="middle" fill="#68775e" font-size="8">공간 이미지</text><text x="30" y="40" text-anchor="middle" fill="#68775e" font-size="8">준비 중</text></svg>`;
  const crop=entry.category==='food'&&entry.product.imageKind!=='product-photo'?{milk:'17 2 33 53',water:'17 3 29 52',vitamin:'15 8 33 47'}[entry.illustrationKey]:null;
  const image=`<image href="${escapeAttribute(entry.imageUrl)}" data-product-image="${escapeAttribute(entry.productId)}" x="${crop?0:x}" y="${crop?0:y}" width="${crop?60:w}" height="${crop?60:h}" preserveAspectRatio="xMidYMax meet"/>`;
  return crop?`<svg x="${x}" y="${y}" width="${w}" height="${h}" viewBox="${crop}" overflow="hidden">${image}</svg>`:image;

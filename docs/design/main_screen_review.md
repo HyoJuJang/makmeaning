@@ -414,3 +414,10 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 네 가구 첫tap→approach/open 또는seated→준비후두번째tap→맞는category→중앙복귀후Room nav0 PASS. wardrobe rapid doubletap은Room유지. production Fashion에서기준상품선택후현재tab재tap에도선택동일. context tray는320에서하단8px로nav빈자리없음.
 - npm test(Node+기존assertion+Python9), typecheck, production build, live release-contract/공통6036상품불변PASS. 개발N표시가재tap검사를방해해production으로같은scenario를재실행했다.
 - 동료660df5f의집계catalog를유지하고배포추적은recommendations/status두API의catalog.json만포함한다. 개인users/samples는포함하지않으며두nft파일을검사했다. 새상품·추천기능은추가하지않았다.
+## 2026-09-22 상품 이미지 대체 — 사용자 의도 정정
+
+- Spec: product_artwork_spec.md. 첫 에셋 병합의 '상품 목록/상세 실사 유지' 결정을 철회하고 보유 목록·상세·찜/장바구니·추천에 동일 상품 ID의 생성 에셋을 표시한다. 추천 순위/가격/구매 identity와 navigation은 유지한다.
+- Review/fix 1: 공간 hero/home에도 미매핑 시 실사로 돌아가는 경로가 남아 있었다. 구매 ID를 유지한 중립 placeholder로 수정하고 관련 회귀검사를 다시 통과했다. 기존 가상 예시 일러스트는 유지한다.
+- 실제 UI: 390×844 Food 구매 목록/선택/상세에서 생성 파스타 이미지 확인. 320×568 Beauty 목록/추천 카드에서 생성 화장품과 미매핑 안내 확인, 가로 넘침0. Food·Beauty DOM의 실상품 사진 호스트 img/image 참조0.
+- 전체 npm test, 타입 검사, 프로덕션 빌드 PASS. 네 영역 추천 API 각각 200/6개 유지. metadata 기본 샘플의 에셋 연결 수는 fashion4/6, food3/6, living1/6, beauty6/6. 추천 결과를 매핑된 상품만으로 필터링하거나 순서를 바꾸지 않았다.
+- 한계: 미매핑/장애 상품의 새 에셋을 생성한 작업은 아니다. 공통 목록/상세 renderer는 이미지 로딩 실패도 준비 중으로 표시하지만 기존 공간 renderer는 PNG 자체가 404이면 빈 그림이 될 수 있다(실사로 복귀하지 않음).
