@@ -33,13 +33,13 @@ export function updateDemoState(home,current,patchOrUpdater,storage){
   store=storage||globalThis.localStorage;snapshot=store.getItem(demoStateKey(home));read=true;
   // A quota failure can leave readable but stale persisted state behind. Continue
   // from this session until another tab actually changes that stored snapshot.
-  const stale=failedStoreSnapshots.has(store)&&failedStoreSnapshots.get(store)===snapshot;
+  const stale=failedStoreSnapshots.get(store)?.get(demoStateKey(home))===snapshot;
   if(snapshot!==null&&!stale)latest=normalizeDemoState(home,JSON.parse(snapshot));
  }catch{}
  const patch=typeof patchOrUpdater==='function'?patchOrUpdater(latest):patchOrUpdater;
  const state=normalizeDemoState(home,{...latest,...patch,foodQuantity:{...latest.foodQuantity,...patch?.foodQuantity}});
  const saved=saveDemoState(home,state,store||storage);
- if(store){if(saved)failedStoreSnapshots.delete(store);else if(read)failedStoreSnapshots.set(store,snapshot);}
+ if(store){let failures=failedStoreSnapshots.get(store);if(saved)failures?.delete(demoStateKey(home));else if(read){if(!failures){failures=new Map();failedStoreSnapshots.set(store,failures);}failures.set(demoStateKey(home),snapshot);}}
  return {state,saved};
 }
 export function resetDemoState(home,storage){const state=initialDemoState(home);try{const store=storage||globalThis.localStorage;for(const key of DEMO_PERSONAL_KEYS)store.removeItem(personalStateKey(key,home));saveDemoState(home,state,store);}catch{}return state;}

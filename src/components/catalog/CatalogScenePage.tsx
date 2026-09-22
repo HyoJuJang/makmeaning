@@ -6,6 +6,8 @@ import { addToCart, cartTotal, normalizeCart, restoreCatalogState } from '../../
 import {demoStateKey, personalStateKey, readDemoState, type DemoState} from '../../../app/demo-state.js';
 import { activePersonaId } from '../../../app/demo-persona.js';
 import RoomAvatar from '../scene/RoomAvatar';
+import { GameItemSprite } from '../GameItemSprite';
+import { catalogRoomItems } from '../../lib/catalog-room';
 import CategoryNav from '../navigation/CategoryNav';
 import RecommendationPanel from '../recommendation/RecommendationPanel';
 import '../scene/scene.css';
@@ -150,6 +152,7 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   const anchor = rail.find(product => product.id === selectedId);
   const detail = data?.products.find(product => product.id === detailId);
   const cartCount = state.cart.reduce((total, line) => total + line.quantity, 0);
+  const roomItems = data ? catalogRoomItems(data, confirmed) : [];
 
   function openPanel(next: Panel, productId?: string) {
     if (!panel) returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -160,9 +163,9 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
   function moveTo(x: number) { setInteraction(previous => ({ x, key: previous.key + 1 })); }
   function choose(product: DisplayProduct, source: 'owned' | 'cart') {
     setTab(source); setSelectedId(product.id);
-    const index = purchases.findIndex(item => item.id === product.id);
+    const roomItem = roomItems.find(item => item.product.id === product.id);
     // Only purchase markers represent a place in the room. Cart selection never implies possession.
-    moveTo(source === 'owned' && index >= 0 ? config.targets[index % config.targets.length] : config.homeX);
+    moveTo(source === 'owned' && roomItem ? roomItem.placement.approachX : config.homeX);
     if (panel) { returnFocusRef.current = roomRef.current; closePanel(); }
   }
   function clearSelection() { setSelectedId(null); moveTo(config.homeX); }
@@ -188,10 +191,16 @@ export default function CatalogScenePage({ category }: { category: CatalogCatego
       <div className="sc-heading"><div><span className="sc-room-number">{config.number}</span><h1>{config.title}</h1></div><span className="sc-person">{data.user.name}의 작은 취향 공간</span></div>
       <section ref={roomRef} tabIndex={-1} className="sc-collection" aria-label={`${config.title}의 구매 상품`}>
         <div className="sc-room-hud"><span><i />{config.english}</span><div className="sc-room-controls"><button onClick={clearSelection} aria-label="캐릭터 제자리로">↶ 제자리로</button></div></div>
-        <div className="sc-room catalog-room" style={{ '--catalog-avatar-x': interaction.x, '--catalog-avatar-bottom': 4 } as CSSProperties}>
+        <div className="sc-room catalog-room" data-hero-category={category} data-hero-source="category-collection" style={{ '--catalog-avatar-x': interaction.x, '--catalog-avatar-bottom': 4 } as CSSProperties}>
           <img className="sc-room-art" src={config.room} alt={config.roomAlt} width="900" height="300" />
+          <svg className="catalog-owned-layer" viewBox="0 0 450 150" aria-hidden="true">
+            {category === 'food' && <g><path d="M68 29h39v79H68Z" fill="#81917a" stroke="#64735b" /><path d="M71 32h33v73H71Z" fill="#c9d6bc" /><path d="M69 65h37v3H69ZM69 105h37v3H69Z" fill="#e9edda" /></g>}
+            {roomItems.map(({ entry, placement, visible }) => <g key={entry.id} data-hero-product-id={entry.id} data-hero-status={entry.status}>
+              {visible && (entry.product.gameAsset?.status === 'ready' ? <GameItemSprite asset={entry.product.gameAsset} x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} productId={entry.id} /> : <image href={entry.imageUrl} x={placement.art.x} y={placement.art.y} width={placement.art.width} height={placement.art.height} preserveAspectRatio="xMidYMax meet" />)}
+            </g>)}
+          </svg>
           <RoomAvatar home={data.home} confirmedState={confirmed ?? undefined} fallbackAvatarId={data.user.avatarId} fallbackOutfitId={data.initialOutfitId} category="living" seated={false} interactionKey={interaction.key} />
-          {purchases.map((product, index) => <button key={product.id} className="sc-room-pin" style={{ left: `${config.targets[index % config.targets.length]}%`, top: '46%' }} aria-label={`${product.name} 살펴보기`} aria-pressed={selectedId === product.id && tab === 'owned'} onClick={() => choose(product, 'owned')}><span>{index + 1}</span></button>)}
+          {roomItems.map(({ entry, product, placement }) => <button key={product.id} className="sc-room-pin catalog-owned-pin" style={{ left: `${placement.pin.x / 4.5}%`, top: `${placement.pin.y / 1.5}%` }} aria-label={`${product.name} 살펴보기`} aria-pressed={selectedId === product.id && tab === 'owned'} onClick={() => choose(product, 'owned')}><span>{purchases.findIndex(item => item.id === entry.id) + 1}</span></button>)}
           <span className="sc-room-footnote">구매 상품을 눌러 살펴보세요</span>
         </div>
         <div className="sc-inventory-head"><div className="sc-tabs" role="group" aria-label="내 상품 목록"><button aria-pressed={tab === 'owned'} onClick={() => changeTab('owned')}>구매한 상품 <span>{purchases.length}</span></button><button aria-pressed={tab === 'cart'} onClick={() => changeTab('cart')}>장바구니 <span>{cartProducts.length}</span></button></div><button className="sc-text-button" onClick={() => openPanel(tab)}>전체 보기 ↗</button></div>

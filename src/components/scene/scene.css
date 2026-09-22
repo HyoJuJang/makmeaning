@@ -402,11 +402,11 @@
 .sc-wardrobe-owned{position:absolute;z-index:3;left:23.5%;top:13%;width:50.8%;height:67%;display:flex;align-items:flex-start;padding:0 1.2%;background:linear-gradient(90deg,#c9b799,#dccbb0 45%,#c6b496);border-bottom:3px solid #9d7549;box-shadow:inset 0 3px 4px #594b3930}
 .sc-wardrobe-garment{position:relative;flex:1;min-width:0;height:100%;min-height:44px;padding:0;border:0;background:transparent;color:#755535;isolation:isolate}
 .sc-wardrobe-garment .sc-owned-hanger{position:absolute;left:10%;top:0;width:80%;height:30%;z-index:0;overflow:visible}
-.sc-wardrobe-garment>img{position:absolute;left:0;top:0;width:100%;height:90%;object-fit:contain;filter:drop-shadow(2px 3px 1px #715b4040)}
+.sc-wardrobe-garment>img,.sc-wardrobe-garment>.sc-wardrobe-asset{position:absolute;left:0;top:0;width:100%;height:90%;object-fit:contain;filter:drop-shadow(2px 3px 1px #715b4040)}
 .sc-wardrobe-garment>span{position:absolute;z-index:1;left:50%;bottom:0;transform:translateX(-50%);display:flex;align-items:center;gap:2px;padding:2px 4px;border:1px solid #fffbea;background:#efeee0;color:#334b3c;font:700 9px/1 ui-monospace,monospace;box-shadow:1px 1px #51483677}
 .sc-wardrobe-garment>span i{font-size:8px;font-style:normal}
 .sc-wardrobe-garment[data-wearing=true]>span,.sc-wardrobe-garment[aria-pressed=true]>span{background:#345343;color:#fff}
-.sc-wardrobe-garment[aria-pressed=true]>img{filter:drop-shadow(0 0 2px #fffdf0) drop-shadow(2px 3px 1px #715b4040)}
+.sc-wardrobe-garment[aria-pressed=true]>img,.sc-wardrobe-garment[aria-pressed=true]>.sc-wardrobe-asset{filter:drop-shadow(0 0 2px #fffdf0) drop-shadow(2px 3px 1px #715b4040)}
 .sc-wardrobe-garment:focus-visible{outline:2px solid #345343;outline-offset:-2px}
 .sc-fashion .sc-room-avatar{--sc-avatar-knit-x:var(--sc-preview-hanger-x,28);--sc-avatar-shirt-x:var(--sc-preview-hanger-x,46)}
 
@@ -431,7 +431,7 @@
 
 /* Shared long-sleeve artwork includes its own hanger; keep it attached to the rail. */
 .sc-fashion .sc-wardrobe-owned{top:11.5%;height:68.5%;background:linear-gradient(90deg,#d0bfa4,#dcccb3 48%,#cdbb9f);border-bottom-color:#aa8557;box-shadow:inset 0 2px 2px #594b391c}
-.sc-fashion .sc-wardrobe-garment>img{height:91%;object-position:center top}
+.sc-fashion .sc-wardrobe-garment>img,.sc-fashion .sc-wardrobe-garment>.sc-wardrobe-asset{height:91%;object-position:center top}
 
 /* Product identity belongs to the category collection; this layer only positions it. */
 .sc-living-art-repair{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none}

@@ -12,7 +12,7 @@
     "prebuild": "node scripts/prepare-assets.mjs",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3000",
-    "test": "node app/tests/movement.test.mjs && node app/tests/input.test.mjs && node app/tests/interactions.test.mjs && node app/tests/object-art.test.mjs && node app/tests/avatar-eating.test.mjs && node --test tests/api.test.mjs && npm run test:products && node --test tests/scenes-api.test.mjs tests/scene-recommend.test.mjs tests/avatar-motion.test.mjs tests/catalog.test.mjs && node app/tests/home-food.test.mjs && node --test tests/demo-state.test.mjs tests/demo-persona.test.mjs tests/personas.test.mjs && npm run test:recommendations",
+    "test": "node app/tests/movement.test.mjs && node app/tests/input.test.mjs && node app/tests/interactions.test.mjs && node app/tests/object-art.test.mjs && node app/tests/avatar-eating.test.mjs && node --test tests/api.test.mjs && npm run test:products && node --test tests/scenes-api.test.mjs tests/scene-recommend.test.mjs tests/avatar-motion.test.mjs tests/catalog.test.mjs && node app/tests/home-food.test.mjs && node --test tests/demo-state.test.mjs tests/demo-persona.test.mjs tests/personas.test.mjs && npm run test:recommendations && node --test tests/game-assets.test.mjs scripts/lib/game-asset-rules.test.mjs scripts/lib/game-asset-job-key.test.mjs tests/room-game-assets.test.mjs tests/demo-personas.test.mjs tests/persona-geometry.test.mjs && npm run test:asset-db && node --test tests/asset-library.test.mjs tests/game-asset-tab-integration.test.mjs",
     "test:api": "node --test tests/api.test.mjs",
     "typecheck": "tsc --noEmit",
     "test:products": "node --test tests/products-data.test.mjs tests/products-api.test.mjs",
@@ -22,7 +22,14 @@
     "recommendations:prepare": "python3 scripts/recommendation/prepare.py",
     "test:recommendations": "node --test tests/recommendation-*.test.mjs && python3 tests/recommendation-prepare.test.py",
     "recommendations:check": "node scripts/recommendation/check.mjs",
-    "test:recommendations:http": "node tests/recommendation-http.mjs"
+    "test:recommendations:http": "node tests/recommendation-http.mjs",
+    "pretest": "node scripts/build-game-assets.mjs",
+    "assets:build": "node scripts/build-game-assets.mjs && node scripts/prepare-assets.mjs",
+    "test:assets": "node scripts/build-game-assets.mjs && node --test tests/game-assets.test.mjs scripts/lib/game-asset-rules.test.mjs scripts/lib/game-asset-job-key.test.mjs",
+    "db:assets:migrate": "node --env-file-if-exists=.env.local scripts/asset-db-migrate.mjs",
+    "db:assets:import": "node --env-file-if-exists=.env.local scripts/asset-db-import.mjs",
+    "test:asset-db": "node --test tests/asset-db-*.test.mjs",
+    "assets:api:prepare": "node scripts/prepare-asset-api-service.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.1.0",

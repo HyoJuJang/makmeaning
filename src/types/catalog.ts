@@ -1,4 +1,5 @@
 import type { CategoryCollection, DemoHome } from './home.ts';
+import type { GameAsset } from '../lib/game-asset-types.ts';
 
 export type CatalogCategory = 'food' | 'beauty';
 
@@ -25,6 +26,7 @@ export interface ProductPresentation {
 }
 
 export interface DisplayProduct extends CatalogProduct {
+  gameAsset?: GameAsset | null;
   id: string;
   name: string;
   shortName: string;

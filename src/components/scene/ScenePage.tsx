@@ -7,6 +7,9 @@ import { activePersonaId } from '../../../app/demo-persona.js';
 import type { DemoScene, SceneCategory, SceneProduct } from '../../types/scene';
 import { recommend, type SceneFilters } from '../../lib/scene/recommend';
 import RoomAvatar from './RoomAvatar';
+import LivingOwnedProducts from './LivingOwnedProducts';
+import { GameItemSprite } from '../GameItemSprite';
+import { getCategoryProducts, getHeroProducts } from '../../../app/category-products.js';
 import { restoreSceneCollection } from '../../lib/scene/collection-state';
 import RoomPlacement, { canPlaceInRoom } from './RoomPlacement';
 import CategoryNav from '../navigation/CategoryNav';
@@ -179,7 +182,9 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
     return () => { window.removeEventListener('storage', onStorage); window.removeEventListener('pageshow', onPageShow); window.removeEventListener('focus', restore); };
   }, [home, catalog, storeKey]);
 
-  const purchases = home?.purchases.filter(product => product.category === category) || [];
+  const collection = home?.categories?.[category];
+  const purchases = getCategoryProducts(collection, confirmedState).map(entry => entry.product);
+  const heroEntries = getHeroProducts(collection, confirmedState);
   const previewPurchase = purchases.find(product => product.id === outfitPreviewId);
   const previewArt = previewPurchase?.imageKind === 'product-photo' ? null : previewPurchase?.illustrationKey;
   const outfitPreview = previewArt === 'knit' || previewArt === 'shirt' ? previewArt : null;
@@ -188,7 +193,6 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
   const saved = catalog?.products.filter(product => savedIds.includes(product.id)) || [];
   const rail: Item[] = tab === 'owned' ? purchases : cart;
   const anchor: Item | null = [...purchases, ...cart].find(product => product.id === selectedId) || null;
-  const anchorArt = anchor && 'illustrationKey' in anchor && anchor.imageKind !== 'product-photo' ? anchor.illustrationKey : null;
   const recommendations = recommend(catalog?.products || [], filters, anchor);
   const detail = catalog?.products.find(product => product.id === detailId);
   const detailMatch = recommendations.find(match => match.product.id === detailId);
@@ -306,14 +310,18 @@ export default function ScenePage({ category }: { category: SceneCategory }) {
         <div className="sc-context">
           <section ref={collectionRef} tabIndex={-1} id="sc-room-preview" className="sc-collection" aria-label={`구매한 상품이 있는 ${config.title}`}>
             <div className="sc-room-hud"><span><i />{config.english}</span>{category === 'living' ? <div className="sc-room-controls"><button aria-pressed={lampLit} onClick={() => setLampPreview(!lampLit)}>{lampLit ? '조명 끄기 체험' : '조명 켜기 체험'}</button><button aria-pressed={seated} onClick={() => setSeated(value => !value)}>{seated ? '↟ 일어나기' : '⌑ 소파 앉기'}</button></div> : outfitPreview ? <button className="sc-outfit-reset" onClick={restoreOutfit}>입어보기 취소</button> : <span>MY ITEMS <b>{String(purchases.length).padStart(2, '0')}</b></span>}</div>
-            <div className={`sc-room ${lampLit ? 'sc-light-on' : ''}`} data-preview-product={placedId || undefined}>
+            <div className={`sc-room ${lampLit ? 'sc-light-on' : ''}`} data-hero-category={category} data-hero-source="category-collection" data-preview-product={placedId || undefined}>
               <img className="sc-room-art" src={`/scene-art/${config.room}`} alt={category === 'fashion' ? '메인 공간과 이어지는 아늑한 픽셀 옷장' : '소파와 우드 가구가 있는 아늑한 픽셀 거실'} />
-              {category === 'living' && <span className="sc-room-light" aria-hidden="true" />}
+              {category === 'living' && <LivingOwnedProducts entries={heroEntries} selectedId={tab === 'owned' ? selectedId : null} lit={lampLit} onSelect={product => choose(product, 'owned')} />}
+              {category === 'living' && heroEntries.some(entry => entry.presentationRole === 'lamp') && <span className="sc-room-light" aria-hidden="true" />}
+              {category === 'fashion' && <div className="sc-wardrobe-owned" aria-label="내가 보유한 의류 옷걸이">
+                {heroEntries.map(entry => <button key={entry.id} className="sc-wardrobe-garment" data-hero-product-id={entry.id} data-wearing={entry.status === 'applied'} aria-label={`${entry.product.name} 기준으로 추천받기`} aria-pressed={selectedId === entry.id && tab === 'owned'} onClick={() => choose(entry.product, 'owned')}>
+                  {entry.artVisible && (entry.product.gameAsset?.status === 'ready' ? <GameItemSprite asset={entry.product.gameAsset} className="sc-wardrobe-asset" productId={entry.id} /> : <img src={entry.imageUrl} alt="" aria-hidden="true" />)}
+                  <span>{entry.displayIndex}{entry.status === 'applied' && <i aria-hidden="true">✓</i>}</span>
+                </button>)}
+              </div>}
               {placedProduct && <RoomPlacement key={`${placedProduct.id}-${previewSequence}`} productId={placedProduct.id} lit={lampLit} />}
               <RoomAvatar home={home} confirmedState={confirmedState ?? undefined} category={category} outfitPreview={outfitPreview} seated={seated} interactionKey={interactionKey} />
-              {anchor && anchorArt && tab === 'owned' && <span key={`${anchor.id}-${interactionKey}`} className={`sc-room-target sc-target-${anchorArt}`} aria-hidden="true" /> }
-              {purchases.map((product, index) => <button key={product.id} className={`sc-room-pin sc-pin-${product.illustrationKey}`} style={category === 'fashion' && product.imageKind === 'product-photo' ? { left: `${[28, 46, 64][index % 3]}%`, top: '49%' } : undefined} aria-label={`${product.name} 기준으로 추천받기`} aria-pressed={selectedId === product.id} onClick={() => choose(product, 'owned')}><span>{index + 1}</span></button>)}
-              {category === 'living' && <><img className="sc-room-cushion" src="/products/cushion.svg" alt="" aria-hidden="true" /><img className="sc-room-lamp" src="/products/lamp.svg" alt="" aria-hidden="true" /></>}
               <span className="sc-room-footnote">{placedProduct ? '공간 미리보기' : category === 'fashion' ? outfitPreview ? '캐릭터 착장 미리보기' : home.personas ? '구매 상품을 눌러 살펴보세요' : '옷을 눌러 입어보세요' : '번호를 눌러 조합해보세요'}</span>
             </div>
             {outfitPreview && previewPurchase && <div className="sc-confirmed-preview" aria-live="polite"><span><b>입어보기</b> {previewPurchase.name}</span><div><button onClick={restoreOutfit}>취소</button><button className="sc-apply-outfit" onClick={applyOutfit}>내 착장으로 적용</button></div></div>}

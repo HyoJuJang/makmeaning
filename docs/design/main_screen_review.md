@@ -394,3 +394,12 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 원문 근거: compact 직전6b0c8de의 app/index.html·app/app.js. `{이름}의 작은 일상.` / `내가 고른 물건으로 채워지는 집` 그대로 복원.
 - 실제390×844·320×568 before/after 독립 screenshot 검토 PASS. 제목26/24px와 설명13px가 각각 한 줄, 버튼 충돌·가로 넘침0. 방 시작은143.5/141.5px로 compact 대비27.5px만 증가(예전390은276px).
 - 캐릭터 sheet 열기/닫기와 옷장 접근→준비→Fashion 진입 실제 실행 PASS. build·typecheck·실제app input harness PASS. 하단 삭제 요소와 navigation은 유지. 추가 visual defect0.
+## 2026-09-22 — Separate asset service / miniroom integration
+
+- 최신 main의 category → hero → Room 데이터 방향과 보유 ID·잔량 계약을 보존하고 상품 ID로 별도 에셋 API를 조회한다. 읽기 API는 별도로 전달한 에셋 API 주소 에 배포했다.
+- 검토 후 수정 2건: (1) floor_lamp가 일반 작은 램프와 같은 geometry로 표시되는 문제를 메인 방의 장스탠드 크기·hit area·glow 위치로 보정 (2) 기존 knit/shirt alias 밖의 검수된 스커트가 옷장에서 빠지는 조건을 제거. 관련 회귀검사 통과.
+- 실제 브라우저에서 메인 390px의 옷장 열림, 조명 끄기/켜기, 패션·리빙 320px의 셔츠/쿠션/장스탠드와 가로 넘침 없음 확인. 식품·뷰티는 1280px에서 우유·생수·세럼·크림 에셋과 기존 상태 표시 확인. 검수 폭을 넘어 모든 크기에서 테스트했다고 확대하지 않는다.
+- 실제 보유 10개 중 7개는 Blob의 공용 PNG, 형태 확인 중 니트 2개와 CSV 밖 영양제 1개는 기존 예시 그림. ID·개수·가격은 상품 DB에서 유지. 미연결을 ready로 바꾸지 않는다.
+- 전체 테스트 / typecheck / production build 통과. 공개 API 10건, 이미지 URL 1,219건, 재다운로드 원본 해시 표본 8건 모두 통과. 새 스커트 2종·러그 1종·소파패드 1종의 prd_id 매핑도 공개 API에서 확인.
+- 에셋 API만 배포했으며 원래 앱 배포·main 병합은 하지 않았다. 기존 추천 목록의 가상 예시 상품은 별도 범위다.
+- 상세: docs/design/backend/GAME_ASSETS.md. 로컬 검증 증거: ../outputs/game-asset-service/verification.json.

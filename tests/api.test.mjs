@@ -26,7 +26,7 @@ test('home joins the default selected persona to real catalog IDs in all four ro
   assert.deepEqual(user, { id: 'demo-f01', name: '민서', avatarId: 'f01' });
   assert.equal(purchases.length, 10);
   assert.equal(personas.length, 4);
-  for (const key of ['id', 'purchaseId', 'roomSlot', 'illustrationKey']) {
+  for (const key of ['id', 'purchaseId', 'roomSlot']) {
     assert.equal(new Set(purchases.map(item => item[key])).size, purchases.length, key);
   }
   assert.equal(demo.isDemo, true);
@@ -36,10 +36,10 @@ test('home joins the default selected persona to real catalog IDs in all four ro
   assert.match(demo.notice, /실제 상품 외형이나 가상 피팅을 재현하지 않습니다/);
 
   const expectedSlots = {
-    knit: ['fashion', 'wardrobe-1'], shirt: ['fashion', 'wardrobe-2'], garment: ['fashion', 'wardrobe-3'],
-    milk: ['food', 'fridge-1'], water: ['food', 'fridge-2'], vitamin: ['food', 'pantry-1'],
-    cushion: ['living', 'sofa-1'], lamp: ['living', 'lamp-1'],
-    serum: ['beauty', 'vanity-1'], cream: ['beauty', 'vanity-2'],
+    '1083830467': ['fashion', 'wardrobe-1'], '1124808739': ['fashion', 'wardrobe-2'], '1113830439': ['fashion', 'wardrobe-3'],
+    '1113622242': ['food', 'fridge-1'], '1015281967': ['food', 'pantry-1'], '1134436378': ['food', 'pantry-2'],
+    '1053232515': ['living', 'lamp-1'], '1057538146': ['living', 'table-1'],
+    '16052422': ['beauty', 'vanity-1'], '1059856091': ['beauty', 'vanity-2'],
   };
   for (const purchase of purchases) {
     const item = catalog.find(row => row.prd_id === purchase.id);
@@ -49,7 +49,7 @@ test('home joins the default selected persona to real catalog IDs in all four ro
     assert.equal(purchase.category, item.domain);
     assert.equal(purchase.purchaseId, selected.purchases.find(item => item.productId === purchase.id).purchaseId);
     assert.notEqual(purchase.id, purchase.illustrationKey);
-    assert.deepEqual([purchase.category, purchase.roomSlot], expectedSlots[purchase.illustrationKey]);
+    assert.deepEqual([purchase.category, purchase.roomSlot], expectedSlots[purchase.id]);
     assert.equal(purchase.imageUrl, `https://asset.m-gs.kr/prod/${purchase.id}/1/550`);
     assert.equal(purchase.catalogSource, 'shared-products');
     assert.equal(purchase.imageKind, 'product-photo');

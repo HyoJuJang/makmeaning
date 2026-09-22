@@ -1,10 +1,12 @@
+import type { GameAsset } from '../lib/game-asset-types.ts';
+
 export type Category = 'fashion' | 'food' | 'living' | 'beauty';
 
 /** Legacy room placement metadata; never determines category ownership or selection. */
-export type RoomSlot = `${'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity'}-${number}`;
-export type PresentationRole = 'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity' | 'shelf';
+export type RoomSlot = `${'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity' | 'table' | 'bed' | 'shelf'}-${number}`;
+export type PresentationRole = 'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity' | 'shelf' | 'table' | 'bed';
 
-export type IllustrationKey = 'knit' | 'shirt' | 'garment' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';
+export type IllustrationKey = 'knit' | 'shirt' | 'garment' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream' | 'food' | 'mug' | 'plant' | 'pillow';
 
 export interface DemoUser {
   id: string;
@@ -34,6 +36,7 @@ export interface Purchase {
   /** Current catalog reference price in KRW, not a paid purchase price. */
   price: number;
   imageUrl: string;
+  gameAsset?: GameAsset | null;
   roomSlot: RoomSlot;
   /** Category-owned presentation semantics, independent of either screen's coordinates. */
   presentationRole: PresentationRole;

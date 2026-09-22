@@ -1,0 +1,306 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Presentation geometry only; ownership is data/demo-persona-purchases.json",
+  "personas": [
+    {
+      "id": "demo-f01",
+      "purchases": [
+        {
+          "id": "1083830467",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-1",
+          "illustrationKey": "shirt"
+        },
+        {
+          "id": "1124808739",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-2",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1113830439",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-3",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1113622242",
+          "category": "food",
+          "presentationRole": "fridge",
+          "roomSlot": "fridge-1",
+          "illustrationKey": "milk"
+        },
+        {
+          "id": "1015281967",
+          "category": "food",
+          "presentationRole": "pantry",
+          "roomSlot": "pantry-1",
+          "illustrationKey": "food"
+        },
+        {
+          "id": "1134436378",
+          "category": "food",
+          "presentationRole": "pantry",
+          "roomSlot": "pantry-2",
+          "illustrationKey": "food"
+        },
+        {
+          "id": "1053232515",
+          "category": "living",
+          "presentationRole": "lamp",
+          "roomSlot": "lamp-1",
+          "illustrationKey": "lamp"
+        },
+        {
+          "id": "1057538146",
+          "category": "living",
+          "presentationRole": "table",
+          "roomSlot": "table-1",
+          "illustrationKey": "mug"
+        },
+        {
+          "id": "16052422",
+          "category": "beauty",
+          "presentationRole": "vanity",
+          "roomSlot": "vanity-1",
+          "illustrationKey": "serum"
+        },
+        {
+          "id": "1059856091",
+          "category": "beauty",
+          "presentationRole": "shelf",
+          "roomSlot": "vanity-2",
+          "illustrationKey": "serum"
+        }
+      ]
+    },
+    {
+      "id": "demo-f02",
+      "purchases": [
+        {
+          "id": "1134622052",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-1",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1105155685",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-2",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1092856012",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-3",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1050446036",
+          "category": "food",
+          "presentationRole": "pantry",
+          "roomSlot": "pantry-1",
+          "illustrationKey": "food"
+        },
+        {
+          "id": "1083510719",
+          "category": "food",
+          "presentationRole": "fridge",
+          "roomSlot": "fridge-1",
+          "illustrationKey": "water"
+        },
+        {
+          "id": "1033331215",
+          "category": "food",
+          "presentationRole": "fridge",
+          "roomSlot": "fridge-2",
+          "illustrationKey": "water"
+        },
+        {
+          "id": "1057182462",
+          "category": "living",
+          "presentationRole": "table",
+          "roomSlot": "table-1",
+          "illustrationKey": "plant"
+        },
+        {
+          "id": "1056652878",
+          "category": "living",
+          "presentationRole": "lamp",
+          "roomSlot": "lamp-1",
+          "illustrationKey": "lamp"
+        },
+        {
+          "id": "1118407031",
+          "category": "beauty",
+          "presentationRole": "vanity",
+          "roomSlot": "vanity-1",
+          "illustrationKey": "serum"
+        },
+        {
+          "id": "1088835047",
+          "category": "beauty",
+          "presentationRole": "shelf",
+          "roomSlot": "vanity-2",
+          "illustrationKey": "cream"
+        }
+      ]
+    },
+    {
+      "id": "demo-m01",
+      "purchases": [
+        {
+          "id": "1128893597",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-1",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1132775217",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-2",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1111946338",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-3",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1113622242",
+          "category": "food",
+          "presentationRole": "fridge",
+          "roomSlot": "fridge-1",
+          "illustrationKey": "milk"
+        },
+        {
+          "id": "1033331215",
+          "category": "food",
+          "presentationRole": "fridge",
+          "roomSlot": "fridge-2",
+          "illustrationKey": "water"
+        },
+        {
+          "id": "1069125001",
+          "category": "food",
+          "presentationRole": "pantry",
+          "roomSlot": "pantry-1",
+          "illustrationKey": "food"
+        },
+        {
+          "id": "1056652878",
+          "category": "living",
+          "presentationRole": "lamp",
+          "roomSlot": "lamp-1",
+          "illustrationKey": "lamp"
+        },
+        {
+          "id": "1678991",
+          "category": "living",
+          "presentationRole": "bed",
+          "roomSlot": "bed-1",
+          "illustrationKey": "pillow"
+        },
+        {
+          "id": "1053067763",
+          "category": "beauty",
+          "presentationRole": "vanity",
+          "roomSlot": "vanity-1",
+          "illustrationKey": "serum"
+        },
+        {
+          "id": "1059856091",
+          "category": "beauty",
+          "presentationRole": "shelf",
+          "roomSlot": "vanity-2",
+          "illustrationKey": "serum"
+        }
+      ]
+    },
+    {
+      "id": "demo-m02",
+      "purchases": [
+        {
+          "id": "1108455723",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-1",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1108216372",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-2",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1111946338",
+          "category": "fashion",
+          "presentationRole": "wardrobe",
+          "roomSlot": "wardrobe-3",
+          "illustrationKey": "knit"
+        },
+        {
+          "id": "1029143151",
+          "category": "food",
+          "presentationRole": "pantry",
+          "roomSlot": "pantry-1",
+          "illustrationKey": "food"
+        },
+        {
+          "id": "1131432801",
+          "category": "food",
+          "presentationRole": "fridge",
+          "roomSlot": "fridge-1",
+          "illustrationKey": "water"
+        },
+        {
+          "id": "1015281967",
+          "category": "food",
+          "presentationRole": "pantry",
+          "roomSlot": "pantry-2",
+          "illustrationKey": "food"
+        },
+        {
+          "id": "1000432412",
+          "category": "living",
+          "presentationRole": "lamp",
+          "roomSlot": "lamp-1",
+          "illustrationKey": "lamp"
+        },
+        {
+          "id": "1057182462",
+          "category": "living",
+          "presentationRole": "table",
+          "roomSlot": "table-1",
+          "illustrationKey": "plant"
+        },
+        {
+          "id": "1032164641",
+          "category": "beauty",
+          "presentationRole": "vanity",
+          "roomSlot": "vanity-1",
+          "illustrationKey": "serum"
+        },
+        {
+          "id": "1120723268",
+          "category": "beauty",
+          "presentationRole": "shelf",
+          "roomSlot": "vanity-2",
+          "illustrationKey": "serum"
+        }
+      ]
+    }
+  ]
+}

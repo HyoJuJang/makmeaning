@@ -1,4 +1,5 @@
 import source from '../../data/demo-persona-purchases.json' with { type: 'json' };
+import geometry from './demo-personas.json' with { type: 'json' };
 import type { DemoPurchaseSeed } from './demo-purchases.ts';
 import type { Category, DemoPersonaSummary, IllustrationKey, PresentationRole, RoomSlot } from '../types/home.ts';
 
@@ -33,15 +34,16 @@ const personas: readonly DemoPersona[] = source.personas.map(persona => {
     if (!slot || !item.productId || !item.purchaseId || item.ownership !== 'fictional') {
       throw new Error('Invalid demo purchase');
     }
+    const placement = geometry.personas.find(p => p.id === persona.id)?.purchases.find(p => p.id === item.productId && p.category === category);
     return {
       id: item.productId,
       purchaseId: item.purchaseId,
       category,
-      roomSlot: slot[0],
-      presentationRole: (category === 'living' && !isLamp && !item.assetId.startsWith('cushion') ? 'shelf' : category === 'beauty' && index > 0 ? 'shelf' : slot[0].split('-')[0]) as PresentationRole,
+      roomSlot: (placement?.roomSlot ?? slot[0]) as RoomSlot,
+      presentationRole: (placement?.presentationRole ?? (category === 'living' && !isLamp && !item.assetId.startsWith('cushion') ? 'shelf' : category === 'beauty' && index > 0 ? 'shelf' : slot[0].split('-')[0])) as PresentationRole,
       displayOrder: index + 1,
       imageUrl: `https://asset.m-gs.kr/prod/${encodeURIComponent(item.productId)}/1/550`,
-      illustrationKey: slot[1],
+      illustrationKey: (placement?.illustrationKey ?? slot[1]) as IllustrationKey,
       purchasedAt,
       state: category === 'fashion' ? { wearing: false }
         : category === 'food' ? { quantity: 3 }
@@ -65,7 +67,8 @@ export function resolveDemoPersonaId(value: unknown): string {
 
 export function demoPersonaIdFromRequest(request?: Request): string {
   const cookies = request?.headers.get('cookie')?.split(';') ?? [];
-  const selection = cookies.find(cookie => cookie.trim().startsWith(`${DEMO_PERSONA_COOKIE}=`));
+  const selections = cookies.filter(cookie => cookie.trim().startsWith(`${DEMO_PERSONA_COOKIE}=`));
+  const selection = selections.length === 1 ? selections[0] : undefined;
   if (!selection) return DEFAULT_DEMO_PERSONA_ID;
   try {
     return resolveDemoPersonaId(decodeURIComponent(selection.trim().slice(DEMO_PERSONA_COOKIE.length + 1)));

@@ -38,11 +38,33 @@ test('stale patch preserves outfit and independent same-art food IDs',async()=>{
  assert.deepEqual(toRoomVisualState(home,result.state).foodQuantity,result.state.foodQuantity);
 });
 test('food photos bypass SVG crop and third wardrobe photo is represented',async()=>{
- const home=await homeFor(),state=initialDemoState(home),foods=getHeroProducts(home.categories.food,state),wardrobe=getHeroProducts(home.categories.fashion,state);
+ const home=await homeFor();
+ for(const purchase of home.purchases)purchase.gameAsset=null;
+ const state=initialDemoState(home),foods=getHeroProducts(home.categories.food,state),wardrobe=getHeroProducts(home.categories.fashion,state);
  for(const entry of foods){const markup=mirrorImage(entry,roomMirrorPlacement(entry,foods));assert.match(markup,/^<image /);assert.ok(markup.includes(entry.imageUrl));assert.doesNotMatch(markup,/viewBox=/);}
- assert.equal(wardrobe.length,3);assert.equal(wardrobe[2].illustrationKey,'garment');assert.deepEqual(garmentPresentation(wardrobe[2]),{source:wardrobe[2].imageUrl,number:3});
+ assert.equal(wardrobe.length,3);assert.equal(wardrobe[2].productId,home.categories.fashion.ownedProducts[2].id);assert.deepEqual(garmentPresentation(wardrobe[2]),{source:wardrobe[2].imageUrl,number:3});
  const markup=objectArt({wardrobeOpen:1,mirrorProducts:[...wardrobe,...foods]});for(const entry of wardrobe)assert.ok(markup.includes(`data-garment-source="${entry.imageUrl}"`));
  assert.equal(applyOwnedOutfit(home,state,wardrobe[0].id).outfitId,'base');
+});
+test('reviewed sprites render by exact owned product without replacing photo metadata or applying an outfit',async()=>{
+ const home=await homeFor(),before=JSON.stringify(home),state=initialDemoState(home);
+ const foods=getHeroProducts(home.categories.food,state),wardrobe=getHeroProducts(home.categories.fashion,state);
+ for(const entry of foods){
+  assert.equal(entry.product.gameAsset?.status,'ready');
+  const markup=mirrorImage(entry,roomMirrorPlacement(entry,foods));
+  assert.ok(markup.includes(`data-game-asset="${entry.product.gameAsset.id}"`));
+  assert.ok(markup.includes(`data-product-image="${entry.productId}"`));
+  assert.ok(markup.includes(entry.product.gameAsset.url));
+  assert.equal(entry.imageUrl,`https://asset.m-gs.kr/prod/${entry.productId}/1/550`);
+ }
+ const markup=objectArt({wardrobeOpen:1,mirrorProducts:[...wardrobe,...foods]});
+ for(const entry of wardrobe){
+  assert.equal(entry.product.gameAsset?.status,'ready');
+  assert.ok(markup.includes(`data-game-asset="${entry.product.gameAsset.id}"`));
+  assert.ok(markup.includes(`data-product-image="${entry.productId}"`));
+ }
+ assert.equal(applyOwnedOutfit(home,state,wardrobe[0].id).outfitId,'base');
+ assert.equal(JSON.stringify(home),before);
 });
 test('all home routes require ready re-tap and finish exit once',()=>{
  for(const [id,category] of [['wardrobe','fashion'],['fridge','food'],['pantry','food'],['sofa','living'],['vanity','beauty']]){

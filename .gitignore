@@ -15,6 +15,14 @@ public/assets/
 .env
 .env.*
 !.env.example
+
+# Local generation work and reproducible exports; preserve the reviewed source inputs.
+**/__pycache__/
+*.pyc
+data/game-assets/generated/
+data/game-assets/generation-prompts.json
+data/game-assets/overnight/*
+!data/game-assets/overnight/reference-status.json
 *.pem
 *.key
 .vercel
@@ -30,3 +38,8 @@ public/assets/
 /.recommendation-*/
 __pycache__/
 *.pyc
+# Transient local review lock.
+data/game-assets/.review-import.lock
+
+# Generated product PNGs are served by the external asset service, not Git.
+app/assets/game-items/

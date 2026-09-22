@@ -13,6 +13,12 @@ export interface DemoPurchaseSeed {
   state: PurchaseState;
 }
 
+export interface DemoPurchaseSource {
+  user: DemoHome['user'];
+  categories: Record<Category, readonly DemoPurchaseSeed[]>;
+  personas?: DemoHome['personas'];
+}
+
 /** Category-owned fictional purchase events; catalog identity is real, placement is presentation only. */
 export const demoCategoryPurchaseSeeds: Record<Category, readonly DemoPurchaseSeed[]> = {
   fashion: [
