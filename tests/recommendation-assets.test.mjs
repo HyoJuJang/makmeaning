@@ -19,7 +19,8 @@ test('recommendation assets use exact IDs and preserve ranking, identity, signal
   assert.deepEqual(result.assets, { status: 'partial', mapped: 1, total: 2 });
   assert.equal(original.items[0].product.gameAsset, undefined);
   for (let i = 0; i < result.items.length; i++) {
-    const { gameAsset, ...raw } = result.items[i].product;
+    const { gameAsset, imageUrl, ...raw } = result.items[i].product;
+    assert.equal(imageUrl, `https://asset.m-gs.kr/prod/${original.items[i].product.prd_id}/1/550`);
     assert.deepEqual({ ...result.items[i], product: raw }, original.items[i]);
   }
   assert.equal(result.totalCandidates, original.totalCandidates);

@@ -8,7 +8,7 @@ const price = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
 function ProductPhoto({ product }: { product: RecommendationItem['product'] }) {
   return <div className="rec-product-photo">
-    <ProductArtwork asset={product.gameAsset} productId={product.prd_id} name={product.view_name} className="rec-product-artwork" />
+    <ProductArtwork asset={product.gameAsset} photoUrl={product.imageUrl} productId={product.prd_id} name={product.view_name} className="rec-product-artwork" />
   </div>;
 }
 

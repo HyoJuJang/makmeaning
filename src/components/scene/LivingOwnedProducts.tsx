@@ -20,7 +20,7 @@ export default function LivingOwnedProducts({ entries, selectedId, lit, onSelect
     {entries.map(entry => {
       const position = livingHeroPlacement(entry, entries);
       return <span className="sc-living-owned-product" key={entry.id} data-hero-product-id={entry.id} data-hero-status={entry.status} data-hero-role={entry.presentationRole} data-hero-source-image={entry.imageUrl} data-hero-on={entry.on ?? undefined}>
-        {entry.artVisible && <ProductArtwork asset={entry.product.gameAsset} name={entry.product.name} productId={entry.id} className={`sc-living-owned-art${entry.presentationRole === 'lamp' ? ' sc-living-owned-art--lamp' : ''}`} style={{ ...position.art, '--hero-lamp-on': lit ? 1 : 0 } as CSSProperties} />}
+        {entry.artVisible && <ProductArtwork asset={entry.product.gameAsset} name={entry.product.name} productId={entry.id} photoUrl={entry.imageUrl} className={`sc-living-owned-art${entry.presentationRole === 'lamp' ? ' sc-living-owned-art--lamp' : ''}`} style={{ ...position.art, '--hero-lamp-on': lit ? 1 : 0 } as CSSProperties} />}
         {selectedId === entry.id && <span className="sc-room-target sc-living-owned-target" style={position.art} aria-hidden="true" />}
         <button className="sc-room-pin sc-living-owned-pin" style={position.pin} data-hero-control-product-id={entry.id} aria-label={`${entry.product.name} 기준으로 추천받기`} aria-pressed={selectedId === entry.id} onClick={() => onSelect(entry.product)}><span>{entry.displayIndex}</span></button>
       </span>;

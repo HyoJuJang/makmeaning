@@ -18,6 +18,6 @@ test('room sprites use category ownership and keep cart items out of the hero', 
   assert.match(scene, /getHeroProducts\(collection, confirmedState\)/);
   assert.match(scene, /<LivingOwnedProducts entries=\{heroEntries\}/);
   assert.match(catalog, /catalogRoomItems\(data, confirmed\)/);
-  assert.match(catalog, /visible && \(entry\.product\.gameAsset/);
+  assert.match(catalog, /visible && <GameItemSprite asset=\{entry\.product\.gameAsset\}/);
   assert.doesNotMatch(scene, /className="sc-room-cushion"/);
 });

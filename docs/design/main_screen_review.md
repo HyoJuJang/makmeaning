@@ -431,3 +431,11 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - Actual browser: 390×844 and 320×568; wardrobe first interaction/ready re-tap navigation, three F01 garment appearances, M01/M02/F02 wear, cancel, Escape, rapid selection, leave before completion, refresh, Room return, category appearance, Living sit, cart isolation and unsupported selection PASS. Runtime screenshots captured by Main; independent critic reviewed screenshots because its browser provider was unavailable.
 - npm test, typecheck, production build and release API contract PASS. Shared catalog unchanged: 6,036 products, SHA256 d2caaf9ed958d13c724c87aff849cb7427b3f25514128db5082c4564e19a8dbe. Local preview 3452. No push/deploy in this scope.
 - Evidence: Codex outputs/owned-outfit-20260922/qa-results.json; final 13-fixed-owned-card-320.jpg and 14-final-cardigan-320.jpg. Stylized appearance does not assert exact product fit.
+
+## 2026-09-22 — Scene product photo toggle
+
+- Scope: Fashion/Food/Living/Beauty share an explicit `실제 상품 이미지` switch. Every fresh category entry defaults to generated game artwork; ON uses the exact product ID's catalog photograph across hero, owned rail, dialogs and real recommendations. Room and confirmed state are unaffected. Missing photos are explicit, never silently replaced with generated art.
+- Removed Fashion/Living's fictional `공간 미리보기 예시 상품` section and its now-unreachable filters. Existing saved/cart records are preserved; no catalog/database writes.
+- Browser review: all four categories default OFF, ON/OFF restores original imagery, matching hero/list IDs. Fashion photo-mode wear completes and survives toggle; Food selection/quantity and Living seated pose survive toggling. Food detail displays the same actual image. Beauty keyboard Space works and refresh restores OFF. Reviewed 390×844 and 320×568 with no horizontal overflow.
+- Independent visual review: no required geometry/layout fixes. One copy mismatch found in photo mode (`공간 그림은…`); changed to distinguish actual product photography from the illustrated room background, then rechecked Living.
+- Validation: production build, typecheck and full npm test pass. Evidence: projectless outputs/scene-image-toggle-20260922 (screenshots and logs). Production release QA is recorded there separately.

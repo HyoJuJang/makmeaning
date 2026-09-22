@@ -33,7 +33,7 @@ export async function hydrateRecommendationAssets(data: RecommendationResponse, 
       && asset?.domain === product.domain && asset.status === 'ready'
       && mapping.assetId === asset.id && mapping.familyId === asset.familyId;
     if (valid) mappedIds.add(product.prd_id);
-    return { ...product, gameAsset: valid ? asset : null };
+    return { ...product, gameAsset: valid ? asset : null, imageUrl: /^[0-9]{1,64}$/.test(product.prd_id) ? `https://asset.m-gs.kr/prod/${encodeURIComponent(product.prd_id)}/1/550` : undefined };
   };
   const items = data.items.map(item => ({ ...item, product: hydrate(item.product) }));
   const anchors = data.anchors.map(anchor => ({ ...anchor, product: hydrate(anchor.product) }));

@@ -8,6 +8,8 @@ export interface RecommendationProduct {
   domain: RecommendationDomain;
   /** Exact-ID generated artwork; absence never licenses another product's image. */
   gameAsset?: GameAsset | null;
+  /** Catalog photograph for this exact product, independent of generated artwork. */
+  imageUrl?: string;
 }
 export interface UserItem {
   productId: string; viewCount: number; cartCount: number; orderCount: number; lastAt: string;

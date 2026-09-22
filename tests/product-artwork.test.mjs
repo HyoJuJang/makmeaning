@@ -6,12 +6,13 @@ import ts from 'typescript';
 
 const source = readFileSync(new URL('../src/components/ProductArtwork.tsx', import.meta.url), 'utf8');
 const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX } }).outputText;
-function component() {
+function component(photos = false) {
   let failed = null;
   const exports = {};
   const jsx = (type, props) => ({ type, props });
   vm.runInNewContext(code, { exports, require(name) {
     if (name === 'react') return { useState: () => [failed, value => { failed = value; }] };
+    if (name === './ProductImageMode') return { useProductImageMode: () => ({ showProductPhotos: photos }) };
     if (name === 'react/jsx-runtime') return { jsx, jsxs: jsx };
     throw Error(name);
   } });
@@ -36,4 +37,28 @@ test('recommendation cards use the same asset visual without hardcoded real phot
   const cards = readFileSync(new URL('../src/components/recommendation/RecommendationCards.tsx', import.meta.url), 'utf8');
   assert.match(cards, /ProductArtwork asset=\{product.gameAsset\}/);
   assert.doesNotMatch(cards, /asset\.m-gs\.kr/);
+});
+
+const photoUrl = 'https://asset.m-gs.kr/prod/123/1/550';
+test('explicit photo mode renders the exact catalog photograph even when game artwork is unavailable', () => {
+  const render = component(true);
+  for (const art of [asset, null]) {
+    const result = render({ asset: art, photoUrl, name: '상품', productId: '123' });
+    assert.equal(result.type, 'img');
+    assert.equal(result.props.src, photoUrl);
+    assert.equal(result.props['data-product-image'], '123');
+    assert.equal(result.props['data-image-mode'], 'photo');
+  }
+});
+test('photo failure stays explicit and never substitutes a generated depiction', () => {
+  const render = component(true);
+  render({ asset, photoUrl, name: '상품', productId: '123' }).props.onError();
+  const result = render({ asset, photoUrl, name: '상품', productId: '123' });
+  assert.equal(result.props['data-artwork-state'], 'unavailable');
+  assert.equal(result.props['data-image-mode'], 'photo');
+});
+test('default mode retains the sprite even when an exact photo is available', () => {
+  const result = component()({ asset, photoUrl, name: '상품', productId: '123' });
+  assert.equal(result.type, 'svg');
+  assert.equal(result.props.children.props.href, asset.url);
 });
