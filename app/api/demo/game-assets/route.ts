@@ -1,5 +1,5 @@
 import { getGameProduct, listGameProducts } from '../../../../src/lib/game-assets.ts';
-import { remoteAssetLookup } from '../../../../src/lib/remote-game-assets.ts';
+import { lookupRoomGameAssets } from '../../../../src/lib/runtime-game-assets.ts';
 import type { ProductWithAsset } from '../../../../src/lib/game-asset-types.ts';
 import type { AssetStatus, Domain } from '../../../../src/lib/game-asset-types.ts';
 
@@ -7,17 +7,17 @@ export function GET(request: Request) {
   const params = new URL(request.url).searchParams;
   const plainJson = (body: unknown, status = 200) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
   const json = (body: unknown, status = 200): Response | Promise<Response> => {
-    if (status !== 200 || !process.env.ASSET_API_URL) return plainJson(body, status);
+    if (status !== 200) return plainJson(body, status);
     const page = body as { products?: ProductWithAsset[] };
     const products = page.products ?? [body as ProductWithAsset];
     if (!products.length) return plainJson(body);
-    return remoteAssetLookup(process.env.ASSET_API_URL)(products.map(product => product.prd_id)).then(mappings => {
+    return lookupRoomGameAssets(products.map(product => product.prd_id)).then(mappings => {
       const byId = new Map(mappings.map(mapping => [mapping.prd_id, mapping]));
       const hydrated = products.map(product => {
         const mapping = byId.get(product.prd_id);
         const asset = mapping?.domain === product.domain && mapping.status === 'ready' ? mapping.asset : null;
         return { ...product, assetStatus: mapping?.status ?? 'needs_review', assetId: asset?.id ?? null,
-          assetUrl: asset?.url ?? null, asset: asset ? { ...product.asset, ...asset } : null };
+          assetUrl: asset?.url ?? null, asset };
       });
       return plainJson(page.products ? { ...page, products: hydrated } : hydrated[0]);
     }).catch(() => plainJson({ error: 'Asset service unavailable' }, 503));

@@ -4,10 +4,30 @@ import { readFile, writeFile, mkdir, mkdtemp, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
+import vm from 'node:vm';
+import ts from 'typescript';
 import { CATALOG_COLUMNS, parseCsv, writeCsv, validateCatalog } from '../scripts/lib/catalog-csv.mjs';
 import { resolveAsset, buildGameAssets, validateProductOverrides, validateReferenceStatuses } from '../scripts/build-game-assets.mjs';
-import { getGameProduct } from '../src/lib/game-assets.ts';
-import { GET } from '../app/api/demo/game-assets/route.ts';
+import { getGameProduct, listGameProducts } from '../src/lib/game-assets.ts';
+
+// Exercise the real route against a deterministic asset service fixture, without
+// loading server-only code into Node's client condition or querying live services.
+const routeSource = await readFile(new URL('../app/api/demo/game-assets/route.ts', import.meta.url), 'utf8');
+const routeExports = {};
+vm.runInNewContext(ts.transpileModule(routeSource, { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText, {
+  exports: routeExports, Response, URL,
+  require(name) {
+    if (name.endsWith('/runtime-game-assets.ts')) return { async lookupRoomGameAssets(ids) {
+      return ids.flatMap(id => {
+        const product = getGameProduct(id);
+        return product ? [{ prd_id: id, domain: product.domain, status: product.assetStatus, asset: product.asset }] : [];
+      });
+    } };
+    if (name.endsWith('/game-assets.ts')) return { getGameProduct, listGameProducts };
+    throw Error(`Unexpected route dependency: ${name}`);
+  },
+});
+const { GET } = routeExports;
 
 const catalog = parseCsv(await readFile(new URL('../data/catalog/products.csv', import.meta.url), 'utf8'));
 const generated = JSON.parse(await readFile(new URL('../src/generated/product-asset-map.json', import.meta.url), 'utf8'));
@@ -105,7 +125,7 @@ test('different neckline, packaging and unverified color never receive a mislead
 });
 
 test('product ID API returns the exact product, no arbitrary fallback or mutable shared data', async () => {
-  const response = GET(request('id=1059856091')); assert.equal(response.status, 200);
+  const response = await GET(request('id=1059856091')); assert.equal(response.status, 200);
   const product = await response.json(); assert.equal(product.prd_id, '1059856091'); assert.equal(product.asset.color, 'blue');
   assert.equal(GET(request('id=99999999999999999')).status, 404);
   assert.equal(GET(request('id=__proto__')).status, 400);
@@ -117,13 +137,13 @@ test('product ID API returns the exact product, no arbitrary fallback or mutable
 });
 
 test('filtered and paginated API results retain valid mapped products and reject invalid filters', async () => {
-  const ready = await GET(request('status=ready')).json(); assert.ok(ready.total >= originalReviewedIds.length);
+  const ready = await (await GET(request('status=ready'))).json(); assert.ok(ready.total >= originalReviewedIds.length);
   const readyIds = new Set(generated.products.filter(product => product.assetStatus === 'ready').map(product => product.prd_id));
   for (const id of originalReviewedIds) assert.ok(readyIds.has(id), `Original reviewed product remains ready: ${id}`);
   assert.ok(ready.products.every(p => p.assetStatus === 'ready' && p.asset));
-  const fashion = await GET(request('domain=fashion&limit=2&page=2')).json();
+  const fashion = await (await GET(request('domain=fashion&limit=2&page=2'))).json();
   assert.equal(fashion.total, 1680); assert.equal(fashion.products.length, 2); assert.equal(fashion.page, 2);
-  const search = await GET(request('q=1050446037')).json(); assert.equal(search.total, 1); assert.equal(search.products[0].prd_id, '1050446037');
+  const search = await (await GET(request('q=1050446037'))).json(); assert.equal(search.total, 1); assert.equal(search.products[0].prd_id, '1050446037');
   for (const query of ['domain=__proto__', 'status=fake', 'limit=0', 'limit=49', 'page=-1', 'page=1.5']) assert.equal(GET(request(query)).status, 400);
 });
 
