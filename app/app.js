@@ -56,7 +56,7 @@ let state=readDemoState(home,localStorage);
 const artKey=id=>products.find(p=>p.id===id)?.illustrationKey;
 let preloadedEatingAvatar=null;
 function preloadEatingAsset(){if(preloadedEatingAvatar===state.avatarId||typeof Image!=='function')return;preloadedEatingAvatar=state.avatarId;const image=new Image();image.src=`/assets/avatars/${state.avatarId}-eating-states.png`;}
-document.querySelector('h1').textContent=`${home.user.name}의 공간`;
+document.querySelector('h1').innerHTML=`${escapeHTML(home.user.name)}의 작은 일상<span>.</span>`;
 document.querySelector('.home-section').setAttribute('aria-label',`${home.user.name}의 연결된 원룸`);
 document.title=`G:Scene — ${home.user.name}의 공간`;
 let active=null,returnFocus=null,draftAvatar=null;

@@ -387,3 +387,10 @@ Visual QA는 코드 대신 실제 렌더 화면을 검토했다. 발견 4건(Hig
 - 시각 review: 주요 결함0. 작은 화면의 낮은 우선순위 안내 가독성을 보강해 안내10→11px, footer9→10px로 수정하고 동일320 화면을 재검토했다. 가로 넘침0, 캐릭터61×44px와 모든 tab59×61px 이상. 중앙 집은 primary, 실제 current category만 밑줄로 구별된다.
 - 기능: 캐릭터 sheet 열기/닫기, 연속 옷장 tap 시 Room 유지→준비 후 Fashion 이동→Room 복귀, 냉장고 준비 후 Food 이동, 바닥 tap 연속 이동/멈춤을 실제 브라우저에서 확인했다. 기존83개 Node tests+이동/입력/interaction/assertion suites, build, typecheck PASS. API release contract와6036개 공통 catalog 불변 PASS.
 - 동료 담당 의상 그림·카테고리 hero·상품 데이터는 변경하지 않았다.
+
+
+## 2026-09-22 상단 orientation 복원 검토
+
+- 원문 근거: compact 직전6b0c8de의 app/index.html·app/app.js. `{이름}의 작은 일상.` / `내가 고른 물건으로 채워지는 집` 그대로 복원.
+- 실제390×844·320×568 before/after 독립 screenshot 검토 PASS. 제목26/24px와 설명13px가 각각 한 줄, 버튼 충돌·가로 넘침0. 방 시작은143.5/141.5px로 compact 대비27.5px만 증가(예전390은276px).
+- 캐릭터 sheet 열기/닫기와 옷장 접근→준비→Fashion 진입 실제 실행 PASS. build·typecheck·실제app input harness PASS. 하단 삭제 요소와 navigation은 유지. 추가 visual defect0.
