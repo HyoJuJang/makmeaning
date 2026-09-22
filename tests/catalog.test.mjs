@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import personaSource from '../data/demo-persona-purchases.json' with { type: 'json' };
 import { demoCatalogResponse } from '../src/lib/demo-catalog.ts';
 import { resolveDemoHome } from '../src/lib/demo-home.ts';
 import { demoCatalogRows, demoCatalogs } from '../src/data/demo-catalog.ts';
@@ -10,8 +11,8 @@ import {
   adaptCatalogProducts, addToCart, cartTotal, normalizeCart, restoreCatalogState,
 } from '../src/lib/catalog.ts';
 
-const sharedRows = demoHome.purchases.map(p => ({
-  prd_id: p.id, view_name: p.name, discprice: p.price, domain: p.category,
+const sharedRows = personaSource.personas.find(persona => persona.id === 'demo-f01').purchases.map((p, index) => ({
+  prd_id: p.productId, view_name: p.productName, discprice: 10000 + index, domain: p.category,
   cate1_nm: null, cate2_nm: null, cate3_nm: null, cate4_nm: null,
   brand_name: null, opt1: null, opt2: null, opt3: null, opt4: null,
 }));
@@ -104,14 +105,15 @@ for (const [category, get] of [['food', getFood], ['beauty', getBeauty]]) {
     assert.equal(response.status, 200);
     assert.equal(response.headers.get('cache-control'), 'no-store');
     const result = await response.json();
-    assert.deepEqual(Object.keys(result).sort(), ['category', 'collection', 'home', 'initialCart', 'initialOutfitId', 'products', 'purchases', 'user']);
+    assert.deepEqual(Object.keys(result).sort(), ['category', 'collection', 'home', 'initialCart', 'products', 'purchases', 'user']);
+    const currentHome = await resolveDemoHome(repository());
     assert.deepEqual(result.collection, result.home.categories[category]);
     assert.equal(result.category, category);
-    assert.deepEqual(result.user, demoHome.user);
-    assert.equal(result.initialOutfitId, demoHome.purchases.find(purchase => purchase.category === 'fashion' && purchase.state.wearing === true)?.illustrationKey);
-    const purchases = demoHome.purchases.filter(purchase => purchase.category === category);
+    assert.deepEqual(result.user, currentHome.user);
+    assert.equal(result.initialOutfitId, undefined, 'Selected display clothing does not imply virtual fitting');
+    const purchases = currentHome.purchases.filter(purchase => purchase.category === category);
     assert.deepEqual(result.purchases, purchases.map(purchase => ({ productId: purchase.id, purchaseId: purchase.purchaseId, purchasedAt: purchase.purchasedAt })));
-    assert.deepEqual(result.home, await resolveDemoHome(repository()));
+    assert.deepEqual(result.home, currentHome);
     assert.deepEqual(result.initialCart, []);
     for (const purchase of purchases) {
       const product = result.products.find(product => product.id === purchase.id);
@@ -122,7 +124,7 @@ for (const [category, get] of [['food', getFood], ['beauty', getBeauty]]) {
       assert.equal(product.view_name, purchase.name);
       assert.equal(product.catalogSource, 'shared-products');
       assert.equal(product.illustrationKey, purchase.illustrationKey);
-      assert.equal(product.imageKind, 'illustration');
+      assert.equal(product.imageKind, 'product-photo');
       assert.equal(product.priceKind, 'catalog-reference');
     }
     assertNoRemovedFields(result);

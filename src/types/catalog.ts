@@ -20,6 +20,7 @@ export interface ProductPresentation {
   shortName?: string;
   imageUrl?: string;
   illustrationKey?: string;
+  imageKind?: 'illustration' | 'product-photo';
   catalogSource?: 'shared-products' | 'fictional-example';
 }
 
@@ -29,7 +30,7 @@ export interface DisplayProduct extends CatalogProduct {
   shortName: string;
   imageUrl: string;
   illustrationKey: string;
-  imageKind: 'illustration';
+  imageKind: 'illustration' | 'product-photo';
   catalogSource: 'shared-products' | 'fictional-example';
   priceKind: 'catalog-reference' | 'fictional-example';
 }

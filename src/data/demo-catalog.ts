@@ -53,8 +53,10 @@ export function buildDemoCatalog(collection: CategoryCollection, home: DemoHome)
   const purchased = collection.ownedProducts;
   const ownedPresentation = Object.fromEntries(purchased.map(purchase => [purchase.id, {
     ...presentation[purchase.illustrationKey],
+    ...(purchase.imageKind === 'product-photo' ? { shortName: purchase.name } : {}),
     illustrationKey: purchase.illustrationKey,
     imageUrl: purchase.imageUrl,
+    imageKind: purchase.imageKind,
     catalogSource: 'shared-products' as const,
   }]));
   const examplePresentation = Object.fromEntries(fictionalRows[category].map(row => [row.prd_id, {

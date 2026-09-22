@@ -1,0 +1,986 @@
+{
+  "kind": "demo-purchase-persona-proposal",
+  "createdAt": "2026-09-22T00:29:59.859Z",
+  "sourceBranch": "feat/game-asset-mapping",
+  "personCount": 4,
+  "purchasesPerPerson": 10,
+  "notes": [
+    "가상 고객과 구매내역의 제안이며 실제 회원 또는 주문 데이터가 아닙니다.",
+    "성별은 예시 캐릭터 설정이고 상품 선호는 개인별 시나리오입니다.",
+    "색상은 대표사진 기반 어셋이며 실제 구매 옵션은 확정하지 않았습니다.",
+    "avatarLabel은 시연용 캐릭터 표시명이며 앱의 저장용 avatarId에 직접 대입하지 않습니다.",
+    "머그·조화·베개·파스타 등은 현재 고정 배치와 동작의 조정이 필요할 수 있습니다.",
+    "의류 진열용 어셋은 착용 애니메이션을 의미하지 않습니다."
+  ],
+  "personas": [
+    {
+      "id": "demo-f01",
+      "name": "민서",
+      "gender": "여성",
+      "avatarLabel": "F01",
+      "theme": "밝은 홈카페",
+      "palette": "화이트 · 하늘색 · 핑크",
+      "story": "집에서 간단한 아침을 먹고 따뜻한 조명 아래 쉬는 일상을 즐긴다.",
+      "purchases": [
+        {
+          "purchaseId": "demo-f01-fashion-1",
+          "productId": "1083830467",
+          "category": "fashion",
+          "productName": "[지오다노/본사] 345518 여 린넨셔츠",
+          "assetId": "shirt--shirt-white",
+          "assetUrl": "/assets/game-items/v1/fashion/shirt/shirt-white.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/fashion/shirt/shirt-white.png",
+          "frame": {
+            "x": 199,
+            "y": 75,
+            "width": 857,
+            "height": 1080
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-fashion-2",
+          "productId": "1124808739",
+          "category": "fashion",
+          "productName": "[비버리힐스폴로클럽][TAG가116,400원] 여성 데일리 쿨터치 니트 가디건 TK108",
+          "assetId": "cardigan_round_solid--fashion-cardigan-round-solid-light-blue",
+          "assetUrl": "/assets/game-items/v1/fashion/cardigan_round_solid/fashion-cardigan-round-solid-light-blue.png",
+          "assetStatus": "ready",
+          "representativeColor": "light_blue",
+          "sourcePath": "app/assets/game-items/v1/fashion/cardigan_round_solid/fashion-cardigan-round-solid-light-blue.png",
+          "frame": {
+            "x": 147,
+            "y": 80,
+            "width": 960,
+            "height": 1115
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-fashion-3",
+          "productId": "1113830439",
+          "category": "fashion",
+          "productName": "디스커버리 25SS 봄 이월/할인 세미오버핏 여성 우븐 맨투맨/티셔츠 DWMT44051-GSAS",
+          "assetId": "sweatshirt--fashion-sweatshirt-round-ivory",
+          "assetUrl": "/assets/game-items/v1/fashion/sweatshirt/fashion-sweatshirt-round-ivory.png",
+          "assetStatus": "ready",
+          "representativeColor": "ivory",
+          "sourcePath": "app/assets/game-items/v1/fashion/sweatshirt/fashion-sweatshirt-round-ivory.png",
+          "frame": {
+            "x": 166,
+            "y": 75,
+            "width": 923,
+            "height": 1099
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-food-1",
+          "productId": "1113622242",
+          "category": "food",
+          "productName": "서울우유 멸균우유 1000mlx10개",
+          "assetId": "beverage_carton--food-beverage-carton-tall-flat-top-white-green-milk",
+          "assetUrl": "/assets/game-items/v1/food/beverage_carton/food-beverage-carton-tall-flat-top-white-green-milk.png",
+          "assetStatus": "ready",
+          "representativeColor": "white_green",
+          "sourcePath": "app/assets/game-items/v1/food/beverage_carton/food-beverage-carton-tall-flat-top-white-green-milk.png",
+          "frame": {
+            "x": 402,
+            "y": 159,
+            "width": 450,
+            "height": 1045
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-food-2",
+          "productId": "1015281967",
+          "category": "food",
+          "productName": "오트밀 1.5kg (500gX3봉) 귀리 100% 시리얼",
+          "assetId": "food_pouch--food-food-pouch-kraft-standing-zip-beige",
+          "assetUrl": "/assets/game-items/v1/food/food_pouch/food-food-pouch-kraft-standing-zip-beige.png",
+          "assetStatus": "ready",
+          "representativeColor": "beige",
+          "sourcePath": "app/assets/game-items/v1/food/food_pouch/food-food-pouch-kraft-standing-zip-beige.png",
+          "frame": {
+            "x": 253,
+            "y": 121,
+            "width": 749,
+            "height": 1051
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-food-3",
+          "productId": "1134436378",
+          "category": "food",
+          "productName": "산과들에 하루견과 원데이발란스그린 30봉 견과명절선물세트",
+          "assetId": "food_pouch--food-food-pouch-green-cream",
+          "assetUrl": "/assets/game-items/v1/food/food_pouch/food-food-pouch-green-cream.png",
+          "assetStatus": "ready",
+          "representativeColor": "green_ivory",
+          "sourcePath": "app/assets/game-items/v1/food/food_pouch/food-food-pouch-green-cream.png",
+          "frame": {
+            "x": 392,
+            "y": 86,
+            "width": 468,
+            "height": 1089
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-living-1",
+          "productId": "1053232515",
+          "category": "living",
+          "productName": "모노피아 KC 인증 대용량 배터리 밝기조절 무선 인테리어조명 단스탠드",
+          "assetId": "table_lamp_dome--ivory",
+          "assetUrl": "/assets/game-items/v1/living/table_lamp_dome/ivory.png",
+          "assetStatus": "ready",
+          "representativeColor": "ivory",
+          "sourcePath": "app/assets/game-items/v1/living/table_lamp_dome/ivory.png",
+          "frame": {
+            "x": 252,
+            "y": 134,
+            "width": 749,
+            "height": 1007
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-living-2",
+          "productId": "1057538146",
+          "category": "living",
+          "productName": "코렐코디 유리 머그 2P 세트",
+          "assetId": "mug--living-mug-glass-clear",
+          "assetUrl": "/assets/game-items/v1/living/mug/living-mug-glass-clear.png",
+          "assetStatus": "ready",
+          "representativeColor": "clear",
+          "sourcePath": "app/assets/game-items/v1/living/mug/living-mug-glass-clear.png",
+          "frame": {
+            "x": 211,
+            "y": 213,
+            "width": 876,
+            "height": 865
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-beauty-1",
+          "productId": "16052422",
+          "category": "beauty",
+          "productName": "아이소이 로즈PDRN 브라이트닝 세럼(NEW잡티세럼) 15ml",
+          "assetId": "cosmetic_cylinder_capped--beauty-cosmetic-cylinder-pink-gradient-tall-metal-cap",
+          "assetUrl": "/assets/game-items/v1/beauty/cosmetic_cylinder_capped/beauty-cosmetic-cylinder-pink-gradient-tall-metal-cap.png",
+          "assetStatus": "ready",
+          "representativeColor": "pink",
+          "sourcePath": "app/assets/game-items/v1/beauty/cosmetic_cylinder_capped/beauty-cosmetic-cylinder-pink-gradient-tall-metal-cap.png",
+          "frame": {
+            "x": 454,
+            "y": 108,
+            "width": 346,
+            "height": 1046
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f01-beauty-2",
+          "productId": "1059856091",
+          "category": "beauty",
+          "productName": "[체험특가] 웰라쥬 히알루론산 블루 100앰플 30ml / 무료배송",
+          "assetId": "serum_dropper_round--blue",
+          "assetUrl": "/assets/game-items/v1/beauty/serum_dropper_round/blue-revision-669e83414949.png",
+          "assetStatus": "ready",
+          "representativeColor": "blue",
+          "sourcePath": "app/assets/game-items/v1/beauty/serum_dropper_round/blue-revision-669e83414949.png",
+          "frame": {
+            "x": 420,
+            "y": 148,
+            "width": 416,
+            "height": 973
+          },
+          "ownership": "fictional"
+        }
+      ]
+    },
+    {
+      "id": "demo-f02",
+      "name": "지우",
+      "gender": "여성",
+      "avatarLabel": "F02",
+      "theme": "식물과 홈쿠킹",
+      "palette": "버건디 · 그린 · 그레이",
+      "story": "주말에 집에서 요리하고 식물 소품으로 공간을 꾸미는 것을 좋아한다.",
+      "purchases": [
+        {
+          "purchaseId": "demo-f02-fashion-1",
+          "productId": "1134622052",
+          "category": "fashion",
+          "productName": "[보니스팍스] 베이직 무지 라운드넥 니트 가디건 (XQ3CK004L0)",
+          "assetId": "cardigan_round_solid--cardigan-round-burgundy",
+          "assetUrl": "/assets/game-items/v1/fashion/cardigan_round_solid/cardigan-round-burgundy.png",
+          "assetStatus": "ready",
+          "representativeColor": "burgundy",
+          "sourcePath": "app/assets/game-items/v1/fashion/cardigan_round_solid/cardigan-round-burgundy.png",
+          "frame": {
+            "x": 206,
+            "y": 72,
+            "width": 842,
+            "height": 1081
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-fashion-2",
+          "productId": "1105155685",
+          "category": "fashion",
+          "productName": "[주간BEST][데니스골프] 26SS신상 여성 울 블렌디드 클래식 배색 로고 가디건 그린_HD4FLSP991",
+          "assetId": "cardigan_unspecified--fashion-cardigan-collared-green-contrast-trim",
+          "assetUrl": "/assets/game-items/v1/fashion/cardigan_unspecified/fashion-cardigan-collared-green-contrast-trim.png",
+          "assetStatus": "ready",
+          "representativeColor": "green",
+          "sourcePath": "app/assets/game-items/v1/fashion/cardigan_unspecified/fashion-cardigan-collared-green-contrast-trim.png",
+          "frame": {
+            "x": 164,
+            "y": 67,
+            "width": 926,
+            "height": 1104
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-fashion-3",
+          "productId": "1092856012",
+          "category": "fashion",
+          "productName": "내셔널지오그래픽 여성 크롭 후드 티셔츠 N233WHD010",
+          "assetId": "hoodie--fashion-hoodie-pullover-gray",
+          "assetUrl": "/assets/game-items/v1/fashion/hoodie/fashion-hoodie-pullover-gray.png",
+          "assetStatus": "ready",
+          "representativeColor": "gray",
+          "sourcePath": "app/assets/game-items/v1/fashion/hoodie/fashion-hoodie-pullover-gray.png",
+          "frame": {
+            "x": 119,
+            "y": 65,
+            "width": 1016,
+            "height": 1128
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-food-1",
+          "productId": "1050446036",
+          "category": "food",
+          "productName": "[보라티알] 듀럼기다 아르벨라 스파게티 500g x 3개",
+          "assetId": "pasta_long_pouch--neutral",
+          "assetUrl": "/assets/game-items/v1/food/pasta_long_pouch/neutral-revision-bb574954f716.png",
+          "assetStatus": "ready",
+          "representativeColor": "unspecified",
+          "sourcePath": "app/assets/game-items/v1/food/pasta_long_pouch/neutral-revision-bb574954f716.png",
+          "frame": {
+            "x": 432,
+            "y": 60,
+            "width": 387,
+            "height": 1194
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-food-2",
+          "productId": "1083510719",
+          "category": "food",
+          "productName": "[100% NFC 착즙] 보넬드 아이엠 당근 주스 즙 1L 2개",
+          "assetId": "beverage_bottle--food-juice-pet-rect-orange-white-cap",
+          "assetUrl": "/assets/game-items/v1/food/beverage_bottle/food-juice-pet-rect-orange-white-cap.png",
+          "assetStatus": "ready",
+          "representativeColor": "orange",
+          "sourcePath": "app/assets/game-items/v1/food/beverage_bottle/food-juice-pet-rect-orange-white-cap.png",
+          "frame": {
+            "x": 407,
+            "y": 110,
+            "width": 440,
+            "height": 1057
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-food-3",
+          "productId": "1033331215",
+          "category": "food",
+          "productName": "동원샘물 미니 생수 300ml x 20개",
+          "assetId": "beverage_bottle--food-water-pet-short-faceted-clear-blue-cap",
+          "assetUrl": "/assets/game-items/v1/food/beverage_bottle/food-water-pet-short-faceted-clear-blue-cap.png",
+          "assetStatus": "ready",
+          "representativeColor": "transparent_blue",
+          "sourcePath": "app/assets/game-items/v1/food/beverage_bottle/food-water-pet-short-faceted-clear-blue-cap.png",
+          "frame": {
+            "x": 366,
+            "y": 148,
+            "width": 522,
+            "height": 1000
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-living-1",
+          "productId": "1057182462",
+          "category": "living",
+          "productName": "달개비 조화 화분 미니 17cm 2타입 인테리어 식물 테이블 장식 소품 꾸미기",
+          "assetId": "plant--living-plant-leafy-white-pot",
+          "assetUrl": "/assets/game-items/v1/living/plant/living-plant-leafy-white-pot.png",
+          "assetStatus": "ready",
+          "representativeColor": "green",
+          "sourcePath": "app/assets/game-items/v1/living/plant/living-plant-leafy-white-pot.png",
+          "frame": {
+            "x": 140,
+            "y": 229,
+            "width": 986,
+            "height": 825
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-living-2",
+          "productId": "1056652878",
+          "category": "living",
+          "productName": "[이케아 무료배송] 스탠드조명 무드등 장스탠드(전구포함) TP124",
+          "assetId": "floor_lamp--living-floor-lamp-tapered-ivory-shade-black-stem",
+          "assetUrl": "/assets/game-items/v1/living/floor_lamp/living-floor-lamp-tapered-ivory-shade-black-stem.png",
+          "assetStatus": "ready",
+          "representativeColor": "ivory",
+          "sourcePath": "app/assets/game-items/v1/living/floor_lamp/living-floor-lamp-tapered-ivory-shade-black-stem.png",
+          "frame": {
+            "x": 437,
+            "y": 49,
+            "width": 381,
+            "height": 1160
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-beauty-1",
+          "productId": "1118407031",
+          "category": "beauty",
+          "productName": "뷰 유자 멜라토닝 세럼 30ml 2개 체험특가",
+          "assetId": "serum_dropper_round--yellow",
+          "assetUrl": "/assets/game-items/v1/beauty/serum_dropper_round/yellow.png",
+          "assetStatus": "ready",
+          "representativeColor": "yellow",
+          "sourcePath": "app/assets/game-items/v1/beauty/serum_dropper_round/yellow.png",
+          "frame": {
+            "x": 384,
+            "y": 160,
+            "width": 508,
+            "height": 965
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-f02-beauty-2",
+          "productId": "1088835047",
+          "category": "beauty",
+          "productName": "아브카 [체험특가] 히알루론산 고수분 크림 200ml",
+          "assetId": "cosmetic_jar--beauty-cosmetic-jar-open-white-cream-visible",
+          "assetUrl": "/assets/game-items/v1/beauty/cosmetic_jar/beauty-cosmetic-jar-open-white-cream-visible.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/beauty/cosmetic_jar/beauty-cosmetic-jar-open-white-cream-visible.png",
+          "frame": {
+            "x": 231,
+            "y": 237,
+            "width": 792,
+            "height": 904
+          },
+          "ownership": "fictional"
+        }
+      ]
+    },
+    {
+      "id": "demo-m01",
+      "name": "도윤",
+      "gender": "남성",
+      "avatarLabel": "M01",
+      "theme": "차분한 독서 공간",
+      "palette": "네이비 · 그레이 · 아이보리",
+      "story": "단정한 기본 의류를 즐겨 입고 저녁에는 조명을 켜고 책을 읽는다.",
+      "purchases": [
+        {
+          "purchaseId": "demo-m01-fashion-1",
+          "productId": "1128893597",
+          "category": "fashion",
+          "productName": "헤지스 남성 25FW 스테디셀러 네이비 로고자수 울혼방 가디건 WHSW5D203N2",
+          "assetId": "cardigan_vneck_solid--navy",
+          "assetUrl": "/assets/game-items/v1/fashion/cardigan_vneck_solid/navy.png",
+          "assetStatus": "ready",
+          "representativeColor": "navy",
+          "sourcePath": "app/assets/game-items/v1/fashion/cardigan_vneck_solid/navy.png",
+          "frame": {
+            "x": 223,
+            "y": 71,
+            "width": 812,
+            "height": 1072
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-fashion-2",
+          "productId": "1132775217",
+          "category": "fashion",
+          "productName": "디스커버리 25SS 이월/할인 남성 와펜포켓 맨투맨 티셔츠 캐쥬얼/데일리/세미오버핏 DMMT35051-GSAS",
+          "assetId": "sweatshirt--fashion-sweatshirt-round-gray",
+          "assetUrl": "/assets/game-items/v1/fashion/sweatshirt/fashion-sweatshirt-round-gray.png",
+          "assetStatus": "ready",
+          "representativeColor": "gray",
+          "sourcePath": "app/assets/game-items/v1/fashion/sweatshirt/fashion-sweatshirt-round-gray.png",
+          "frame": {
+            "x": 98,
+            "y": 136,
+            "width": 1059,
+            "height": 993
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-fashion-3",
+          "productId": "1111946338",
+          "category": "fashion",
+          "productName": "[나이키] 남성 드라이 핏 트레이닝 티셔츠 IO1426-100",
+          "assetId": "tee_short--fashion-tee-short-round-white",
+          "assetUrl": "/assets/game-items/v1/fashion/tee_short/fashion-tee-short-round-white.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/fashion/tee_short/fashion-tee-short-round-white.png",
+          "frame": {
+            "x": 175,
+            "y": 61,
+            "width": 904,
+            "height": 1150
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-food-1",
+          "productId": "1113622242",
+          "category": "food",
+          "productName": "서울우유 멸균우유 1000mlx10개",
+          "assetId": "beverage_carton--food-beverage-carton-tall-flat-top-white-green-milk",
+          "assetUrl": "/assets/game-items/v1/food/beverage_carton/food-beverage-carton-tall-flat-top-white-green-milk.png",
+          "assetStatus": "ready",
+          "representativeColor": "white_green",
+          "sourcePath": "app/assets/game-items/v1/food/beverage_carton/food-beverage-carton-tall-flat-top-white-green-milk.png",
+          "frame": {
+            "x": 402,
+            "y": 159,
+            "width": 450,
+            "height": 1045
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-food-2",
+          "productId": "1033331215",
+          "category": "food",
+          "productName": "동원샘물 미니 생수 300ml x 20개",
+          "assetId": "beverage_bottle--food-water-pet-short-faceted-clear-blue-cap",
+          "assetUrl": "/assets/game-items/v1/food/beverage_bottle/food-water-pet-short-faceted-clear-blue-cap.png",
+          "assetStatus": "ready",
+          "representativeColor": "transparent_blue",
+          "sourcePath": "app/assets/game-items/v1/food/beverage_bottle/food-water-pet-short-faceted-clear-blue-cap.png",
+          "frame": {
+            "x": 366,
+            "y": 148,
+            "width": 522,
+            "height": 1000
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-food-3",
+          "productId": "1069125001",
+          "category": "food",
+          "productName": "코스트코 부샤드 다크 초콜릿 나폴리테인 1300g 벨기에 초코렛",
+          "assetId": "food_pouch--food-food-pouch-pillow-brown",
+          "assetUrl": "/assets/game-items/v1/food/food_pouch/food-food-pouch-pillow-brown.png",
+          "assetStatus": "ready",
+          "representativeColor": "brown",
+          "sourcePath": "app/assets/game-items/v1/food/food_pouch/food-food-pouch-pillow-brown.png",
+          "frame": {
+            "x": 353,
+            "y": 74,
+            "width": 571,
+            "height": 1120
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-living-1",
+          "productId": "1056652878",
+          "category": "living",
+          "productName": "[이케아 무료배송] 스탠드조명 무드등 장스탠드(전구포함) TP124",
+          "assetId": "floor_lamp--living-floor-lamp-tapered-ivory-shade-black-stem",
+          "assetUrl": "/assets/game-items/v1/living/floor_lamp/living-floor-lamp-tapered-ivory-shade-black-stem.png",
+          "assetStatus": "ready",
+          "representativeColor": "ivory",
+          "sourcePath": "app/assets/game-items/v1/living/floor_lamp/living-floor-lamp-tapered-ivory-shade-black-stem.png",
+          "frame": {
+            "x": 437,
+            "y": 49,
+            "width": 381,
+            "height": 1160
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-living-2",
+          "productId": "1678991",
+          "category": "living",
+          "productName": "[단독 45%][2개 SET] 헬렌스타인 다운필 베개 40x60/50x70",
+          "assetId": "cushion--living-pillow-rect-plain-white",
+          "assetUrl": "/assets/game-items/v1/living/cushion/living-pillow-rect-plain-white.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/living/cushion/living-pillow-rect-plain-white.png",
+          "frame": {
+            "x": 78,
+            "y": 329,
+            "width": 1123,
+            "height": 658
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-beauty-1",
+          "productId": "1053067763",
+          "category": "beauty",
+          "productName": "매스티나 [65%OFF]화이트매스틱 올인원 로션 포 맨 150ml [정가 28,000원]",
+          "assetId": "cosmetic_pump--beauty-cosmetic-pump-navy-tall-airless-silver-top",
+          "assetUrl": "/assets/game-items/v1/beauty/cosmetic_pump/beauty-cosmetic-pump-navy-tall-airless-silver-top.png",
+          "assetStatus": "ready",
+          "representativeColor": "navy",
+          "sourcePath": "app/assets/game-items/v1/beauty/cosmetic_pump/beauty-cosmetic-pump-navy-tall-airless-silver-top.png",
+          "frame": {
+            "x": 484,
+            "y": 157,
+            "width": 287,
+            "height": 951
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m01-beauty-2",
+          "productId": "1059856091",
+          "category": "beauty",
+          "productName": "[체험특가] 웰라쥬 히알루론산 블루 100앰플 30ml / 무료배송",
+          "assetId": "serum_dropper_round--blue",
+          "assetUrl": "/assets/game-items/v1/beauty/serum_dropper_round/blue-revision-669e83414949.png",
+          "assetStatus": "ready",
+          "representativeColor": "blue",
+          "sourcePath": "app/assets/game-items/v1/beauty/serum_dropper_round/blue-revision-669e83414949.png",
+          "frame": {
+            "x": 420,
+            "y": 148,
+            "width": 416,
+            "height": 973
+          },
+          "ownership": "fictional"
+        }
+      ]
+    },
+    {
+      "id": "demo-m02",
+      "name": "준호",
+      "gender": "남성",
+      "avatarLabel": "M02",
+      "theme": "편안한 작업실",
+      "palette": "블루 · 블랙 · 화이트",
+      "story": "가벼운 캐주얼을 입고 집에서 개인 작업을 하며 간단한 간식을 곁들인다.",
+      "purchases": [
+        {
+          "purchaseId": "demo-m02-fashion-1",
+          "productId": "1108455723",
+          "category": "fashion",
+          "productName": "[벤시몽] 남성 케이블 가디건 2종 택1",
+          "assetId": "cardigan_unspecified--fashion-cardigan-vneck-relaxed-blue-cable",
+          "assetUrl": "/assets/game-items/v1/fashion/cardigan_unspecified/fashion-cardigan-vneck-relaxed-blue-cable.png",
+          "assetStatus": "ready",
+          "representativeColor": "blue",
+          "sourcePath": "app/assets/game-items/v1/fashion/cardigan_unspecified/fashion-cardigan-vneck-relaxed-blue-cable.png",
+          "frame": {
+            "x": 154,
+            "y": 45,
+            "width": 948,
+            "height": 1145
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-fashion-2",
+          "productId": "1108216372",
+          "category": "fashion",
+          "productName": "울시 남성 봄니트집업가디건 APWSCD26S66MBK",
+          "assetId": "cardigan_unspecified--fashion-cardigan-zip-standcollar-black-contrast-trim",
+          "assetUrl": "/assets/game-items/v1/fashion/cardigan_unspecified/fashion-cardigan-zip-standcollar-black-contrast-trim.png",
+          "assetStatus": "ready",
+          "representativeColor": "black",
+          "sourcePath": "app/assets/game-items/v1/fashion/cardigan_unspecified/fashion-cardigan-zip-standcollar-black-contrast-trim.png",
+          "frame": {
+            "x": 142,
+            "y": 46,
+            "width": 971,
+            "height": 1133
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-fashion-3",
+          "productId": "1111946338",
+          "category": "fashion",
+          "productName": "[나이키] 남성 드라이 핏 트레이닝 티셔츠 IO1426-100",
+          "assetId": "tee_short--fashion-tee-short-round-white",
+          "assetUrl": "/assets/game-items/v1/fashion/tee_short/fashion-tee-short-round-white.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/fashion/tee_short/fashion-tee-short-round-white.png",
+          "frame": {
+            "x": 175,
+            "y": 61,
+            "width": 904,
+            "height": 1150
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-food-1",
+          "productId": "1029143151",
+          "category": "food",
+          "productName": "[너트리] 무첨가 견과100% 프리미엄 믹스너트 750g",
+          "assetId": "food_jar--food-food-jar-short-clear-black-lid-burgundy-label-mixed-nuts",
+          "assetUrl": "/assets/game-items/v1/food/food_jar/food-food-jar-short-clear-black-lid-burgundy-label-mixed-nuts.png",
+          "assetStatus": "ready",
+          "representativeColor": "clear_burgundy",
+          "sourcePath": "app/assets/game-items/v1/food/food_jar/food-food-jar-short-clear-black-lid-burgundy-label-mixed-nuts.png",
+          "frame": {
+            "x": 233,
+            "y": 125,
+            "width": 789,
+            "height": 1014
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-food-2",
+          "productId": "1131432801",
+          "category": "food",
+          "productName": "[산지애] 실속사과하나주스 60팩",
+          "assetId": "beverage_pouch--food-drink-pouch-flat-white",
+          "assetUrl": "/assets/game-items/v1/food/beverage_pouch/food-drink-pouch-flat-white.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/food/beverage_pouch/food-drink-pouch-flat-white.png",
+          "frame": {
+            "x": 348,
+            "y": 88,
+            "width": 559,
+            "height": 1081
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-food-3",
+          "productId": "1015281967",
+          "category": "food",
+          "productName": "오트밀 1.5kg (500gX3봉) 귀리 100% 시리얼",
+          "assetId": "food_pouch--food-food-pouch-kraft-standing-zip-beige",
+          "assetUrl": "/assets/game-items/v1/food/food_pouch/food-food-pouch-kraft-standing-zip-beige.png",
+          "assetStatus": "ready",
+          "representativeColor": "beige",
+          "sourcePath": "app/assets/game-items/v1/food/food_pouch/food-food-pouch-kraft-standing-zip-beige.png",
+          "frame": {
+            "x": 253,
+            "y": 121,
+            "width": 749,
+            "height": 1051
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-living-1",
+          "productId": "1000432412",
+          "category": "living",
+          "productName": "인비오 시력보호 무선 책상 공부 LED스탠드 조명 INVIO LIGHT",
+          "assetId": "table_lamp--living-desk-lamp-single-oval-head-white",
+          "assetUrl": "/assets/game-items/v1/living/table_lamp/living-desk-lamp-single-oval-head-white.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/living/table_lamp/living-desk-lamp-single-oval-head-white.png",
+          "frame": {
+            "x": 211,
+            "y": 79,
+            "width": 842,
+            "height": 1122
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-living-2",
+          "productId": "1057182462",
+          "category": "living",
+          "productName": "달개비 조화 화분 미니 17cm 2타입 인테리어 식물 테이블 장식 소품 꾸미기",
+          "assetId": "plant--living-plant-leafy-white-pot",
+          "assetUrl": "/assets/game-items/v1/living/plant/living-plant-leafy-white-pot.png",
+          "assetStatus": "ready",
+          "representativeColor": "green",
+          "sourcePath": "app/assets/game-items/v1/living/plant/living-plant-leafy-white-pot.png",
+          "frame": {
+            "x": 140,
+            "y": 229,
+            "width": 986,
+            "height": 825
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-beauty-1",
+          "productId": "1032164641",
+          "category": "beauty",
+          "productName": "마녀공장 얼티밋 올인원 밀크 120ml  (포맨) (사용기한 2027.05.16까지) [정가 38,000원]",
+          "assetId": "cosmetic_pump--beauty-cosmetic-pump-white-tall-airless-integrated",
+          "assetUrl": "/assets/game-items/v1/beauty/cosmetic_pump/beauty-cosmetic-pump-white-tall-airless-integrated.png",
+          "assetStatus": "ready",
+          "representativeColor": "white",
+          "sourcePath": "app/assets/game-items/v1/beauty/cosmetic_pump/beauty-cosmetic-pump-white-tall-airless-integrated.png",
+          "frame": {
+            "x": 461,
+            "y": 101,
+            "width": 332,
+            "height": 1059
+          },
+          "ownership": "fictional"
+        },
+        {
+          "purchaseId": "demo-m02-beauty-2",
+          "productId": "1120723268",
+          "category": "beauty",
+          "productName": "뷰 진주알 글로우 톤업 선크림 50ml 2개 체험특가",
+          "assetId": "cosmetic_tube--beauty-cosmetic-tube-ivory-long-beige-cap",
+          "assetUrl": "/assets/game-items/v1/beauty/cosmetic_tube/beauty-cosmetic-tube-ivory-long-beige-cap.png",
+          "assetStatus": "ready",
+          "representativeColor": "ivory",
+          "sourcePath": "app/assets/game-items/v1/beauty/cosmetic_tube/beauty-cosmetic-tube-ivory-long-beige-cap.png",
+          "frame": {
+            "x": 432,
+            "y": 126,
+            "width": 391,
+            "height": 1011
+          },
+          "ownership": "fictional"
+        }
+      ]
+    }
+  ],
+  "validation": {
+    "validatedAt": "2026-09-22T00:30:10.278Z",
+    "uniqueProducts": 33,
+    "allAssetsReady": true,
+    "databaseResults": [
+      {
+        "id": "1083830467",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1124808739",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1113830439",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1113622242",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1015281967",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1134436378",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1053232515",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1057538146",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "16052422",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1059856091",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1134622052",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1105155685",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1092856012",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1050446036",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1083510719",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1033331215",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1057182462",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1056652878",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1118407031",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1088835047",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1128893597",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1132775217",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1111946338",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1069125001",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1678991",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1053067763",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1108455723",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1108216372",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1029143151",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1131432801",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1000432412",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1032164641",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      },
+      {
+        "id": "1120723268",
+        "status": 200,
+        "categoryMatches": true,
+        "nameMatches": true
+      }
+    ]
+  }
+}

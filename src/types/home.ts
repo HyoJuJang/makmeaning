@@ -4,12 +4,16 @@ export type Category = 'fashion' | 'food' | 'living' | 'beauty';
 export type RoomSlot = `${'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity'}-${number}`;
 export type PresentationRole = 'wardrobe' | 'fridge' | 'pantry' | 'sofa' | 'lamp' | 'vanity' | 'shelf';
 
-export type IllustrationKey = 'knit' | 'shirt' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';
+export type IllustrationKey = 'knit' | 'shirt' | 'garment' | 'milk' | 'water' | 'vitamin' | 'cushion' | 'lamp' | 'serum' | 'cream';
 
 export interface DemoUser {
   id: string;
   name: string;
   avatarId: string;
+}
+
+export interface DemoPersonaSummary extends DemoUser {
+  theme: string;
 }
 
 /** A fictional customer's confirmed state, never a mutation of catalog data. */
@@ -38,9 +42,10 @@ export interface Purchase {
   illustrationKey: IllustrationKey;
   state: PurchaseState;
   catalogSource: 'shared-products';
-  imageKind: 'illustration';
+  imageKind: 'illustration' | 'product-photo';
   priceKind: 'catalog-reference';
   /** Optional catalog extraction metadata, never inferred from the generic illustration. */
+  catalogMetadata?: { cate1_nm: string; cate2_nm: string; cate3_nm: string; cate4_m: string; brd_mn: string; };
   catalogDetails?: {
     cate1_nm: string | null; cate2_nm: string | null; cate3_nm: string | null;
     cate4_nm: string | null; brand_name: string | null;
@@ -73,6 +78,7 @@ export interface CategoryProductEntry {
 
 export interface DemoHome {
   user: DemoUser;
+  personas?: DemoPersonaSummary[];
   categories: CategoryCollections;
   /** Compatibility projection of categories' ownedProducts, not an independent source. */
   purchases: Purchase[];

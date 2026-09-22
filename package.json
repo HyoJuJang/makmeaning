@@ -12,13 +12,17 @@
     "prebuild": "node scripts/prepare-assets.mjs",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1 --port 3000",
-    "test": "node app/tests/movement.test.mjs && node app/tests/input.test.mjs && node app/tests/interactions.test.mjs && node app/tests/object-art.test.mjs && node app/tests/avatar-eating.test.mjs && node --test tests/api.test.mjs && npm run test:products && node --test tests/scenes-api.test.mjs tests/scene-recommend.test.mjs tests/avatar-motion.test.mjs tests/catalog.test.mjs && node app/tests/home-food.test.mjs && node --test tests/demo-state.test.mjs",
+    "test": "node app/tests/movement.test.mjs && node app/tests/input.test.mjs && node app/tests/interactions.test.mjs && node app/tests/object-art.test.mjs && node app/tests/avatar-eating.test.mjs && node --test tests/api.test.mjs && npm run test:products && node --test tests/scenes-api.test.mjs tests/scene-recommend.test.mjs tests/avatar-motion.test.mjs tests/catalog.test.mjs && node app/tests/home-food.test.mjs && node --test tests/demo-state.test.mjs tests/demo-persona.test.mjs tests/personas.test.mjs && npm run test:recommendations",
     "test:api": "node --test tests/api.test.mjs",
     "typecheck": "tsc --noEmit",
     "test:products": "node --test tests/products-data.test.mjs tests/products-api.test.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/products-migrate.mjs",
     "db:seed": "node --env-file-if-exists=.env.local scripts/products-seed.mjs",
-    "db:import": "node --env-file-if-exists=.env.local scripts/products-import.mjs"
+    "db:import": "node --env-file-if-exists=.env.local scripts/products-import.mjs",
+    "recommendations:prepare": "python3 scripts/recommendation/prepare.py",
+    "test:recommendations": "node --test tests/recommendation-*.test.mjs && python3 tests/recommendation-prepare.test.py",
+    "recommendations:check": "node scripts/recommendation/check.mjs",
+    "test:recommendations:http": "node tests/recommendation-http.mjs"
   },
   "dependencies": {
     "@neondatabase/serverless": "1.1.0",

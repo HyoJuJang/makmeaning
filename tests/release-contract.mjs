@@ -52,7 +52,7 @@ const addImage = path => assets.set(path.split('#')[0], /image\//);
 
 if (!options.catalogOnly) {
   const home = await json('/api/demo/home');
-  assert.equal(home.user.id, 'demo-user');
+  assert.equal(home.user.id, 'demo-f01');
   assert.equal(home.purchases.length, 10);
   assert.equal(home.demo.isDemo, true);
   assert.equal(home.demo.ownership, 'fictional');
@@ -79,10 +79,10 @@ if (!options.catalogOnly) {
     assert.equal(purchase.price, product.discprice, `${purchase.id}: catalog price`);
     assert.equal(purchase.category, product.domain, `${purchase.id}: category`);
     assert.equal(purchase.catalogSource, 'shared-products');
-    assert.equal(purchase.imageKind, 'illustration');
+    assert.equal(purchase.imageKind, 'product-photo');
     assert.equal(purchase.priceKind, 'catalog-reference');
     assert.notEqual(purchase.id, purchase.illustrationKey, 'Artwork keys are not product IDs');
-    assert.equal(purchase.imageUrl, `/products/${purchase.illustrationKey}.svg`);
+    assert.equal(purchase.imageUrl, `https://asset.m-gs.kr/prod/${purchase.id}/1/550`);
     addImage(purchase.imageUrl);
   });
   console.log('PASS: home 10 purchases match shared product ID/name/price/domain; demo/artwork boundaries explicit');
@@ -112,7 +112,7 @@ if (!options.catalogOnly) {
     const examples = catalog.products.filter(p => p.catalogSource === 'fictional-example');
     assert.equal(examples.length, category === 'food' ? 6 : 2, 'Existing examples preserved without expanding the catalog');
     assert.ok(examples.every(p => p.priceKind === 'fictional-example' && !home.purchases.some(h => h.id === p.id)));
-    assert.ok(catalog.products.every(p => p.imageKind === 'illustration'));
+    assert.ok(catalog.products.every(p => p.imageKind === (p.catalogSource === 'shared-products' ? 'product-photo' : 'illustration')));
     catalog.products.forEach(p => addImage(p.imageUrl));
     addImage(`/catalog-art/${category}-room.svg`);
     console.log(`PASS: ${category} shares home/user/purchases and separates ${examples.length} fictional examples`);
@@ -146,7 +146,7 @@ if (!options.catalogOnly) {
         for (const category of ['fashion', 'food', 'living', 'beauty']) assert.ok(html.includes(`data-room="${category}"`));
       }
     }
-    for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'vanity-frames.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js', 'category-routes.js', 'demo-state.js', 'category-products.js', 'room-mirror.js', 'garment-art.js']) {
+    for (const file of ['app.js', 'avatar.js', 'avatar-frames.js', 'vanity-frames.js', 'interactions.js', 'movement.js', 'object-art.js', 'scene-entry.js', 'category-routes.js', 'demo-state.js', 'demo-persona.js', 'category-products.js', 'room-mirror.js', 'garment-art.js']) {
       assets.set(`/prototype/${file}`, /javascript/);
     }
     addImage('/assets/gather-room.png');

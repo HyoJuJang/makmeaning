@@ -1,13 +1,14 @@
 import { buildDemoCatalog } from '../data/demo-catalog.ts';
+import { demoPersonaIdFromRequest } from '../data/demo-personas.ts';
 import type { CatalogCategory } from '../types/catalog.ts';
 import { projectDemoHome, resolveCategoryCollections } from './demo-home.ts';
 import { ProductApiError } from './products/contracts.ts';
 import type { ProductRepository } from './products/contracts.ts';
 
 /** Category owns its source; home is an additive compatibility projection of the same join. */
-export async function demoCatalogResponse(category: CatalogCategory, getRepository: () => Pick<ProductRepository, 'find'>): Promise<Response> {
+export async function demoCatalogResponse(category: CatalogCategory, getRepository: () => Pick<ProductRepository, 'find'>, request?: Request): Promise<Response> {
   try {
-    const collections = await resolveCategoryCollections(getRepository());
+    const collections = await resolveCategoryCollections(getRepository(), demoPersonaIdFromRequest(request));
     return Response.json(buildDemoCatalog(collections[category], projectDemoHome(collections)), { headers: { 'Cache-Control': 'no-store' } });
   } catch (error) {
     const known = error instanceof ProductApiError;

@@ -22,3 +22,10 @@ public/assets/
 
 # Keep only the credential-free setup template.
 !.env.example
+
+# Local recommendation dumps and generated user indexes.
+/data/*.csv
+/.recommendation/
+/.recommendation-*/
+__pycache__/
+*.pyc
